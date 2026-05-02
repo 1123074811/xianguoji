@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>营销管理 - 鲜果日记</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#b35200",
+                    "on-primary-fixed": "#002204",
+                    "surface-container-high": "#e9e8e7",
+                    "tertiary-fixed-dim": "#ffb68d",
+                    "on-secondary-fixed": "#031d2f",
+                    "surface": "#fbf9f9",
+                    "on-secondary-fixed-variant": "#32495d",
+                    "surface-container-low": "#f5f3f3",
+                    "outline-variant": "#bfcaba",
+                    "primary-fixed-dim": "#88d982",
+                    "primary": "#0d631b",
+                    "secondary-fixed-dim": "#b1c9e1",
+                    "on-tertiary-fixed": "#321200",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f2f0f0",
+                    "secondary-container": "#cde5fe",
+                    "on-tertiary-fixed-variant": "#763300",
+                    "on-background": "#1b1c1c",
+                    "surface-dim": "#dbdad9",
+                    "on-secondary-container": "#50677b",
+                    "outline": "#707a6c",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed": "#ffdbc9",
+                    "on-surface-variant": "#40493d",
+                    "surface-bright": "#fbf9f9",
+                    "secondary-fixed": "#cde5fe",
+                    "surface-container-highest": "#e3e2e2",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#303031",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-error": "#ffffff",
+                    "surface-tint": "#1b6d24",
+                    "inverse-primary": "#88d982",
+                    "on-primary-container": "#cbffc2",
+                    "on-primary": "#ffffff",
+                    "background": "#fbf9f9",
+                    "primary-fixed": "#a3f69c",
+                    "on-primary-fixed-variant": "#005312",
+                    "secondary": "#4a6175",
+                    "on-tertiary-container": "#ffeee6",
+                    "on-surface": "#1b1c1c",
+                    "tertiary": "#8d3f00",
+                    "surface-container": "#efeded",
+                    "surface-variant": "#e3e2e2",
+                    "primary-container": "#2e7d32",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-sm": "8px",
+                    "stack-xs": "4px",
+                    "unit": "4px",
+                    "table-row-height": "48px",
+                    "container-padding-pc": "24px",
+                    "stack-md": "16px",
+                    "gutter": "16px",
+                    "container-padding-mobile": "16px",
+                    "stack-lg": "24px"
+            },
+            "fontFamily": {
+                    "label-bold": ["Be Vietnam Pro"],
+                    "body-lg": ["Be Vietnam Pro"],
+                    "h2": ["Be Vietnam Pro"],
+                    "h1": ["Be Vietnam Pro"],
+                    "body-sm": ["Be Vietnam Pro"],
+                    "h3": ["Be Vietnam Pro"],
+                    "body-md": ["Be Vietnam Pro"],
+                    "table-header": ["Be Vietnam Pro"]
+            },
+            "fontSize": {
+                    "label-bold": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "h2": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "h1": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "table-header": ["13px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-background antialiased">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-60 border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col z-50">
+<div class="p-6">
+<h1 class="text-lg font-black text-green-800 dark:text-green-400 uppercase tracking-tight font-['Be_Vietnam_Pro']">鲜果日记</h1>
+<p class="text-xs text-slate-500 font-medium">商家管理后台</p>
+</div>
+<nav class="flex-1 overflow-y-auto sidebar-scroll">
+<div class="flex flex-col">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-bold">仪表盘</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="font-label-bold">订单管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-bold">商品管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 border-l-4 border-green-700 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 font-bold transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-bold">营销管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="rate_review">rate_review</span>
+<span class="font-label-bold">评价管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-bold">客户管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-label-bold">配送设置</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-bold">系统设置</span>
+</a>
+</div>
+</nav>
+<div class="mt-auto border-t border-slate-200 dark:border-zinc-800 p-4">
+<button class="w-full bg-primary-container text-on-primary-container font-label-bold py-3 rounded-lg flex items-center justify-center gap-2 mb-4 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                新增商品
+            </button>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-green-700 transition-colors" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="help">help</span>
+<span class="text-sm font-medium">帮助支持</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-red-600 transition-colors" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="logout">logout</span>
+<span class="text-sm font-medium">退出登录</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-60 h-16 border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md z-40 flex items-center justify-between px-6">
+<div class="flex items-center gap-6">
+<h2 class="text-base font-bold text-slate-900 dark:text-white font-['Be_Vietnam_Pro']">营销管理</h2>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-500 dark:text-zinc-400 hover:text-green-600 font-medium text-sm transition-colors" href="#">首页</a>
+<a class="text-slate-500 dark:text-zinc-400 hover:text-green-600 font-medium text-sm transition-colors" href="#">数据分析</a>
+<a class="text-slate-500 dark:text-zinc-400 hover:text-green-600 font-medium text-sm transition-colors" href="#">报表统计</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="bg-green-100 text-green-800 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wider border border-green-200">
+                营业中
+            </div>
+<div class="flex items-center gap-3 text-slate-500">
+<button class="hover:text-green-600 transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:text-green-600 transition-colors">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-slate-200 overflow-hidden border border-slate-300">
+<img alt="商家管理员" class="w-full h-full object-cover" data-alt="A professional headshot of a middle-aged merchant administrator in a clean white shirt, smiling warmly against a soft-focus background of an organic fruit market." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQqSUJmdliAMXmYd9xgK9rvvKJCIR5zut29wZf5zqLCqg5CDeP6Q_VD_8EiS1P3rm65eEPZiVq4ym7yRd1zGasEjcecteZXTK1GxxmHnmxH_41HfwuG2JkNtswFQhrXFyUtEo0VzEMqxGV-wEBZFaOCT-VREfFNVvl8z0uZrvkiWLidsgYmgH3o_rGT6i639g6DTM6kaHCezXtx3pb6GHbfkw71miXRzLaptQzJESrm0L-pFr24u2iX8F9-sKnXttBOrbo_xWKHDK2"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-60 mt-16 p-8 min-h-screen">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+<div>
+<h1 class="font-h1 text-h1 text-on-background">优惠券与促销</h1>
+<p class="font-body-md text-slate-500 mt-1">管理折扣代码和客户忠诚度激励措施。</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="bg-white border border-outline px-4 py-2.5 rounded-lg font-label-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+                    筛选
+                </button>
+<button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-lg font-label-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-sm">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                    创建优惠券
+                </button>
+</div>
+</div>
+<!-- Marketing Stats Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-8">
+<div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="p-2 bg-green-50 text-green-700 rounded-lg">
+<span class="material-symbols-outlined" data-icon="confirmation_number">confirmation_number</span>
+</div>
+<span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">+12%</span>
+</div>
+<p class="text-sm font-medium text-slate-500">生效中优惠券</p>
+<h3 class="font-h2 text-h2 mt-1">24</h3>
+</div>
+<div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="p-2 bg-blue-50 text-blue-700 rounded-lg">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+</div>
+<span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">高</span>
+</div>
+<p class="text-sm font-medium text-slate-500">核销率</p>
+<h3 class="font-h2 text-h2 mt-1">68.4%</h3>
+</div>
+<div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="p-2 bg-orange-50 text-orange-700 rounded-lg">
+<span class="material-symbols-outlined" data-icon="savings">savings</span>
+</div>
+<span class="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">$4.2k</span>
+</div>
+<p class="text-sm font-medium text-slate-500">累计折扣金额</p>
+<h3 class="font-h2 text-h2 mt-1">$12,840</h3>
+</div>
+<div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="p-2 bg-purple-50 text-purple-700 rounded-lg">
+<span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+</div>
+<span class="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">新增</span>
+</div>
+<p class="text-sm font-medium text-slate-500">即将过期</p>
+<h3 class="font-h2 text-h2 mt-1">05</h3>
+</div>
+</div>
+<!-- Coupons List Container -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+<!-- Tabs -->
+<div class="flex border-b border-slate-100">
+<button class="px-8 py-4 font-label-bold text-green-700 border-b-2 border-green-700">生效中 (18)</button>
+<button class="px-8 py-4 font-label-bold text-slate-500 hover:text-green-600 transition-colors">已过期 (6)</button>
+<button class="px-8 py-4 font-label-bold text-slate-500 hover:text-green-600 transition-colors">待生效 (2)</button>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-slate-50 border-b border-slate-100">
+<tr>
+<th class="px-6 py-4 font-table-header text-slate-600">名称与代码</th>
+<th class="px-6 py-4 font-table-header text-slate-600">类型</th>
+<th class="px-6 py-4 font-table-header text-slate-600">面值</th>
+<th class="px-6 py-4 font-table-header text-slate-600">使用门槛</th>
+<th class="px-6 py-4 font-table-header text-slate-600">使用进度</th>
+<th class="px-6 py-4 font-table-header text-slate-600">有效期至</th>
+<th class="px-6 py-4 font-table-header text-slate-600">状态</th>
+<th class="px-6 py-4 font-table-header text-slate-600">操作</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-50">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50/50 transition-colors h-[48px]">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-label-bold text-slate-900">盛夏丰收特惠</span>
+<span class="text-xs font-mono text-green-600 font-bold bg-green-50 px-1 rounded w-fit">SUMMER25</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="bg-blue-50 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full border border-blue-100">百分比折扣</span>
+</td>
+<td class="px-6 py-4 font-label-bold">75折</td>
+<td class="px-6 py-4 font-body-md text-slate-600">订单满 $50</td>
+<td class="px-6 py-4">
+<div class="w-48">
+<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+<span>425/500</span>
+<span>85%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-green-600 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-sm text-slate-600">2024年9月15日</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-xs font-bold text-green-700">
+<span class="h-1.5 w-1.5 bg-green-700 rounded-full animate-pulse"></span>
+                                    生效中
+                                </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<button class="p-1 text-slate-400 hover:text-green-600 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button class="p-1 text-slate-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="delete">delete</span>
+</button>
+<button class="p-1 text-slate-400 hover:text-slate-900 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50/50 transition-colors h-[48px]">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-label-bold text-slate-900">新鲜浆果秒杀</span>
+<span class="text-xs font-mono text-green-600 font-bold bg-green-50 px-1 rounded w-fit">BERRY10</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="bg-orange-50 text-orange-700 text-xs font-bold px-2.5 py-1 rounded-full border border-orange-100">固定金额</span>
+</td>
+<td class="px-6 py-4 font-label-bold">立减 $10.00</td>
+<td class="px-6 py-4 font-body-md text-slate-600">无门槛</td>
+<td class="px-6 py-4">
+<div class="w-48">
+<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+<span>32/200</span>
+<span>16%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-blue-600 rounded-full" style="width: 16%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-sm text-slate-600">2024年8月30日</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-xs font-bold text-green-700">
+<span class="h-1.5 w-1.5 bg-green-700 rounded-full"></span>
+                                    生效中
+                                </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<button class="p-1 text-slate-400 hover:text-green-600 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button class="p-1 text-slate-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="delete">delete</span>
+</button>
+<button class="p-1 text-slate-400 hover:text-slate-900 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50/50 transition-colors h-[48px]">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-label-bold text-slate-900">新客欢迎礼</span>
+<span class="text-xs font-mono text-green-600 font-bold bg-green-50 px-1 rounded w-fit">FRESHSTART</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="bg-blue-50 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full border border-blue-100">百分比折扣</span>
+</td>
+<td class="px-6 py-4 font-label-bold">85折</td>
+<td class="px-6 py-4 font-body-md text-slate-600">订单满 $25</td>
+<td class="px-6 py-4">
+<div class="w-48">
+<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+<span>不限次数</span>
+<span>--</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-slate-400 rounded-full" style="width: 100%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-sm text-slate-600">长期有效</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-xs font-bold text-green-700">
+<span class="h-1.5 w-1.5 bg-green-700 rounded-full"></span>
+                                    生效中
+                                </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<button class="p-1 text-slate-400 hover:text-green-600 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button class="p-1 text-slate-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="delete">delete</span>
+</button>
+<button class="p-1 text-slate-400 hover:text-slate-900 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50/50 transition-colors h-[48px]">
+<td class="px-6 py-4">
+<div class="flex flex-col opacity-50">
+<span class="font-label-bold text-slate-900">有机芒果大促</span>
+<span class="text-xs font-mono text-slate-500 font-bold bg-slate-100 px-1 rounded w-fit">MANGO50</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-200 opacity-50">百分比折扣</span>
+</td>
+<td class="px-6 py-4 font-label-bold opacity-50">5折</td>
+<td class="px-6 py-4 font-body-md text-slate-600 opacity-50">订单满 $100</td>
+<td class="px-6 py-4 opacity-50">
+<div class="w-48">
+<div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+<span>100/100</span>
+<span>100%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-slate-500 rounded-full" style="width: 100%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-sm text-slate-600 opacity-50">2024年8月1日</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+<span class="h-1.5 w-1.5 bg-slate-500 rounded-full"></span>
+                                    已结束
+                                </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<button class="p-1 text-slate-300 cursor-not-allowed">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button class="p-1 text-slate-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="delete">delete</span>
+</button>
+<button class="p-1 text-slate-400 hover:text-slate-900 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Footer Pagination -->
+<div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+<span class="text-sm text-slate-500">显示第 <span class="font-bold text-slate-900">1-10</span> 条，共 <span class="font-bold text-slate-900">24</span> 条生效中优惠券</span>
+<div class="flex items-center gap-1">
+<button class="p-2 rounded hover:bg-slate-200 text-slate-500 transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="px-3 py-1 text-sm font-bold bg-green-700 text-white rounded">1</button>
+<button class="px-3 py-1 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded">2</button>
+<button class="px-3 py-1 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded">3</button>
+<button class="p-2 rounded hover:bg-slate-200 text-slate-500 transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Create Coupon Dialog Placeholder -->
+<div class="mt-12 bg-white rounded-xl border border-slate-200 p-8 flex flex-col items-center justify-center text-center border-dashed border-2">
+<div class="h-16 w-16 rounded-full bg-green-50 flex items-center justify-center text-green-700 mb-4">
+<span class="material-symbols-outlined text-3xl" data-icon="celebration">celebration</span>
+</div>
+<h4 class="font-h3 text-h3">准备好提升销售额了吗？</h4>
+<p class="text-slate-500 max-w-md mt-2">创建针对性的促销活动，回馈忠实客户并吸引新的有机水果爱好者光顾您的店铺。</p>
+<button class="mt-6 border-2 border-green-700 text-green-700 px-8 py-3 rounded-lg font-label-bold hover:bg-green-50 transition-all active:scale-95">
+                启动新活动
+            </button>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-around z-50">
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] font-bold uppercase">首页</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-green-700" href="#">
+<span class="material-symbols-outlined" data-icon="campaign" style="font-variation-settings: 'FILL' 1;">campaign</span>
+<span class="text-[10px] font-bold uppercase">营销</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="text-[10px] font-bold uppercase">库存</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="text-[10px] font-bold uppercase">个人中心</span>
+</a>
+</nav>
+<!-- Contextual FAB (Only relevant here for quick coupon creation) -->
+<button class="fixed bottom-24 right-8 h-14 w-14 rounded-full bg-primary-container text-on-primary-container shadow-xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all z-40 md:hidden">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</body></html>

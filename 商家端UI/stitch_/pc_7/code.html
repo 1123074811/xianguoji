@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>鲜果日记 - 商品管理</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#b35200",
+                        "on-primary-fixed": "#002204",
+                        "surface-container-high": "#e9e8e7",
+                        "tertiary-fixed-dim": "#ffb68d",
+                        "on-secondary-fixed": "#031d2f",
+                        "surface": "#fbf9f9",
+                        "on-secondary-fixed-variant": "#32495d",
+                        "surface-container-low": "#f5f3f3",
+                        "outline-variant": "#bfcaba",
+                        "primary-fixed-dim": "#88d982",
+                        "primary": "#0d631b",
+                        "secondary-fixed-dim": "#b1c9e1",
+                        "on-tertiary-fixed": "#321200",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f2f0f0",
+                        "secondary-container": "#cde5fe",
+                        "on-tertiary-fixed-variant": "#763300",
+                        "on-background": "#1b1c1c",
+                        "surface-dim": "#dbdad9",
+                        "on-secondary-container": "#50677b",
+                        "outline": "#707a6c",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#ffdbc9",
+                        "on-surface-variant": "#40493d",
+                        "surface-bright": "#fbf9f9",
+                        "secondary-fixed": "#cde5fe",
+                        "surface-container-highest": "#e3e2e2",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#303031",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "surface-tint": "#1b6d24",
+                        "inverse-primary": "#88d982",
+                        "on-primary-container": "#cbffc2",
+                        "on-primary": "#ffffff",
+                        "background": "#fbf9f9",
+                        "primary-fixed": "#a3f69c",
+                        "on-primary-fixed-variant": "#005312",
+                        "secondary": "#4a6175",
+                        "on-tertiary-container": "#ffeee6",
+                        "on-surface": "#1b1c1c",
+                        "tertiary": "#8d3f00",
+                        "surface-container": "#efeded",
+                        "surface-variant": "#e3e2e2",
+                        "primary-container": "#2e7d32",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "stack-xs": "4px",
+                        "unit": "4px",
+                        "table-row-height": "48px",
+                        "container-padding-pc": "24px",
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "container-padding-mobile": "16px",
+                        "stack-lg": "24px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Be Vietnam Pro"],
+                        "body-lg": ["Be Vietnam Pro"],
+                        "h2": ["Be Vietnam Pro"],
+                        "h1": ["Be Vietnam Pro"],
+                        "body-sm": ["Be Vietnam Pro"],
+                        "h3": ["Be Vietnam Pro"],
+                        "body-md": ["Be Vietnam Pro"],
+                        "table-header": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "h2": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "h1": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "table-header": ["13px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .sidebar-active {
+            border-left-width: 4px;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .table-fixed-header { position: sticky; top: 0; z-index: 10; }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased">
+<aside class="fixed left-0 top-0 h-screen w-60 border-r border-slate-200 bg-white dark:bg-zinc-950 flex flex-col z-50 overflow-y-auto">
+<div class="px-6 py-8">
+<span class="text-lg font-black text-green-800 dark:text-green-400 uppercase tracking-tight font-label-bold">鲜果日记</span>
+<p class="text-xs text-slate-500 font-body-sm mt-1">商家管理后台</p>
+</div>
+<nav class="flex-1 space-y-1">
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>仪表盘</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span>订单管理</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 border-l-4 border-green-700 bg-green-50 text-green-700 font-bold active:scale-95 transition-all duration-150 cursor-pointer font-label-bold">
+<span class="material-symbols-outlined" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span>商品管理</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span>营销推广</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold">
+<span class="material-symbols-outlined" data-icon="rate_review">rate_review</span>
+<span>评价管理</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>客户管理</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span>配送服务</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>系统设置</span>
+</div>
+</nav>
+<div class="mt-auto border-t border-slate-200">
+<div class="px-4 py-4 space-y-1">
+<div class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:bg-slate-50 transition-colors font-body-md cursor-pointer">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>帮助中心</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:bg-slate-50 transition-colors font-body-md cursor-pointer text-error">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>退出登录</span>
+</div>
+</div>
+</div>
+</aside>
+<header class="fixed top-0 right-0 left-60 h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md z-40 shadow-sm flex items-center justify-between px-6">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-64 group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-1.5 text-body-md focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="搜索商品..." type="text"/>
+</div>
+<nav class="flex items-center gap-6 ml-4">
+<a class="text-green-700 border-b-2 border-green-700 py-5 font-label-bold" href="#">首页</a>
+<a class="text-slate-500 hover:text-green-600 py-5 font-label-bold transition-colors" href="#">统计分析</a>
+<a class="text-slate-500 hover:text-green-600 py-5 font-label-bold transition-colors" href="#">经营报表</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-primary-container text-on-primary-container px-4 py-2 rounded font-label-bold flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="w-2 h-2 rounded-full bg-green-300"></span>
+            店铺运营中
+        </button>
+<div class="flex items-center gap-3 text-slate-500">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="mail">mail</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-primary-fixed cursor-pointer">
+<img alt="管理员头像" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsLH06LL5Gb_Lg2fjeiHF1Wk9Ps7vkVcqbTpLFBFXtCGFlhsKoR4DF4HBtNMdZ-VL_n1xN--kQKzKLlOy-V4TKaBYzjmfS0R8OgVsvwNVe5_n12IcRF2ViMIlNRbGvIaIeTxmiaWSLdjYCj6FlZevb7NlLnPw1CUujYOTURkMXwZPvIvd8QDu4DuqbJPp4mjklWtm0uB40T81KWdCK4Hk2lo2W56Pxc4Ewyx-rLN0MWPBfi9HrEgztU5bAyrc9onVkO7ddxxP4gtIj"/>
+</div>
+</div>
+</div>
+</header>
+<main class="ml-60 mt-16 p-6 min-h-[calc(100vh-64px)]">
+<div class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="font-h1 text-on-surface mb-1">商品管理</h1>
+<p class="text-slate-500 font-body-md">管理您的时令水果、库存水平和区域定价策略。</p>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2.5 rounded-lg flex items-center gap-2 font-label-bold shadow-md hover:translate-y-[-1px] transition-all">
+<span class="material-symbols-outlined">add</span>
+            新增商品
+        </button>
+</div>
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
+<div class="flex items-center px-6 border-b border-slate-100 overflow-x-auto no-scrollbar">
+<button class="px-6 py-4 font-label-bold border-b-2 border-primary text-primary whitespace-nowrap">在售中 (128)</button>
+<button class="px-6 py-4 font-label-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors whitespace-nowrap">已下架 (12)</button>
+<button class="px-6 py-4 font-label-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors whitespace-nowrap flex items-center gap-2">
+                库存预警
+                <span class="bg-error text-on-error text-[10px] px-1.5 py-0.5 rounded-full font-bold">4</span>
+</button>
+<button class="px-6 py-4 font-label-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors whitespace-nowrap">回收站</button>
+</div>
+<div class="p-4 bg-surface-container-lowest border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="relative">
+<select class="appearance-none bg-white border border-outline-variant rounded-lg pl-3 pr-10 py-1.5 text-body-md font-label-bold focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+<option>所有品类</option>
+<option>柑橘类</option>
+<option>热带水果</option>
+<option>浆果类</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">expand_more</span>
+</div>
+<div class="relative">
+<select class="appearance-none bg-white border border-outline-variant rounded-lg pl-3 pr-10 py-1.5 text-body-md font-label-bold focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+<option>批量操作</option>
+<option>批量上架</option>
+<option>批量下架</option>
+<option>批量删除</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">layers</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-body-sm text-slate-500">共 144 件商品</span>
+<div class="flex border border-outline-variant rounded-lg overflow-hidden">
+<button class="p-1.5 bg-surface-container-low text-primary"><span class="material-symbols-outlined">list</span></button>
+<button class="p-1.5 hover:bg-slate-50 text-slate-400 transition-colors"><span class="material-symbols-outlined">grid_view</span></button>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-slate-200">
+<tr>
+<th class="px-6 py-3 w-12"><input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/></th>
+<th class="px-3 py-3 font-table-header text-on-surface-variant uppercase">商品预览</th>
+<th class="px-3 py-3 font-table-header text-on-surface-variant uppercase">商品信息</th>
+<th class="px-3 py-3 font-table-header text-on-surface-variant uppercase">分类</th>
+<th class="px-3 py-3 font-table-header text-on-surface-variant uppercase">规格/单位</th>
+<th class="px-3 py-3 font-table-header text-on-surface-variant uppercase">价格范围</th>
+<th class="px-3 py-3 font-table-header text-on-surface-variant uppercase">库存</th>
+<th class="px-3 py-3 font-table-header text-on-surface-variant uppercase">累计销量</th>
+<th class="px-3 py-3 font-table-header text-on-surface-variant uppercase">状态</th>
+<th class="px-6 py-3 font-table-header text-on-surface-variant uppercase text-right">操作</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<tr class="hover:bg-slate-50/80 transition-colors group">
+<td class="px-6 py-3"><input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-3 py-3">
+<div class="w-12 h-12 rounded bg-slate-100 overflow-hidden border border-slate-200">
+<img alt="新奇士脐橙" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzDRCu8CxjUmNJdxgETq23D4aIZPCXZzFd_Sm3VQ2HKMYv1NG_mfshe8PmN8qAv0nga40-0l0xjdc2Zab2TOErLE9eT0XANLdK0AXOkl_rGhrJS3qwUATZLNFbtbH3emt27XkMuxSyy73KJWdypgKHBXvx2O25yr53w-KS-7rMy46Fm2dSgYy3hk5V0DBppfZBaR3Vk-Qog-AaQj58LPmLv4JUZ7EzFdD8zGXC9F0Tkpkx8h_wm769Sgj6TF0SSeZjLJtiUeDDmXf1"/>
+</div>
+</td>
+<td class="px-3 py-3">
+<div class="font-label-bold text-on-surface">新奇士脐橙 (L号)</div>
+<div class="text-xs text-slate-400 font-body-sm">ID: FD-2024001</div>
+</td>
+<td class="px-3 py-3">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[11px] font-bold">柑橘类</span>
+</td>
+<td class="px-3 py-3 text-body-md text-slate-600">5kg/箱 (约12个)</td>
+<td class="px-3 py-3 text-body-md font-label-bold text-on-surface">¥89.00 - ¥168.00</td>
+<td class="px-3 py-3 text-body-md text-slate-600">1,240 件</td>
+<td class="px-3 py-3 text-body-md text-slate-600">3,452</td>
+<td class="px-3 py-3">
+<div class="w-10 h-5 bg-primary-container rounded-full relative cursor-pointer shadow-inner">
+<div class="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</div>
+</td>
+<td class="px-6 py-3 text-right">
+<div class="flex items-center justify-end gap-2 text-slate-400">
+<button class="p-1 hover:text-primary transition-colors" title="编辑"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+<button class="p-1 hover:text-primary transition-colors" title="复制"><span class="material-symbols-outlined text-[20px]">content_copy</span></button>
+<button class="p-1 hover:text-error transition-colors" title="删除"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</td>
+</tr>
+<tr class="bg-error-container/10 hover:bg-error-container/20 transition-colors group">
+<td class="px-6 py-3"><input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-3 py-3">
+<div class="w-12 h-12 rounded bg-slate-100 overflow-hidden border border-error-container">
+<img alt="金菠萝" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQpXwC-sZJ7AAeK9yj0Krp6TdYmWxQjGH1ql2yTnqPt-_1j9kERjEDZA0lOrTfOeQl3btrE-LVDpZifUkkQeAeoVhDXrP6EJ655Vh45XHWrV2VA24ZW7ovl3fw9aqD-jSFVBRRIyucpCmi0scx7PnytgRQnPpQ4vuDm6QCjbV3VcnpNKHipxR-nUzDzSfcGUtKH-l_mvVIh37cPynZQNaXly1L14icxgK0E0gLqH0bDmsBkhH3Gjkp-qxEgoDhiwEeHeiu3ZYpxtH9"/>
+</div>
+</td>
+<td class="px-3 py-3">
+<div class="font-label-bold text-on-surface flex items-center gap-2">
+                            菲律宾金菠萝
+                            <span class="material-symbols-outlined text-error text-[16px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div class="text-xs text-error font-body-sm font-bold">库存预警: 低于 50</div>
+</td>
+<td class="px-3 py-3">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[11px] font-bold">热带水果</span>
+</td>
+<td class="px-3 py-3 text-body-md text-slate-600">2个装 (约3kg)</td>
+<td class="px-3 py-3 text-body-md font-label-bold text-on-surface">¥45.00</td>
+<td class="px-3 py-3 text-body-md text-error font-bold italic">12 件</td>
+<td class="px-3 py-3 text-body-md text-slate-600">892</td>
+<td class="px-3 py-3">
+<div class="w-10 h-5 bg-primary-container rounded-full relative cursor-pointer shadow-inner">
+<div class="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</div>
+</td>
+<td class="px-6 py-3 text-right">
+<div class="flex items-center justify-end gap-2 text-slate-400">
+<button class="p-1 hover:text-primary transition-colors" title="编辑"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+<button class="p-1 hover:text-primary transition-colors" title="复制"><span class="material-symbols-outlined text-[20px]">content_copy</span></button>
+<button class="p-1 hover:text-error transition-colors" title="删除"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/80 transition-colors group">
+<td class="px-6 py-3"><input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-3 py-3">
+<div class="w-12 h-12 rounded bg-slate-100 overflow-hidden border border-slate-200">
+<img alt="草莓" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx8G6cqMNk5sV_FHbnZmnikjTQ-AITUO9RjJJ5HK4wQuwsUygymt6ZEthr_RKHS4tFQzwyanF4z2PwCbbZZcInAAtVKrQ9WkmSir7vWAzJctGQazi33DlKOyGSgxk6SFRpQOlNAd3q3yeEWXZlElXl2Vva3jXdsbafjqDuHMZ1ty1SpApgT_wOmw2C4lzIoWwF1cHwGVPY9YJsLqRR7c8DiRDhWktK1WcpoBEZ9gwOi0GCSHRb7SxxnhbHRLx2s5I7JuzqmUIbjx9c"/>
+</div>
+</td>
+<td class="px-3 py-3">
+<div class="font-label-bold text-on-surface">红颜草莓 (特级)</div>
+<div class="text-xs text-slate-400 font-body-sm">ID: FD-2024082</div>
+</td>
+<td class="px-3 py-3">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[11px] font-bold">浆果类</span>
+</td>
+<td class="px-3 py-3 text-body-md text-slate-600">500g/盒</td>
+<td class="px-3 py-3 text-body-md font-label-bold text-on-surface">¥32.50 - ¥38.00</td>
+<td class="px-3 py-3 text-body-md text-slate-600">450 件</td>
+<td class="px-3 py-3 text-body-md text-slate-600">1,120</td>
+<td class="px-3 py-3">
+<div class="w-10 h-5 bg-primary-container rounded-full relative cursor-pointer shadow-inner">
+<div class="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</div>
+</td>
+<td class="px-6 py-3 text-right">
+<div class="flex items-center justify-end gap-2 text-slate-400">
+<button class="p-1 hover:text-primary transition-colors" title="编辑"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+<button class="p-1 hover:text-primary transition-colors" title="复制"><span class="material-symbols-outlined text-[20px]">content_copy</span></button>
+<button class="p-1 hover:text-error transition-colors" title="删除"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/80 transition-colors group">
+<td class="px-6 py-3"><input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-3 py-3">
+<div class="w-12 h-12 rounded bg-slate-100 overflow-hidden border border-slate-200">
+<img alt="牛油果" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzFR-rK2DkNlVpNuMe8G7Wpu5HnwU5UGQ3OqMq3cHkk51V6OmhkgwbiVgPdrH1c1fHOjnGgFgnwZaLBBFmFlOfUvgnR22VZhj-JbMrB19oUVQW3FY951_KE5RtZYiiBMQUvTn7JQ_oFo5v1vMs2C6iAGPqJOtOSZ8JHw9VfTJKAzd-q7ir7kxeBLVjuVQIlA2r1kxQG03WlxHWeojdiOBGtBO7qp9p2ugKqaW9VC_0rhipvw2ayMRsxOiz_Qy27p00x2UZsL2cb-eH"/>
+</div>
+</td>
+<td class="px-3 py-3">
+<div class="font-label-bold text-on-surface">墨西哥牛油果</div>
+<div class="text-xs text-slate-400 font-body-sm">ID: FD-2024105</div>
+</td>
+<td class="px-3 py-3">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[11px] font-bold">热带水果</span>
+</td>
+<td class="px-3 py-3 text-body-md text-slate-600">6个装 (1.2kg)</td>
+<td class="px-3 py-3 text-body-md font-label-bold text-on-surface">¥68.00</td>
+<td class="px-3 py-3 text-body-md text-slate-600">312 件</td>
+<td class="px-3 py-3 text-body-md text-slate-600">745</td>
+<td class="px-3 py-3">
+<div class="w-10 h-5 bg-outline-variant rounded-full relative cursor-pointer shadow-inner">
+<div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</div>
+</td>
+<td class="px-6 py-3 text-right">
+<div class="flex items-center justify-end gap-2 text-slate-400">
+<button class="p-1 hover:text-primary transition-colors" title="编辑"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+<button class="p-1 hover:text-primary transition-colors" title="复制"><span class="material-symbols-outlined text-[20px]">content_copy</span></button>
+<button class="p-1 hover:text-error transition-colors" title="删除"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-surface-container-low">
+<span class="text-body-sm text-slate-500">显示第 1 到 4 条，共 144 条数据</span>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white transition-colors"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-on-primary font-bold text-sm shadow-sm">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-600 hover:bg-white transition-colors text-sm">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-600 hover:bg-white transition-colors text-sm">3</button>
+<span class="px-2 text-slate-400">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-600 hover:bg-white transition-colors text-sm">36</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white transition-colors"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</div>
+<div class="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
+<div class="bg-white p-5 border border-slate-200 rounded-xl shadow-sm">
+<div class="flex justify-between items-start mb-3">
+<div class="p-2 bg-green-50 text-green-700 rounded-lg">
+<span class="material-symbols-outlined">inventory</span>
+</div>
+<span class="text-xs font-bold text-green-600">较上月 +12%</span>
+</div>
+<h4 class="text-slate-500 text-body-sm mb-1">总商品数 (SKU)</h4>
+<p class="text-h2 font-black text-on-surface">1,482</p>
+</div>
+<div class="bg-white p-5 border border-slate-200 rounded-xl shadow-sm">
+<div class="flex justify-between items-start mb-3">
+<div class="p-2 bg-orange-50 text-orange-700 rounded-lg">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<span class="text-xs font-bold text-orange-600">需要立即处理</span>
+</div>
+<h4 class="text-slate-500 text-body-sm mb-1">库存预警</h4>
+<p class="text-h2 font-black text-on-surface">4</p>
+</div>
+<div class="bg-white p-5 border border-slate-200 rounded-xl shadow-sm">
+<div class="flex justify-between items-start mb-3">
+<div class="p-2 bg-blue-50 text-blue-700 rounded-lg">
+<span class="material-symbols-outlined">local_fire_department</span>
+</div>
+<span class="text-xs font-bold text-blue-600">表现优异</span>
+</div>
+<h4 class="text-slate-500 text-body-sm mb-1">热销商品</h4>
+<p class="text-h2 font-black text-on-surface">24</p>
+</div>
+<div class="bg-white p-5 border border-slate-200 rounded-xl shadow-sm">
+<div class="flex justify-between items-start mb-3">
+<div class="p-2 bg-purple-50 text-purple-700 rounded-lg">
+<span class="material-symbols-outlined">category</span>
+</div>
+<span class="text-xs font-bold text-purple-600">涵盖 8 个区域</span>
+</div>
+<h4 class="text-slate-500 text-body-sm mb-1">全部品类</h4>
+<p class="text-h2 font-black text-on-surface">12</p>
+</div>
+</div>
+</main>
+</body></html>

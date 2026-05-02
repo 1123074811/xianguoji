@@ -1,0 +1,208 @@
+前端开发提示词：鲜果记 - 用户端小程序（1:1 复刻原型图）
+一、项目目标
+基于 Stitch 导出的 HTML + PNG 原型图（位于项目根目录 /prototypes/ 文件夹下，每个页面对应一个 .html 文件和一张 .png 截图），1:1 高保真复刻为可运行的 uni-app 跨端小程序项目。最终编译目标为微信小程序，开发期间允许在 H5 端预览。
+1:1 的具体含义：
+
+颜色值、字号、行高、字重、间距、圆角、阴影必须严格匹配原型
+布局结构、元素层级、相对位置必须一致
+图标、按钮形态、Tab 高亮、状态切换的视觉表现一致
+唯一允许的差异：将 Web 端 HTML 控件替换为 uni-app 等价组件（见下方"转换规则"）
+
+二、技术栈
+
+框架：uni-app（Vue 3 + Composition API + <script setup>）
+语言：TypeScript
+构建工具：Vite
+包管理：pnpm
+状态管理：Pinia
+样式预处理：SCSS
+UI 组件库：wot-design-uni（Vue3 原生、风格干净，适合品质感场景）
+HTTP 请求：uni.request 二次封装，统一拦截器
+图标：iconfont 引入 SVG 字体（从原型图中提取所需图标，建立项目专属图标库）
+Mock 数据：本地 JSON 文件 + 延迟模拟接口，路径 src/mock/
+
+三、项目结构
+src/
+├── pages/                  # 主包页面（首页、分类、购物车、订单、我的 5 个 Tab）
+├── pagesA/                 # 分包 A：商品相关（详情、搜索、搜索结果）
+├── pagesB/                 # 分包 B：订单相关（结算、支付结果、订单详情、评价）
+├── pagesC/                 # 分包 C：营销 + 个人中心子页（拼团、优惠券、地址、自提点、消息）
+├── components/             # 全局通用组件（GoodsCard、PriceTag、Empty、Loading 等)
+├── composables/            # 组合式函数（useCart、useUserInfo、useLocation 等）
+├── stores/                 # Pinia 状态管理（cart、user、order）
+├── api/                    # 接口封装
+├── mock/                   # 本地 mock 数据
+├── styles/
+│   ├── variables.scss     # 设计系统变量（必须严格按下方"设计 Token"定义）
+│   ├── mixins.scss        # 通用 mixin（文本省略、flex 居中等）
+│   └── global.scss        # 全局样式
+├── utils/                  # 工具函数（rpx 转换、价格格式化、时间处理）
+├── types/                  # TypeScript 类型定义
+├── static/                 # 静态资源（图标、占位图）
+├── App.vue
+├── main.ts
+├── pages.json             # 页面注册 + tabBar 配置
+└── manifest.json
+四、设计 Token（必须严格遵守，写入 variables.scss）
+scss// === 颜色 ===
+$color-primary: #2E7D32;          // 品牌主色 - 自然绿
+$color-primary-light: #8BC34A;    // 辅助色 - 嫩芽绿
+$color-primary-bg: #F1F8E9;       // 主色浅底（hover/选中态）
+$color-price: #E53935;            // 价格红
+$color-text-primary: #212121;     // 主文字
+$color-text-secondary: #757575;   // 次要文字
+$color-text-placeholder: #BDBDBD; // 占位文字
+$color-divider: #EEEEEE;          // 分隔线
+$color-bg-page: #FAFAFA;          // 页面背景
+$color-bg-card: #FFFFFF;          // 卡片背景
+
+// === 字号（rpx，uni-app 中 1px ≈ 2rpx，基于 750rpx 设计稿） ===
+$font-xs: 20rpx;     // 10px
+$font-sm: 24rpx;     // 12px
+$font-base: 28rpx;   // 14px
+$font-md: 32rpx;     // 16px
+$font-lg: 36rpx;     // 18px
+$font-xl: 40rpx;     // 20px
+$font-price: 44rpx;  // 价格大号
+
+// === 字重 ===
+$weight-regular: 400;
+$weight-medium: 500;
+$weight-semibold: 600;
+
+// === 圆角 ===
+$radius-sm: 8rpx;
+$radius-md: 16rpx;     // 卡片
+$radius-lg: 24rpx;
+$radius-pill: 48rpx;   // 胶囊按钮
+
+// === 阴影 ===
+$shadow-card: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+$shadow-float: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+
+// === 间距（4rpx 基准） ===
+$space-1: 8rpx;
+$space-2: 16rpx;
+$space-3: 24rpx;
+$space-4: 32rpx;
+$space-5: 48rpx;
+注意：uni-app 设计稿基准为 750rpx 宽，原型图是 375px 宽，故所有 px 值乘以 2 转为 rpx。例如原型中字号 14px → SCSS 中 28rpx。
+五、Stitch HTML → uni-app 转换规则（关键）
+Stitch 导出的 HTML 是 Web 标准代码，不能直接搬到 uni-app，需要按以下规则转换：
+Stitch HTML 中的元素uni-app 中对应写法<div><view><span>、纯文本节点<text><img src="..."><image src="..." mode="aspectFill" /><button><button> 或自定义 <view> 模拟（小程序原生 button 有边框，建议自定义）<input><input>（注意 v-model 绑定）<textarea><textarea><a href> 跳转uni.navigateTo({ url: '...' })position: fixeduni-app 中 <view> 也支持，但底部 Tab 占位需用 safe-area-inset-bottomCSS :hover小程序无 hover，使用 :active 或 hover-class 属性localStorageuni.setStorageSync / uni.getStorageSync字体 px 单位全部转 rpx（×2）长列表改用 <scroll-view> 或分页加载，禁止一次性渲染上百条display: grid小程序支持，但建议复杂网格用 flex 实现以确保兼容
+禁止行为：
+
+不要直接复制 HTML 中的 <div class="..."> 写法
+不要保留 Stitch 生成的随机 class 名（如 css-1a2b3c），改用语义化 BEM 命名
+不要复制 Tailwind utility classes（如果 Stitch 用了），改写为 SCSS
+
+六、复刻工作流（每个页面执行）
+对 /prototypes/ 下每个页面，按以下顺序处理：
+
+打开 PNG 截图——肉眼观察整体布局、颜色、间距、特殊视觉细节
+打开同名 HTML 文件——查看 DOM 结构与 CSS 样式作为骨架参考
+提取设计 Token——校验 HTML 中的颜色 / 字号 / 间距是否与项目 variables.scss 一致；不一致以 variables.scss 为准
+拆分组件——识别页面中可复用的部分（如商品卡片、价格标签、空状态），提到 components/ 下
+编写 Vue SFC——按 uni-app 规范实现，使用转换规则
+接入 Mock 数据——从 mock/ 目录读取对应 JSON
+逐项对照 PNG 截图自检——使用下方"1:1 验收清单"
+
+七、Mock 数据要求
+在 src/mock/ 下建立以下文件，提供仿真数据让页面看起来"像真的"：
+
+goods.json：约 30 个商品，覆盖叶菜、水果、根茎、菌菇、肉禽蛋等分类，含多规格、多图、原价划线价、库存
+categories.json：一二级分类树
+coupons.json：5-8 张优惠券（满减、折扣、限品类）
+orders.json：覆盖所有订单状态（待付款、待发货、配送中、已完成、已取消、退款）各 1-2 条
+addresses.json：3-4 个收货地址
+pickupPoints.json：5-6 个自提点（含经纬度占位）
+reviews.json：20+ 条评价（含图、不同星级）
+groupBuys.json：5-6 个拼团商品
+messages.json：分类消息列表
+userInfo.json：当前用户信息
+
+商品图、用户头像可使用占位图服务（如 https://picsum.photos/）或本地 static/ 下的占位 PNG。
+八、页面实现清单（按优先级排序）
+按以下顺序实现，先完成核心闭环，再做营销与边缘页面：
+P0 - 核心购物闭环：
+
+启动页 + 登录页
+首页（含店主推荐、拼团专区入口、优惠券领取、商品瀑布流）
+商品分类页
+商品详情页（含拼团 / 单买切换、规格选择）
+购物车页
+结算页（含配送/自提切换）
+支付结果页
+
+P1 - 订单与个人中心：
+8. 订单列表页（多 Tab 状态切换）
+9. 订单详情页（多状态显示，自提显示自提码、配送显示进度条）
+10. 评价提交页 + 评价查看页
+11. 个人中心页
+P2 - 营销与辅助：
+12. 拼团活动页
+13. 搜索页 + 搜索结果页
+14. 地址管理 + 自提点管理
+15. 消息中心
+九、全局规范
+命名：
+
+文件名 kebab-case（goods-card.vue）
+组件名 PascalCase（<GoodsCard />）
+CSS 类名 BEM（.goods-card__title--active）
+接口字段保持后端风格（snake_case 或 camelCase 与后端约定一致）
+
+TypeScript：
+
+所有组件 props、emit、store state、API 响应必须有完整类型定义
+类型集中在 src/types/ 下，按模块拆分
+
+性能：
+
+列表页使用 <scroll-view> + 分页加载（每页 20 条）
+图片使用懒加载（lazy-load 属性）
+长列表 v-for 必须有稳定的 key（不要用 index）
+避免在模板里写复杂表达式，挪到 computed
+
+交互细节（容易被忽略但影响 1:1 还原度）：
+
+按钮点击需有 :active 反馈（透明度 0.7 或缩放 0.97）
+加入购物车时需有"飞入购物车"动画或至少有 Toast 反馈
+下拉刷新使用 uni-app 原生 onPullDownRefresh
+加载中状态使用骨架屏，不要用单独的 Loading 圈
+Tab 切换、规格选择、勾选状态必须有过渡动画（150-250ms）
+
+安全区适配：
+
+iOS 全面屏底部需预留 safe-area-inset-bottom
+顶部状态栏使用 getSystemInfoSync() 获取高度
+
+十、1:1 验收清单（每页完成后逐项核对）
+
+ 与 PNG 截图叠加对比，主要元素位置偏差 ≤ 4rpx
+ 所有颜色取自 variables.scss，无硬编码 hex
+ 字号、字重、行高与原型一致
+ 圆角、阴影、边框与原型一致
+ 图标风格统一（线性 / 描边粗细一致）
+ 空状态、加载状态、错误状态都已实现
+ 所有可点击区域有 :active 反馈
+ 数据来自 mock，页面无写死的假数据
+ TypeScript 无 any 类型、无报错
+ 微信开发者工具中预览正常，无控制台报错
+
+十一、不要做的事
+
+❌ 不要自行发挥设计——遇到原型未明确的细节，先在代码注释中标注 // TODO: 等待设计确认，不要"看起来差不多就行"
+❌ 不要把 Stitch HTML 中的 inline style 直接复制——必须改为 SCSS 类
+❌ 不要使用未在 variables.scss 中定义的颜色、字号、间距
+❌ 不要省略空状态和加载状态——这些占了体验的 30%
+❌ 不要为了赶进度跳过 TypeScript 类型——后期补反而更慢
+❌ 不要在一个 SFC 里塞 500 行以上代码——超过就拆组件
+
+十二、交付物
+
+完整可运行的 uni-app 项目，pnpm dev:mp-weixin 可启动微信小程序
+README.md 含项目结构说明、启动命令、Mock 数据说明
+每个页面在微信开发者工具中可正常预览，与对应 PNG 截图基本一致
+通过 ESLint + Prettier 格式化，无报错
+

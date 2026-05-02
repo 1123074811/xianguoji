@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "on-background": "#1b1c1c",
+                    "surface-container-low": "#f6f3f2",
+                    "surface-container-highest": "#e5e2e1",
+                    "on-primary-container": "#cbffc2",
+                    "on-tertiary-fixed": "#410002",
+                    "inverse-primary": "#88d982",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#b9f474",
+                    "tertiary-container": "#d22a2a",
+                    "background": "#fcf9f8",
+                    "secondary": "#3e6a00",
+                    "primary-fixed": "#a3f69c",
+                    "on-primary-fixed-variant": "#005312",
+                    "surface-container": "#f0eded",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb4ac",
+                    "primary-fixed-dim": "#88d982",
+                    "surface-variant": "#e5e2e1",
+                    "error-container": "#ffdad6",
+                    "inverse-on-surface": "#f3f0ef",
+                    "outline-variant": "#bfcaba",
+                    "surface-bright": "#fcf9f8",
+                    "tertiary": "#ae0714",
+                    "surface-container-high": "#eae7e7",
+                    "on-surface": "#1b1c1c",
+                    "on-tertiary-fixed-variant": "#93000d",
+                    "tertiary-fixed": "#ffdad6",
+                    "inverse-surface": "#303030",
+                    "on-secondary-container": "#437000",
+                    "on-secondary-fixed-variant": "#2e4f00",
+                    "on-error-container": "#93000a",
+                    "surface": "#fcf9f8",
+                    "on-tertiary-container": "#ffeeec",
+                    "on-tertiary": "#ffffff",
+                    "secondary-fixed-dim": "#9ed75b",
+                    "surface-tint": "#1b6d24",
+                    "primary": "#0d631b",
+                    "surface-dim": "#dcd9d9",
+                    "on-primary-fixed": "#002204",
+                    "outline": "#707a6c",
+                    "on-secondary-fixed": "#0f2000",
+                    "secondary-container": "#b9f474",
+                    "on-secondary": "#ffffff",
+                    "on-surface-variant": "#40493d",
+                    "primary-container": "#2e7d32"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "xl": "24px",
+                    "sm": "8px",
+                    "md": "12px",
+                    "section-gap": "24px",
+                    "lg": "16px",
+                    "container-margin": "16px",
+                    "card-gap": "12px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "h3": ["PingFang SC"],
+                    "body-md": ["PingFang SC"],
+                    "label-sm": ["PingFang SC"],
+                    "body-lg": ["PingFang SC"],
+                    "h2": ["PingFang SC"],
+                    "h1": ["PingFang SC"],
+                    "price-display": ["PingFang SC"]
+            },
+            "fontSize": {
+                    "h3": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "price-display": ["20px", {"lineHeight": "20px", "fontWeight": "500"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #fcf9f8;
+            font-family: 'PingFang SC', system-ui, -apple-system, sans-serif;
+        }
+        .success-glow {
+            box-shadow: 0 0 40px rgba(46, 125, 50, 0.1);
+        }
+        .error-glow {
+            box-shadow: 0 0 40px rgba(186, 26, 26, 0.1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-background">
+<!-- Top AppBar -->
+<header class="bg-white dark:bg-zinc-950 docked full-width top-0 z-50 border-b border-gray-100 dark:border-zinc-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] fixed w-full">
+<div class="flex justify-between items-center h-14 px-4 w-full max-w-md mx-auto">
+<button class="text-green-800 dark:text-green-500 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors active:opacity-70">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-['Be_Vietnam_Pro'] text-lg font-bold text-green-800 dark:text-green-400">鲜果记</h1>
+<button class="text-green-800 dark:text-green-500 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors active:opacity-70">
+<span class="material-symbols-outlined">chat</span>
+</button>
+</div>
+</header>
+<main class="pt-20 pb-24 max-w-md mx-auto px-container-margin space-y-section-gap">
+<!-- Section 1: Payment Success State -->
+<section class="bg-surface-container-lowest rounded-xl p-xl text-center success-glow border border-primary/5">
+<div class="flex flex-col items-center space-y-md">
+<div class="w-16 h-16 bg-primary-container/10 rounded-full flex items-center justify-center mb-sm">
+<span class="material-symbols-outlined text-[48px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h2 class="font-h1 text-h1 text-on-surface">支付成功</h2>
+<div class="flex items-baseline justify-center space-x-xs">
+<span class="font-price-display text-label-sm text-on-surface-variant">¥</span>
+<span class="font-price-display text-[32px] text-on-surface">168.50</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant pt-xs">感谢您的信任，果园正快马加鞭为您备货</p>
+</div>
+<div class="mt-xl flex flex-col space-y-md">
+<button class="w-full h-12 bg-primary text-on-primary font-h3 text-h3 rounded-full hover:opacity-90 active:scale-[0.98] transition-all">查看订单</button>
+<button class="w-full h-12 border border-outline text-primary font-h3 text-h3 rounded-full hover:bg-surface-container-low transition-colors">继续购物</button>
+</div>
+</section>
+<!-- Recommended List for Success Page -->
+<section class="space-y-md">
+<div class="flex items-center justify-between">
+<h3 class="font-h2 text-h2">精选推荐</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">为您推荐更多时令好果</span>
+</div>
+<div class="grid grid-cols-2 gap-card-gap">
+<!-- Product Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent hover:border-primary/20 transition-all">
+<div class="aspect-square relative overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A macro photograph of fresh, vibrant strawberries arranged in a boutique wicker basket. The lighting is soft and natural, coming from the side to highlight the dewy texture and seeds of the fruit. The color palette is dominated by rich ruby reds and lush emerald greens, set against a warm, light beige background in a modern minimalist style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG7ygxhOEXmn4FKwoeLYEo8B_37BbXoTenhnApv_p5QeYkP9EcKqRj_zkuc19c6KjRAo7Bwo-UjC5czDaQzHIIsoUhRwwXZAbL_sybpdW2LE8d5lZWl2H85M4y-yAwgDiNRQhKUY34K2SEVIfz73VWEoEXajXzz3MZ6dmSq55vf08JUurloFl-nG1XbJrtLvJi54GRc8pRuO76HGNVbkWi4VHFYV9j1KDNyf-twfD0GF5AhjrSupqmoCRIlwHeMOYop4uhjIk6SwAP"/>
+</div>
+<div class="p-md space-y-xs">
+<h4 class="font-h3 text-body-md text-on-surface truncate">丹东红颜草莓 500g</h4>
+<div class="flex items-baseline space-x-xs">
+<span class="font-price-display text-primary text-h3">¥39.9</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant line-through">¥58</span>
+</div>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent hover:border-primary/20 transition-all">
+<div class="aspect-square relative overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up of premium organic avocados sliced open to reveal perfectly creamy green flesh. The scene is lit with bright, high-key studio lighting that creates a clean and fresh aesthetic. The composition is artistic and minimalist, emphasizing the healthy and natural qualities of the produce with a palette of deep greens and creamy yellows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCo7PvKSJQt4yE_N0OBoEzTbJNsU1KiCSgeXkkjsUw63N46kgS8O1nXB-C_OsLqP1_5KnKbfiLZOrhQM5GEfBa6UJLVVTtLP3dRRd3KjSDdwzTO7SKeO9pJuesWCGKgC8DZQK8Wm3f5F4JBrdeMsRI_9i-2efGKDi_i-nkYDzSzFzuYZlRw3MJjzjrQTASpHO1Qgx1xIoJTOquhqSIMmklwWUSVl1K5lEdFxKs0I8TmeXIib_s95cvtYu-Rql-ny6kSGTwGIEto200p"/>
+</div>
+<div class="p-md space-y-xs">
+<h4 class="font-h3 text-body-md text-on-surface truncate">智利进口牛油果 4个</h4>
+<div class="flex items-baseline space-x-xs">
+<span class="font-price-display text-primary text-h3">¥29.9</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<hr class="border-surface-container-highest"/>
+<!-- Section 2: Payment Failure State (for demonstration) -->
+<section class="bg-surface-container-lowest rounded-xl p-xl text-center error-glow border border-error/5">
+<div class="flex flex-col items-center space-y-md">
+<div class="w-16 h-16 bg-error-container/10 rounded-full flex items-center justify-center mb-sm">
+<span class="material-symbols-outlined text-[48px] text-error" style="font-variation-settings: 'FILL' 1;">error</span>
+</div>
+<h2 class="font-h1 text-h1 text-on-surface">支付失败</h2>
+<div class="bg-error-container/20 px-md py-sm rounded-lg">
+<p class="font-body-md text-body-md text-error">原因：账户余额不足或支付平台响应超时</p>
+</div>
+</div>
+<div class="mt-xl flex flex-col space-y-md">
+<button class="w-full h-12 bg-primary text-on-primary font-h3 text-h3 rounded-full hover:opacity-90 active:scale-[0.98] transition-all">重新支付</button>
+<button class="w-full h-12 border border-outline text-on-surface-variant font-h3 text-h3 rounded-full hover:bg-surface-container-low transition-colors">返回购物车</button>
+</div>
+</section>
+</main>
+<!-- Bottom NavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-2xl border-t border-gray-100 dark:border-zinc-900 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
+<div class="flex justify-around items-center h-16 pb-safe w-full max-w-md mx-auto">
+<a class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 tap-highlight-transparent active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium">首页</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 tap-highlight-transparent active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium">分类</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 tap-highlight-transparent active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium">购物车</span>
+</a>
+<a class="flex flex-col items-center justify-center text-green-700 dark:text-green-400 scale-105 transition-transform tap-highlight-transparent active:scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium">订单</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 tap-highlight-transparent active:scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium">我的</span>
+</a>
+</div>
+</nav>
+</body></html>

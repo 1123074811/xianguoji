@@ -1,0 +1,29 @@
+@import "./iconfont.scss";
+
+page {
+  background-color: $color-bg-page;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica,
+    Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei',
+    sans-serif;
+  font-size: $font-base;
+  color: $color-text-primary;
+  line-height: 1.5;
+}
+
+view, text, scroll-view, swiper, button, input, textarea, label, navigator, image {
+  box-sizing: border-box;
+}
+
+.card {
+  background-color: $color-bg-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-card;
+  padding: $space-3;
+  margin-bottom: $space-3;
+}
+
+.btn-active {
+  opacity: 0.7;
+  transform: scale(0.97);
+  transition: all 0.1s ease;
+}

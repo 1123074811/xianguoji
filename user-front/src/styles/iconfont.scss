@@ -1,0 +1,34 @@
+/* 模拟 iconfont 样式，实际项目中应替换为真实的 iconfont 链接 */
+@font-face {
+  font-family: "iconfont";
+  src: url('//at.alicdn.com/t/font_placeholder.woff2') format('woff2');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 32rpx;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 预设一些图标名 */
+.icon-eco::before { content: "\e601"; }
+.icon-shipping::before { content: "\e602"; }
+.icon-search::before { content: "\e603"; }
+.icon-chat::before { content: "\e604"; }
+.icon-add::before { content: "\e605"; }
+.icon-remove::before { content: "\e606"; }
+.icon-check::before { content: "\e607"; }
+.icon-home::before { content: "\e608"; }
+.icon-category::before { content: "\e609"; }
+.icon-cart::before { content: "\e60a"; }
+.icon-order::before { content: "\e60b"; }
+.icon-user::before { content: "\e60c"; }
+.icon-settings::before { content: "\e60d"; }
+.icon-arrow-back::before { content: "\e60e"; }
+.icon-share::before { content: "\e60f"; }
+.icon-star::before { content: "\e610"; }
+.icon-location::before { content: "\e611"; }
+.icon-edit::before { content: "\e612"; }
+.icon-chevron-right::before { content: "\e613"; }

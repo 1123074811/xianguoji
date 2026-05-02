@@ -1,0 +1,197 @@
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^wd-(.*)": "wot-design-uni/components/wd-$1/wd-$1.vue"
+    }
+  },
+  "pages": [
+    {
+      "path": "pages/splash/splash",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "鲜果记"
+      }
+    },
+    {
+      "path": "pages/category/category",
+      "style": {
+        "navigationBarTitleText": "全部分类"
+      }
+    },
+    {
+      "path": "pages/cart/cart",
+      "style": {
+        "navigationBarTitleText": "购物车"
+      }
+    },
+    {
+      "path": "pages/order/order",
+      "style": {
+        "navigationBarTitleText": "我的订单"
+      }
+    },
+    {
+      "path": "pages/profile/profile",
+      "style": {
+        "navigationBarTitleText": "个人中心"
+      }
+    }
+  ],
+  "subPackages": [
+    {
+      "root": "pagesA",
+      "pages": [
+        {
+          "path": "goods-detail/index",
+          "style": {
+            "navigationBarTitleText": "商品详情"
+          }
+        },
+        {
+          "path": "search/index",
+          "style": {
+            "navigationBarTitleText": "搜索"
+          }
+        },
+        {
+          "path": "search-result/index",
+          "style": {
+            "navigationBarTitleText": "搜索结果"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pagesB",
+      "pages": [
+        {
+          "path": "checkout/index",
+          "style": {
+            "navigationBarTitleText": "确认订单"
+          }
+        },
+        {
+          "path": "payment-result/index",
+          "style": {
+            "navigationBarTitleText": "支付结果"
+          }
+        },
+        {
+          "path": "order-detail/index",
+          "style": {
+            "navigationBarTitleText": "订单详情"
+          }
+        },
+        {
+          "path": "evaluation/index",
+          "style": {
+            "navigationBarTitleText": "发表评价"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pagesC",
+      "pages": [
+        {
+          "path": "group-buy/index",
+          "style": {
+            "navigationBarTitleText": "拼团专区"
+          }
+        },
+        {
+          "path": "coupons/index",
+          "style": {
+            "navigationBarTitleText": "领券中心"
+          }
+        },
+        {
+          "path": "address/index",
+          "style": {
+            "navigationBarTitleText": "收货地址"
+          }
+        },
+        {
+          "path": "pickup-point/index",
+          "style": {
+            "navigationBarTitleText": "自提点"
+          }
+        },
+        {
+          "path": "message/index",
+          "style": {
+            "navigationBarTitleText": "消息中心"
+          }
+        },
+        {
+          "path": "favorite/index",
+          "style": {
+            "navigationBarTitleText": "我的收藏"
+          }
+        },
+        {
+          "path": "footprint/index",
+          "style": {
+            "navigationBarTitleText": "我的足迹"
+          }
+        }
+      ]
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "鲜果记",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#FAFAFA"
+  },
+  "tabBar": {
+    "color": "#757575",
+    "selectedColor": "#2E7D32",
+    "borderStyle": "black",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/category/category",
+        "text": "分类",
+        "iconPath": "static/tabbar/category.png",
+        "selectedIconPath": "static/tabbar/category-active.png"
+      },
+      {
+        "pagePath": "pages/cart/cart",
+        "text": "购物车",
+        "iconPath": "static/tabbar/cart.png",
+        "selectedIconPath": "static/tabbar/cart-active.png"
+      },
+      {
+        "pagePath": "pages/order/order",
+        "text": "订单",
+        "iconPath": "static/tabbar/order.png",
+        "selectedIconPath": "static/tabbar/order-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "static/tabbar/user.png",
+        "selectedIconPath": "static/tabbar/user-active.png"
+      }
+    ]
+  }
+}

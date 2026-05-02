@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;family=PingFang+SC:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "on-background": "#1b1c1c",
+                    "surface-container-low": "#f6f3f2",
+                    "surface-container-highest": "#e5e2e1",
+                    "on-primary-container": "#cbffc2",
+                    "on-tertiary-fixed": "#410002",
+                    "inverse-primary": "#88d982",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#b9f474",
+                    "tertiary-container": "#d22a2a",
+                    "background": "#fcf9f8",
+                    "secondary": "#3e6a00",
+                    "primary-fixed": "#a3f69c",
+                    "on-primary-fixed-variant": "#005312",
+                    "surface-container": "#f0eded",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb4ac",
+                    "primary-fixed-dim": "#88d982",
+                    "surface-variant": "#e5e2e1",
+                    "error-container": "#ffdad6",
+                    "inverse-on-surface": "#f3f0ef",
+                    "outline-variant": "#bfcaba",
+                    "surface-bright": "#fcf9f8",
+                    "tertiary": "#ae0714",
+                    "surface-container-high": "#eae7e7",
+                    "on-surface": "#1b1c1c",
+                    "on-tertiary-fixed-variant": "#93000d",
+                    "tertiary-fixed": "#ffdad6",
+                    "inverse-surface": "#303030",
+                    "on-secondary-container": "#437000",
+                    "on-secondary-fixed-variant": "#2e4f00",
+                    "on-error-container": "#93000a",
+                    "surface": "#fcf9f8",
+                    "on-tertiary-container": "#ffeeec",
+                    "on-tertiary": "#ffffff",
+                    "secondary-fixed-dim": "#9ed75b",
+                    "surface-tint": "#1b6d24",
+                    "primary": "#0d631b",
+                    "surface-dim": "#dcd9d9",
+                    "on-primary-fixed": "#002204",
+                    "outline": "#707a6c",
+                    "on-secondary-fixed": "#0f2000",
+                    "secondary-container": "#b9f474",
+                    "on-secondary": "#ffffff",
+                    "on-surface-variant": "#40493d",
+                    "primary-container": "#2e7d32"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "xl": "24px",
+                    "sm": "8px",
+                    "md": "12px",
+                    "section-gap": "24px",
+                    "lg": "16px",
+                    "container-margin": "16px",
+                    "card-gap": "12px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "h3": ["PingFang SC"],
+                    "body-md": ["PingFang SC"],
+                    "label-sm": ["PingFang SC"],
+                    "body-lg": ["PingFang SC"],
+                    "h2": ["PingFang SC"],
+                    "h1": ["PingFang SC"],
+                    "price-display": ["PingFang SC"]
+            },
+            "fontSize": {
+                    "h3": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "price-display": ["20px", {"lineHeight": "20px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body-md text-on-background min-h-screen">
+<!-- Top AppBar -->
+<header class="bg-white dark:bg-zinc-950 fixed top-0 z-50 w-full border-b border-gray-100 dark:border-zinc-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="flex justify-between items-center h-14 px-4 w-full max-w-md mx-auto">
+<button class="active:opacity-70 transition-opacity p-1">
+<span class="material-symbols-outlined text-green-800 dark:text-green-500">menu</span>
+</button>
+<h1 class="font-['Be_Vietnam_Pro'] text-lg font-bold text-green-800 dark:text-green-400 tracking-tight">鲜果记</h1>
+<button class="active:opacity-70 transition-opacity p-1">
+<span class="material-symbols-outlined text-green-800 dark:text-green-500">chat</span>
+</button>
+</div>
+</header>
+<main class="pt-14 pb-32 max-w-md mx-auto px-container-margin">
+<!-- Address Management Section -->
+<section class="mt-section-gap">
+<div class="flex justify-between items-center mb-md">
+<h2 class="font-h2 text-h2 text-on-background">收货地址</h2>
+</div>
+<!-- Address Cards -->
+<div class="space-y-card-gap">
+<!-- Address 1 (Default) -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent hover:border-primary-container transition-all">
+<div class="flex justify-between items-start">
+<div class="space-y-xs">
+<div class="flex items-center gap-sm">
+<span class="font-h3 text-h3">张伟</span>
+<span class="font-body-md text-on-surface-variant">138****5678</span>
+<span class="px-xs py-[1px] bg-primary-container text-on-primary text-[10px] rounded-sm font-medium">默认</span>
+<span class="px-xs py-[1px] bg-secondary-container/20 text-secondary text-[10px] rounded-sm font-medium">家</span>
+</div>
+<p class="font-body-md text-on-surface-variant leading-relaxed">北京市朝阳区三里屯街道幸福二村40号楼 3单元 502室</p>
+</div>
+<button class="p-xs hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined text-outline text-[20px]">edit</span>
+</button>
+</div>
+</div>
+<!-- Address 2 -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent">
+<div class="flex justify-between items-start">
+<div class="space-y-xs">
+<div class="flex items-center gap-sm">
+<span class="font-h3 text-h3">李娜</span>
+<span class="font-body-md text-on-surface-variant">135****1234</span>
+<span class="px-xs py-[1px] bg-secondary-container/20 text-secondary text-[10px] rounded-sm font-medium">公司</span>
+</div>
+<p class="font-body-md text-on-surface-variant leading-relaxed">上海市浦东新区陆家嘴环路1000号 恒生银行大厦 22层</p>
+</div>
+<button class="p-xs hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined text-outline text-[20px]">edit</span>
+</button>
+</div>
+</div>
+</div>
+<!-- New Address Form Preview -->
+<div class="mt-section-gap bg-surface-container-low p-lg rounded-xl border border-dashed border-outline-variant">
+<h3 class="font-h3 text-h3 mb-lg text-primary">新增收货地址</h3>
+<form class="space-y-md">
+<div class="grid grid-cols-2 gap-md">
+<div class="space-y-xs">
+<label class="text-label-sm text-on-surface-variant block ml-xs">联系人</label>
+<input class="w-full bg-white border-outline-variant rounded-lg px-md py-sm focus:ring-primary focus:border-primary" placeholder="收货人姓名" type="text"/>
+</div>
+<div class="space-y-xs">
+<label class="text-label-sm text-on-surface-variant block ml-xs">手机号码</label>
+<input class="w-full bg-white border-outline-variant rounded-lg px-md py-sm focus:ring-primary focus:border-primary" placeholder="11位手机号" type="tel"/>
+</div>
+</div>
+<div class="space-y-xs">
+<label class="text-label-sm text-on-surface-variant block ml-xs">所在地区</label>
+<div class="relative">
+<input class="w-full bg-white border-outline-variant rounded-lg px-md py-sm focus:ring-primary focus:border-primary" placeholder="省市区县、乡镇等" type="text"/>
+<span class="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 text-outline">location_on</span>
+</div>
+</div>
+<div class="space-y-xs">
+<label class="text-label-sm text-on-surface-variant block ml-xs">详细地址</label>
+<textarea class="w-full bg-white border-outline-variant rounded-lg px-md py-sm focus:ring-primary focus:border-primary" placeholder="街道、楼牌号等" rows="2"></textarea>
+</div>
+<div class="flex items-center justify-between py-sm">
+<span class="font-body-md text-on-background">设为默认地址</span>
+<div class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary py-md rounded-full font-semibold shadow-md active:scale-[0.98] transition-transform" type="submit">
+                        保存地址
+                    </button>
+</form>
+</div>
+</section>
+<!-- Pickup Point Management Section -->
+<section class="mt-section-gap">
+<h2 class="font-h2 text-h2 text-on-background mb-md">附近自提点</h2>
+<!-- Map View Placeholder -->
+<div class="relative h-64 w-full rounded-2xl overflow-hidden shadow-sm mb-lg">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist digital map interface displayed on a high-resolution screen. The map features a soft green and light gray color palette with subtle terrain markers and clear street layouts. Stylized green circular icons with fruit basket symbols indicate various pickup locations across a quiet urban neighborhood. The overall aesthetic is calm, professional, and reflects a modern boutique brand identity with soft shadows and high-key lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl0W6Hl3Ehyg2ArjxW0W3BJlIKIS89qDoNIWtuOHIej1uwAtygi-bdX7X1YSmcjwFJO_f_6TvAZ88x7Bp_oMAv0tHA58_zbnG0JZBPAMP9EDCAeCdWy5xXIyM8V6uOvuKGnc3m0SxH5qyaaIy-nSmfX_VkS9gLmlm-hSWaVR7vfgyQg5xBhwo_T2dT46N3M909pNRWh5uZ5H2LI2kuYgyo7yv0GHnqPECUj6LtbQ0G4V3HyGcOinY2wATfzcZFXagfZWcweImRRfYf"/>
+<!-- Marker Overlay Simulation -->
+<div class="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2">
+<div class="bg-primary text-on-primary p-xs rounded-full shadow-lg">
+<span class="material-symbols-outlined text-[20px]">shopping_basket</span>
+</div>
+<div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-primary"></div>
+</div>
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md px-lg py-sm rounded-full shadow-lg border border-white/50">
+<p class="text-label-sm font-semibold text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">near_me</span>
+                        您当前的位置附近有 3 个自提点
+                    </p>
+</div>
+</div>
+<!-- Pickup Points List -->
+<div class="space-y-card-gap">
+<!-- Point 1 -->
+<div class="bg-white p-lg rounded-xl border border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="flex justify-between">
+<div class="space-y-xs">
+<h4 class="font-h3 text-h3">鲜果记 · 朝阳大悦城店</h4>
+<p class="font-body-md text-on-surface-variant">朝阳北路101号朝阳大悦城B1层</p>
+<div class="flex items-center gap-md text-label-sm text-outline">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">schedule</span> 09:00 - 22:00</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">distance</span> 0.8km</span>
+</div>
+</div>
+<button class="bg-primary-container/10 text-primary h-10 w-10 rounded-full flex items-center justify-center active:bg-primary-container/20">
+<span class="material-symbols-outlined">directions_walk</span>
+</button>
+</div>
+</div>
+<!-- Point 2 -->
+<div class="bg-white p-lg rounded-xl border border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="flex justify-between">
+<div class="space-y-xs">
+<h4 class="font-h3 text-h3">鲜果记 · 青年路便利驿站</h4>
+<p class="font-body-md text-on-surface-variant">青年路西里3号院5号楼底商</p>
+<div class="flex items-center gap-md text-label-sm text-outline">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">schedule</span> 08:30 - 21:30</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">distance</span> 1.2km</span>
+</div>
+</div>
+<button class="bg-primary-container/10 text-primary h-10 w-10 rounded-full flex items-center justify-center active:bg-primary-container/20">
+<span class="material-symbols-outlined">directions_walk</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md fixed bottom-0 w-full z-50 rounded-t-2xl border-t border-gray-100 dark:border-zinc-900 shadow-[0_-2px_10px_rgba(0,0,0,0.03)] pb-safe">
+<div class="flex justify-around items-center h-16 w-full max-w-md mx-auto">
+<button class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 tap-highlight-transparent active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium mt-1">首页</span>
+</button>
+<button class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 tap-highlight-transparent active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium mt-1">分类</span>
+</button>
+<button class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 tap-highlight-transparent active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium mt-1">购物车</span>
+</button>
+<button class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 tap-highlight-transparent active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium mt-1">订单</span>
+</button>
+<button class="flex flex-col items-center justify-center text-green-700 dark:text-green-400 scale-105 transition-transform tap-highlight-transparent active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium mt-1">我的</span>
+</button>
+</div>
+</nav>
+<!-- FAB for New Address -->
+<button class="fixed bottom-24 right-6 bg-primary text-on-primary w-14 h-14 rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform z-40">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+</body></html>

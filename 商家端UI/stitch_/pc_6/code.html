@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>鲜果日记 - 商家后台</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#b35200",
+                        "on-primary-fixed": "#002204",
+                        "surface-container-high": "#e9e8e7",
+                        "tertiary-fixed-dim": "#ffb68d",
+                        "on-secondary-fixed": "#031d2f",
+                        "surface": "#fbf9f9",
+                        "on-secondary-fixed-variant": "#32495d",
+                        "surface-container-low": "#f5f3f3",
+                        "outline-variant": "#bfcaba",
+                        "primary-fixed-dim": "#88d982",
+                        "primary": "#0d631b",
+                        "secondary": "#4a6175",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f2f0f0",
+                        "secondary-container": "#cde5fe",
+                        "on-tertiary-fixed-variant": "#763300",
+                        "on-background": "#1b1c1c",
+                        "surface-dim": "#dbdad9",
+                        "on-secondary-container": "#50677b",
+                        "outline": "#707a6c",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#ffdbc9",
+                        "on-surface-variant": "#40493d",
+                        "surface-bright": "#fbf9f9",
+                        "secondary-fixed": "#cde5fe",
+                        "surface-container-highest": "#e3e2e2",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#303031",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "surface-tint": "#1b6d24",
+                        "inverse-primary": "#88d982",
+                        "on-primary-container": "#cbffc2",
+                        "on-primary": "#ffffff",
+                        "background": "#fbf9f9",
+                        "primary-fixed": "#a3f69c",
+                        "on-primary-fixed-variant": "#005312",
+                        "on-tertiary-container": "#ffeee6",
+                        "on-surface": "#1b1c1c",
+                        "tertiary": "#8d3f00",
+                        "surface-container": "#efeded",
+                        "surface-variant": "#e3e2e2",
+                        "primary-container": "#2e7d32",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "stack-xs": "4px",
+                        "unit": "4px",
+                        "table-row-height": "48px",
+                        "container-padding-pc": "24px",
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "container-padding-mobile": "16px",
+                        "stack-lg": "24px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Be Vietnam Pro"],
+                        "body-lg": ["Be Vietnam Pro"],
+                        "h2": ["Be Vietnam Pro"],
+                        "h1": ["Be Vietnam Pro"],
+                        "body-sm": ["Be Vietnam Pro"],
+                        "h3": ["Be Vietnam Pro"],
+                        "body-md": ["Be Vietnam Pro"],
+                        "table-header": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "h2": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "h1": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "table-header": ["13px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-screen w-60 border-r border-slate-200 bg-white flex flex-col overflow-y-auto font-['Be_Vietnam_Pro'] text-sm antialiased z-50">
+<div class="p-6">
+<h1 class="text-lg font-black text-green-800 uppercase tracking-tight">鲜果日记</h1>
+<p class="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">商家后台</p>
+</div>
+<div class="px-4 mb-6">
+<button class="w-full bg-primary-container text-white py-2.5 rounded-lg font-label-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95">
+<span class="material-symbols-outlined text-sm">add</span>
+                新增商品
+            </button>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 border-l-4 border-green-700 bg-green-50 text-green-700 font-bold transition-all duration-150 cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                控制面板
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+                订单管理
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+                商品列表
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+                营销活动
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="rate_review">rate_review</span>
+                评价管理
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                客户中心
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+                配送设置
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                系统设置
+            </a>
+</nav>
+<div class="mt-auto border-t border-slate-200">
+<a class="flex items-center gap-3 px-4 py-4 text-slate-600 hover:bg-slate-50 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                帮助与支持
+            </a>
+<a class="flex items-center gap-3 px-4 py-4 text-error hover:bg-error-container/10 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                退出登录
+            </a>
+</div>
+</aside>
+<!-- TopNavBar Shell -->
+<header class="fixed top-0 right-0 left-60 h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md z-40 flex items-center justify-between px-6 font-['Be_Vietnam_Pro'] text-sm font-medium shadow-sm">
+<div class="flex items-center gap-8">
+<span class="text-base font-bold text-slate-900">鲜果日记</span>
+<div class="relative w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-1.5 bg-slate-100 border-transparent rounded-full text-xs focus:ring-1 focus:ring-primary focus:bg-white transition-all" placeholder="搜索订单、商品..." type="text"/>
+</div>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-green-700 border-b-2 border-green-700 h-16 flex items-center" href="#">首页</a>
+<a class="text-slate-500 hover:text-green-600 transition-colors h-16 flex items-center" href="#">经营分析</a>
+<a class="text-slate-500 hover:text-green-600 transition-colors h-16 flex items-center" href="#">报表导出</a>
+</nav>
+</div>
+<div class="flex items-center gap-5">
+<div class="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-xs font-bold">
+<span class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></span>
+                店铺营业中
+            </div>
+<div class="flex items-center gap-3">
+<button class="text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-slate-200 bg-slate-100">
+<img alt="商家管理员" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOlkXfqlVFMJAQosmp9oYMO6GO6uY9lfN_EQwtktJjFSeIzjM87ryDAFse1uTK4s-_3fvOCZczJHyCI3ZNoZRLtGWcQEujZJROpeU1OkV23vezg_1Sqkg3pbqW1Srr7ETptyvmVlS6H7Ja0Y06JyhyrpfQ0uMno3t9x1ZuP10Zff-OP1lIi0UjoVxUPchM0C7SP315A36VgzOaRawbLt3MQB4nFHlexnpTXQRj3bgZaAqMXWeWOmPjI7fdAle6c2xw9FUHolSNwfTP"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="ml-60 pt-16 min-h-screen bg-surface p-container-padding-pc">
+<!-- Welcome Header -->
+<header class="mb-stack-lg">
+<h2 class="font-h1 text-h1 text-on-surface">早上好，张老板 ☀️</h2>
+<p class="font-body-md text-body-md text-slate-500 mt-1">这是您今天的水果生意经营概况。</p>
+</header>
+<!-- Metric Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-stack-lg">
+<!-- Today's Orders -->
+<div class="bg-white p-stack-md border border-outline-variant rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-stack-sm">
+<span class="font-label-bold text-label-bold text-slate-500 uppercase tracking-wider">今日订单量</span>
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg" data-icon="receipt_long">receipt_long</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-h2 text-h2">142</span>
+<span class="text-green-600 text-xs font-bold">+12%</span>
+</div>
+<p class="text-xs text-slate-400 mt-2">较昨日 (126)</p>
+</div>
+<!-- Today's Turnover -->
+<div class="bg-white p-stack-md border border-outline-variant rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-stack-sm">
+<span class="font-label-bold text-label-bold text-slate-500 uppercase tracking-wider">今日成交额</span>
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg" data-icon="payments">payments</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-h2 text-h2">¥12,840</span>
+<span class="text-green-600 text-xs font-bold">+8.4%</span>
+</div>
+<p class="text-xs text-slate-400 mt-2">平均客单价: ¥90.42</p>
+</div>
+<!-- Pending Orders -->
+<div class="bg-white p-stack-md border border-outline-variant rounded-xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-error/5 -mr-10 -mt-10 rounded-full"></div>
+<div class="flex items-center justify-between mb-stack-sm">
+<span class="font-label-bold text-label-bold text-slate-500 uppercase tracking-wider">待处理订单</span>
+<span class="material-symbols-outlined text-error bg-error/10 p-2 rounded-lg" data-icon="pending_actions">pending_actions</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-h2 text-h2">28</span>
+<span class="px-2 py-0.5 bg-error text-white text-[10px] font-black rounded-full uppercase">加急</span>
+</div>
+<p class="text-xs text-slate-400 mt-2">需在2小时内处理完毕</p>
+</div>
+<!-- New Customers -->
+<div class="bg-white p-stack-md border border-outline-variant rounded-xl shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-stack-sm">
+<span class="font-label-bold text-label-bold text-slate-500 uppercase tracking-wider">新增客户</span>
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg" data-icon="person_add">person_add</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-h2 text-h2">15</span>
+<span class="text-slate-400 text-xs font-bold">今日</span>
+</div>
+<div class="flex -space-x-2 mt-2">
+<img alt="客户" class="w-6 h-6 rounded-full border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBecsrch1Av8ZokS_mWcl639CW6xEYRhkaKwOakdn2EZJpxUNzfy3GpcEq1ZLG7wWPOenhDHGRsuMiXm_bK6BMoRVENC2dbf-ba77KEKLU-2zqSdQuBZ0rhkCr-JI38q715_E9U0CPN-RfU7FVshgsmJG7HLSa5pIF-tJOmn7jWAQk1yY-gUgaT-AxAYW6RFThKXI-nhILbEWBDYPGjCYHh8l7lbSUlBOiZX0gEvBxKkAfxQ7JEXydXzouQLPKy1V-cebBGBlHp3IMb"/>
+<img alt="客户" class="w-6 h-6 rounded-full border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZiDgyxcJmjVv11BfGRTC7nytkEy9Q4aY8TUYHGlPTPC6Y5bWHSKcjl6sQlZxB4FAAZ2F1RmSNxfJ8q4BxSyVp1_-MJFAmZwJRLiF5WhFSlwLBMqqOEsHEzMEnQZ3sPbWMT5qN5OvTSN0WUqVK-ejOF-lvB1KNrTN7aa2dVszFtTI8qYtrFoM14feNJ-d1NsmToI4qsQI4x7MamGepHGMti0AfEiC2ptBDhXR37vxm5TZAkM0QcM5Nb4xUknVZ52yc-FT0JO57oF3I"/>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200 text-[10px] flex items-center justify-center text-slate-600 font-bold">+12</div>
+</div>
+</div>
+</section>
+<!-- Charts & To-Do Section -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-stack-lg">
+<!-- 7-Day Trend Chart Area -->
+<div class="lg:col-span-2 bg-white border border-outline-variant rounded-xl p-stack-md">
+<div class="flex items-center justify-between mb-stack-lg">
+<h3 class="font-h3 text-h3">7日订单趋势</h3>
+<div class="flex gap-2">
+<button class="px-3 py-1 text-xs font-label-bold border border-slate-200 rounded-lg hover:bg-slate-50">过去7天</button>
+<button class="px-3 py-1 text-xs font-label-bold text-slate-400 hover:text-slate-600">过去30天</button>
+</div>
+</div>
+<!-- Simulated Line Chart -->
+<div class="h-64 flex items-end justify-between gap-2 px-2 pb-6 border-b border-slate-100">
+<div class="flex-1 bg-primary/20 rounded-t h-[40%] relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">98</div>
+</div>
+<div class="flex-1 bg-primary/30 rounded-t h-[55%] relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">112</div>
+</div>
+<div class="flex-1 bg-primary/40 rounded-t h-[45%] relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">105</div>
+</div>
+<div class="flex-1 bg-primary/50 rounded-t h-[70%] relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">138</div>
+</div>
+<div class="flex-1 bg-primary/60 rounded-t h-[65%] relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">126</div>
+</div>
+<div class="flex-1 bg-primary/80 rounded-t h-[85%] relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">152</div>
+</div>
+<div class="flex-1 bg-primary rounded-t h-[75%] relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">142</div>
+</div>
+</div>
+<div class="flex justify-between mt-2 px-2">
+<span class="text-[10px] text-slate-400 font-bold">周一</span>
+<span class="text-[10px] text-slate-400 font-bold">周二</span>
+<span class="text-[10px] text-slate-400 font-bold">周三</span>
+<span class="text-[10px] text-slate-400 font-bold">周四</span>
+<span class="text-[10px] text-slate-400 font-bold">周五</span>
+<span class="text-[10px] text-slate-400 font-bold">周六</span>
+<span class="text-[10px] text-slate-400 font-bold">周日</span>
+</div>
+</div>
+<!-- To-Do List Card -->
+<div class="bg-white border border-outline-variant rounded-xl p-stack-md flex flex-col">
+<div class="flex items-center justify-between mb-stack-md">
+<h3 class="font-h3 text-h3">待办事项</h3>
+<span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded">4 个任务</span>
+</div>
+<div class="space-y-3 flex-1 overflow-y-auto no-scrollbar">
+<!-- Item 1 -->
+<div class="group flex items-start gap-3 p-3 bg-slate-50 hover:bg-green-50 rounded-lg border border-transparent hover:border-green-100 transition-all cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-error/10 text-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">schedule</span>
+</div>
+<div>
+<p class="font-label-bold text-slate-800">28 个待处理订单</p>
+<p class="text-[10px] text-slate-500">等待时长已超过1小时</p>
+</div>
+<span class="material-symbols-outlined text-slate-300 group-hover:text-primary ml-auto">chevron_right</span>
+</div>
+<!-- Item 2 -->
+<div class="group flex items-start gap-3 p-3 bg-slate-50 hover:bg-green-50 rounded-lg border border-transparent hover:border-green-100 transition-all cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">inventory</span>
+</div>
+<div>
+<p class="font-label-bold text-slate-800">库存预警</p>
+<p class="text-[10px] text-slate-500">泰国金枕榴莲库存不足 (仅剩3件)</p>
+</div>
+<span class="material-symbols-outlined text-slate-300 group-hover:text-primary ml-auto">chevron_right</span>
+</div>
+<!-- Item 3 -->
+<div class="group flex items-start gap-3 p-3 bg-slate-50 hover:bg-green-50 rounded-lg border border-transparent hover:border-green-100 transition-all cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">star</span>
+</div>
+<div>
+<p class="font-label-bold text-slate-800">新评价提醒</p>
+<p class="text-[10px] text-slate-500">有5条未读客户评价</p>
+</div>
+<span class="material-symbols-outlined text-slate-300 group-hover:text-primary ml-auto">chevron_right</span>
+</div>
+<!-- Item 4 -->
+<div class="group flex items-start gap-3 p-3 bg-slate-50 hover:bg-green-50 rounded-lg border border-transparent hover:border-green-100 transition-all cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">undo</span>
+</div>
+<div>
+<p class="font-label-bold text-slate-800">退款申请</p>
+<p class="text-[10px] text-slate-500">2个退款请求待审核</p>
+</div>
+<span class="material-symbols-outlined text-slate-300 group-hover:text-primary ml-auto">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Grid: Best Sellers & Distribution -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Best Selling Products Table -->
+<div class="lg:col-span-2 bg-white border border-outline-variant rounded-xl overflow-hidden">
+<div class="p-stack-md border-b border-slate-100 flex items-center justify-between">
+<h3 class="font-h3 text-h3">热销商品排行榜 Top 10</h3>
+<button class="text-xs font-label-bold text-primary flex items-center gap-1">
+                        查看全部 <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-slate-50">
+<tr class="h-10">
+<th class="px-6 font-table-header text-table-header text-slate-500">排名</th>
+<th class="px-6 font-table-header text-table-header text-slate-500">商品名称</th>
+<th class="px-6 font-table-header text-table-header text-slate-500 text-right">销量</th>
+<th class="px-6 font-table-header text-table-header text-slate-500 text-right">成交额</th>
+<th class="px-6 font-table-header text-table-header text-slate-500 text-right">趋势</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<tr class="h-[48px] hover:bg-slate-50 transition-colors group">
+<td class="px-6 text-sm font-black text-slate-400">#01</td>
+<td class="px-6 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+<img alt="猫山王" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9buUqXT2n1ft-6j08ueBUDCH4gkqVT1giyzOyWR64Z2lW6_fk41RJ8Nyw0YMB7AZp62ImqkgkwU74J2IM97GqtRoUMkbWAo-Mqh15LAznSfsnRGRaawuNMiaSSdQiuUTOCTLWfjBnlhoOXglGqxokvOPM-SDcfW_EzyQu6z9CELFxWcYQU4ewrYp7mbg53mgSS-454WgM5kBoyGxQrYQ8IElRFAj_Z9a6md5o0wsIPQEMUqvCQg5NaQV-2okg1zHE4_fq0f45lKAG"/>
+</div>
+<span class="font-label-bold text-slate-800">猫山王榴莲</span>
+</td>
+<td class="px-6 text-sm text-right font-medium text-slate-700">428 kg</td>
+<td class="px-6 text-sm text-right font-medium text-slate-700">¥42,800</td>
+<td class="px-6 text-right">
+<span class="text-green-600 text-xs flex items-center justify-end gap-1 font-bold">
+<span class="material-symbols-outlined text-sm">trending_up</span> 14%
+                                    </span>
+</td>
+</tr>
+<tr class="h-[48px] hover:bg-slate-50 transition-colors group">
+<td class="px-6 text-sm font-black text-slate-400">#02</td>
+<td class="px-6 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+<img alt="阳光玫瑰" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEytM0k7lbOhyppzmNaa3bY5URxDMtLs1yrMVtnay1fsEAxO_UI8gbAfkInS0zmEbAEI13Hw1z2X6xh8PwE-qulxz1e7b25H72mRTlBb_6bUVpsfklM9FMl7SVGZz8cxkr0LhPIVLvtCVDXPN4bzcz8-9w-nJ32tQs918H8cf2_zrI97OFZhLopdVgCfZvwdsjl4griIT8j8Uw4u_2cLrw1Cw65l_gbNKhM7JgDsY7bGrKV33xOo1UIY3BvTSEwGSukIA8v00eY26P"/>
+</div>
+<span class="font-label-bold text-slate-800">阳光玫瑰葡萄</span>
+</td>
+<td class="px-6 text-sm text-right font-medium text-slate-700">356 kg</td>
+<td class="px-6 text-sm text-right font-medium text-slate-700">¥18,500</td>
+<td class="px-6 text-right">
+<span class="text-green-600 text-xs flex items-center justify-end gap-1 font-bold">
+<span class="material-symbols-outlined text-sm">trending_up</span> 8%
+                                    </span>
+</td>
+</tr>
+<tr class="h-[48px] hover:bg-slate-50 transition-colors group">
+<td class="px-6 text-sm font-black text-slate-400">#03</td>
+<td class="px-6 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+<img alt="凤梨" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3pvCZqmpT6lqUCDmOLR-iqgz50RNBVYHlOFynCFp7E5DyBYiDcKiARTAFwrYwgCCViv3fcknWTcH6xMj350kiP7O-k557Az5Vz6yuhUbN_FfdApdfzZYXCU1My6ImSc3lkChu94o9xeSpItGw83JzrEp1TScoEhoVULmLqGPugEagcdGGBPdNQ-8VvXxIt1V3OKwECdRH5MEFf1-zggmlaFkOpwWq5yotimDRynGIBB26ZlLN-CCWfctp_Nb7sGPCkW129FdpPIUg"/>
+</div>
+<span class="font-label-bold text-slate-800">台南金钻凤梨</span>
+</td>
+<td class="px-6 text-sm text-right font-medium text-slate-700">210 kg</td>
+<td class="px-6 text-sm text-right font-medium text-slate-700">¥7,400</td>
+<td class="px-6 text-right">
+<span class="text-error text-xs flex items-center justify-end gap-1 font-bold">
+<span class="material-symbols-outlined text-sm">trending_down</span> 2%
+                                    </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Order Status Pie Chart Area -->
+<div class="bg-white border border-outline-variant rounded-xl p-stack-md">
+<div class="mb-stack-lg">
+<h3 class="font-h3 text-h3">订单分布</h3>
+<p class="text-xs text-slate-500">实时订单状态追踪</p>
+</div>
+<!-- Simulated Pie Chart -->
+<div class="relative w-48 h-48 mx-auto mb-stack-lg">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#f1f5f9" stroke-width="3"></circle>
+<circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#2e7d32" stroke-dasharray="60 40" stroke-dashoffset="0" stroke-width="3"></circle>
+<circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#ffb68d" stroke-dasharray="20 80" stroke-dashoffset="-60" stroke-width="3"></circle>
+<circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#ba1a1a" stroke-dasharray="20 80" stroke-dashoffset="-80" stroke-width="3"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-2xl font-bold">142</span>
+<span class="text-[10px] text-slate-400 font-bold uppercase">总量</span>
+</div>
+</div>
+<!-- Legend -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<span class="text-xs font-label-bold">已完成</span>
+</div>
+<span class="text-xs font-bold text-slate-600">60%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="text-xs font-label-bold">处理中</span>
+</div>
+<span class="text-xs font-bold text-slate-600">20%</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+<span class="text-xs font-label-bold">待处理</span>
+</div>
+<span class="text-xs font-bold text-slate-600">20%</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

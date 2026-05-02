@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>鲜果记 - 产品详情</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "on-background": "#1b1c1c",
+                        "surface-container-low": "#f6f3f2",
+                        "surface-container-highest": "#e5e2e1",
+                        "on-primary-container": "#cbffc2",
+                        "on-tertiary-fixed": "#410002",
+                        "inverse-primary": "#88d982",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#b9f474",
+                        "tertiary-container": "#d22a2a",
+                        "background": "#fcf9f8",
+                        "secondary": "#3e6a00",
+                        "primary-fixed": "#a3f69c",
+                        "on-primary-fixed-variant": "#005312",
+                        "surface-container": "#f0eded",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb4ac",
+                        "primary-fixed-dim": "#88d982",
+                        "surface-variant": "#e5e2e1",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f3f0ef",
+                        "outline-variant": "#bfcaba",
+                        "surface-bright": "#fcf9f8",
+                        "tertiary": "#ae0714",
+                        "surface-container-high": "#eae7e7",
+                        "on-surface": "#1b1c1c",
+                        "on-tertiary-fixed-variant": "#93000d",
+                        "tertiary-fixed": "#ffdad6",
+                        "inverse-surface": "#303030",
+                        "on-secondary-container": "#437000",
+                        "on-secondary-fixed-variant": "#2e4f00",
+                        "on-error-container": "#93000a",
+                        "surface": "#fcf9f8",
+                        "on-tertiary-container": "#ffeeec",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#9ed75b",
+                        "surface-tint": "#1b6d24",
+                        "primary": "#0d631b",
+                        "surface-dim": "#dcd9d9",
+                        "on-primary-fixed": "#002204",
+                        "outline": "#707a6c",
+                        "on-secondary-fixed": "#0f2000",
+                        "secondary-container": "#b9f474",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#40493d",
+                        "primary-container": "#2e7d32"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "xl": "24px",
+                        "sm": "8px",
+                        "md": "12px",
+                        "section-gap": "24px",
+                        "lg": "16px",
+                        "container-margin": "16px",
+                        "card-gap": "12px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "h3": ["PingFang SC"],
+                        "body-md": ["PingFang SC"],
+                        "label-sm": ["PingFang SC"],
+                        "body-lg": ["PingFang SC"],
+                        "h2": ["PingFang SC"],
+                        "h1": ["PingFang SC"],
+                        "price-display": ["PingFang SC"]
+                    },
+                    "fontSize": {
+                        "h3": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "price-display": ["20px", {"lineHeight": "20px", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #fcf9f8;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-surface">
+<!-- Top Navigation -->
+<header class="bg-white sticky top-0 z-50 border-b border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] h-14 w-full max-w-md mx-auto flex justify-between items-center px-4">
+<button class="w-10 h-10 flex items-center justify-center hover:bg-zinc-50 rounded-full transition-colors active:opacity-70">
+<span class="material-symbols-outlined text-green-800">arrow_back</span>
+</button>
+<h1 class="font-['Be_Vietnam_Pro'] text-lg font-bold text-green-800 tracking-tight">鲜果记</h1>
+<div class="flex gap-2">
+<button class="w-10 h-10 flex items-center justify-center hover:bg-zinc-50 rounded-full transition-colors active:opacity-70">
+<span class="material-symbols-outlined text-green-800">share</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center hover:bg-zinc-50 rounded-full transition-colors active:opacity-70">
+<span class="material-symbols-outlined text-green-800">chat</span>
+</button>
+</div>
+</header>
+<main class="max-w-md mx-auto pb-24">
+<!-- 4:3 Image Carousel Area -->
+<section class="relative aspect-[4/3] bg-white overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A macro close-up of vibrant, sun-drenched Shine Muscat grapes sitting in a handmade artisanal ceramic bowl. The lighting is soft and natural, emphasizing the translucent green skin of the fruit and the morning dew droplets clinging to the surface. The background is a minimalist, light-filled boutique farm kitchen with warm wood textures and clean white surfaces, creating a premium, curated orchard atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtUVEX3Eq4XJy0C1H2FZvmGk24LJysoweI9CMbGhWFTQmwB-x1iVRn9He91cCbiH6Uv8sJluBkMGKGz0wy_y1gqAZQjy-SPkNji-aY5n8ZUs0O-C1Ur6Kz36VV4K7hLbY8Mks4laeBUIa8crSk17xVmjAeYmfaJciHOvTj4Q-RbUDg9Ef7AlhzdlBQ6jbzXyypRRSSUACMzabCQPflu0qthkKnA5x8yUN2tSJ2b23TkncVr8yjgUNv9j8-4YsI56ZUzcYI_mEQ2_CU"/>
+<div class="absolute bottom-4 right-4 bg-black/30 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
+                1/5
+            </div>
+</section>
+<!-- Price Area with Tabs -->
+<section class="bg-white p-lg mb-base shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="flex border-b border-gray-100 mb-md">
+<button class="flex-1 pb-md text-center border-b-2 border-primary text-primary font-h3 transition-all">单独购买</button>
+<button class="flex-1 pb-md text-center text-on-surface-variant font-h3 opacity-50 transition-all">发起拼团</button>
+</div>
+<div class="flex items-end justify-between">
+<div class="flex items-baseline gap-2">
+<span class="text-primary font-price-display text-[28px]">¥59.00</span>
+<span class="text-on-surface-variant line-through text-sm">¥78.00</span>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-xs font-semibold tracking-wide">立省 ¥19</span>
+</div>
+<div class="text-on-surface-variant text-xs">月销 2.4k+</div>
+</div>
+</section>
+<!-- Product Title & Selling Point -->
+<section class="bg-white px-lg pb-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<h2 class="font-h1 text-h1 text-on-background mb-xs">云南阳光玫瑰青提 (Shine Muscat)</h2>
+<p class="font-body-md text-secondary text-sm">出口级品质 · 颗颗爆汁 · 浓郁玫瑰芬芳 · 产地直达</p>
+</section>
+<!-- Specs Selection -->
+<section class="bg-white p-lg mt-md shadow-[0_2px_8px_rgba(0,0,0,0.04)] space-y-md">
+<h3 class="font-h3 text-h3">规格选择</h3>
+<div class="flex flex-wrap gap-md">
+<button class="px-lg py-2 border-2 border-primary bg-primary/5 text-primary rounded-xl font-medium text-sm transition-all">500g 精装</button>
+<button class="px-lg py-2 border border-gray-200 text-on-surface-variant rounded-xl font-medium text-sm hover:border-primary transition-all">1kg 家庭装</button>
+<button class="px-lg py-2 border border-gray-200 text-on-surface-variant rounded-xl font-medium text-sm hover:border-primary transition-all">2kg 礼盒装</button>
+</div>
+</section>
+<!-- Discount Bar -->
+<section class="mx-lg my-section-gap">
+<div class="bg-secondary-container/30 border border-secondary-container p-md rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-lg">celebration</span>
+<span class="text-secondary font-medium text-sm">满39减5，再买¥12即可享受</span>
+</div>
+<button class="text-secondary font-bold text-sm flex items-center">
+                    去凑单 <span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- Delivery Info -->
+<section class="bg-white p-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] space-y-md">
+<div class="flex items-start gap-md">
+<span class="material-symbols-outlined text-primary mt-0.5">local_shipping</span>
+<div>
+<p class="font-h3 text-base">次日送达</p>
+<p class="font-body-md text-on-surface-variant text-xs">16:00前下单预计明日上午送达</p>
+</div>
+</div>
+<div class="flex items-start gap-md">
+<span class="material-symbols-outlined text-primary mt-0.5">storefront</span>
+<div>
+<p class="font-h3 text-base">支持自提</p>
+<p class="font-body-md text-on-surface-variant text-xs">可在鲜果记线下果园直营店取货</p>
+</div>
+</div>
+</section>
+<!-- User Reviews -->
+<section class="p-lg space-y-md">
+<div class="flex items-center justify-between">
+<h3 class="font-h2 text-h2">用户评价 (128)</h3>
+<div class="flex items-center gap-1 text-primary">
+<span class="font-bold">4.8</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs text-on-surface-variant ml-2">满意度 99%</span>
+</div>
+</div>
+<div class="space-y-card-gap">
+<!-- Review 1 -->
+<div class="bg-white p-md rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between mb-sm">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center font-bold text-primary">李</div>
+<span class="font-h3 text-sm">李女士</span>
+</div>
+<span class="text-on-surface-variant text-[10px]">昨天</span>
+</div>
+<p class="text-sm line-clamp-2">葡萄非常新鲜，果肉结实脆甜，真的有股玫瑰的清香，送过来的时候冰袋还没化。</p>
+</div>
+<!-- Review 2 -->
+<div class="bg-white p-md rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between mb-sm">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center font-bold text-primary">王</div>
+<span class="font-h3 text-sm">王先生</span>
+</div>
+<span class="text-on-surface-variant text-[10px]">3天前</span>
+</div>
+<p class="text-sm line-clamp-2">产地直发就是不一样，比超市便宜而且口感更好。包装很精致，适合送人。</p>
+</div>
+</div>
+</section>
+<!-- Rich Text Details -->
+<section class="mt-section-gap">
+<div class="px-lg mb-md">
+<h3 class="font-h2 text-h2 border-l-4 border-primary pl-3">产品详情</h3>
+</div>
+<div class="space-y-4">
+<div class="bg-white p-lg">
+<p class="font-body-lg mb-lg leading-relaxed">
+                        源自云南高原阳光产区，昼夜温差带来的极致糖分积累。每一颗阳光玫瑰都经过严格筛选，确保甜度在18度以上。
+                    </p>
+<img class="w-full rounded-2xl mb-md" data-alt="An artistic high-definition photograph of fresh grapes being harvested by hand in a lush, green orchard at sunrise. The golden light filter through the leaves, creating a warm, ethereal atmosphere. The shot captures the tactile detail of the wooden harvest crate and the vibrant green leaves of the vines. The style is premium farm-to-table, emphasizing purity and artisan care." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkBWYSpX_ol615eyAM4CuGoq3IfIDMw8YmgytI-xitdmpE8sUl0XU-w5QhY-POoNorlm6E2zgsLzae-0WP8uREGqBPKr0czLuVwJx5IwSQ2lnf-4JBnfvXtasnIz9MABmWFNNDp7njI04LOvwlWD2lsfdFYtT7qqp34v43lCSKD7s1_dtt8sM5lKcHRIpX5yN1eafui882xCMioYuAl_YkMqapmPPA-Z-CWE2P2HTooX4jM7UMN1WMPpxudacK280dTtI6fCxWbAEO"/>
+</div>
+<div class="grid grid-cols-2 gap-sm px-md">
+<div class="aspect-square rounded-2xl overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Detailed close-up of fresh green grapes on a white marble countertop. The lighting is crisp and bright, showing the natural bloom on the fruit's skin. A minimalist aesthetic with a clean, sophisticated vibe consistent with a high-end fruit boutique." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjprZZ28g6lw9VBwb13loy-e4NEXMdkzU-erQvsMGvstG3DNKwIQskWqQnQ6rcLL8caM0RPBNx1PukFRgvbCkOUkE0l81Kz2gugR33E0aUEPXZzYdpxxHbGalJxCwjvYiM3ju7Pbx0JDpFKfGhI-8sgOVEQWSuMYJtRyEWrsWhYqEWQPVLkbCUmC5DUlzr2MxhIqv8yu9LgmEDt5Yc-llyFIB78q-NaCHo0e6QQJggx4Gd2dwvQrUgk4rbjBB9NK0s6g8wYmg65AAl"/>
+</div>
+<div class="aspect-square rounded-2xl overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A beautifully presented gift box containing premium grapes, lined with neutral-toned sustainable packaging material. The setting is a bright, modern interior. The focus is on the premium quality and refined presentation of the fruit as a high-end boutique product." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIJ4VMA6tQBmcUXxO5nPHXYrmpWbzv2uvegZRCzBViFH_u2GPg_Y9_FeRq7mMZ0-jBEA4qMj09t-GePqdRrr48i6sz22ZhruiXifOUVfGDqbthyrNZlMU6PBAussH8qkTScQykxpOgV1FncjA62RTa63_V2VWPLMebJ5D8U6Lq9sN1xUK_5OVnmYsFeMWiv-h_d1Gd84g3tdIcs56GmJRtpDrEzECN5EvnC2Y3LapodK_TsWPsOxPhgM5fj78kTEphetsFilVAIkPx"/>
+</div>
+</div>
+<div class="p-lg bg-white">
+<p class="font-body-md text-on-surface-variant italic text-center">
+                        "让每一份来自自然的馈赠，都带有阳光的味道。"
+                    </p>
+</div>
+</div>
+</section>
+</main>
+<!-- Fixed Bottom Action Bar -->
+<footer class="fixed bottom-0 left-0 right-0 z-[60] bg-white/95 backdrop-blur-md border-t border-gray-100 max-w-md mx-auto px-lg h-20 flex items-center gap-lg shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
+<div class="flex gap-lg">
+<div class="flex flex-col items-center gap-0.5 cursor-pointer active:opacity-60 transition-opacity">
+<span class="material-symbols-outlined text-on-surface-variant">support_agent</span>
+<span class="text-[10px] text-on-surface-variant">客服</span>
+</div>
+<div class="flex flex-col items-center gap-0.5 cursor-pointer active:opacity-60 transition-opacity relative">
+<span class="material-symbols-outlined text-on-surface-variant">shopping_cart</span>
+<span class="text-[10px] text-on-surface-variant">购物车</span>
+<span class="absolute -top-1 -right-1 bg-tertiary text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center">2</span>
+</div>
+</div>
+<div class="flex-1 flex gap-md">
+<button class="flex-1 h-12 rounded-full border-2 border-primary text-primary font-bold text-sm active:scale-95 transition-transform">
+                加入购物车
+            </button>
+<button class="flex-1 h-12 rounded-full bg-primary text-white font-bold text-sm shadow-md active:scale-95 transition-transform">
+                立即购买
+            </button>
+</div>
+</footer>
+</body></html>

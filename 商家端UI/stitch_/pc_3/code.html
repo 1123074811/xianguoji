@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-Hans"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#b35200",
+                    "on-primary-fixed": "#002204",
+                    "surface-container-high": "#e9e8e7",
+                    "tertiary-fixed-dim": "#ffb68d",
+                    "on-secondary-fixed": "#031d2f",
+                    "surface": "#fbf9f9",
+                    "on-secondary-fixed-variant": "#32495d",
+                    "surface-container-low": "#f5f3f3",
+                    "outline-variant": "#bfcaba",
+                    "primary-fixed-dim": "#88d982",
+                    "primary": "#0d631b",
+                    "secondary-fixed-dim": "#b1c9e1",
+                    "on-tertiary-fixed": "#321200",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f2f0f0",
+                    "secondary-container": "#cde5fe",
+                    "on-tertiary-fixed-variant": "#763300",
+                    "on-background": "#1b1c1c",
+                    "surface-dim": "#dbdad9",
+                    "on-secondary-container": "#50677b",
+                    "outline": "#707a6c",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed": "#ffdbc9",
+                    "on-surface-variant": "#40493d",
+                    "surface-bright": "#fbf9f9",
+                    "secondary-fixed": "#cde5fe",
+                    "surface-container-highest": "#e3e2e2",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#303031",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-error": "#ffffff",
+                    "surface-tint": "#1b6d24",
+                    "inverse-primary": "#88d982",
+                    "on-primary-container": "#cbffc2",
+                    "on-primary": "#ffffff",
+                    "background": "#fbf9f9",
+                    "primary-fixed": "#a3f69c",
+                    "on-primary-fixed-variant": "#005312",
+                    "secondary": "#4a6175",
+                    "on-tertiary-container": "#ffeee6",
+                    "on-surface": "#1b1c1c",
+                    "tertiary": "#8d3f00",
+                    "surface-container": "#efeded",
+                    "surface-variant": "#e3e2e2",
+                    "primary-container": "#2e7d32",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-sm": "8px",
+                    "stack-xs": "4px",
+                    "unit": "4px",
+                    "table-row-height": "48px",
+                    "container-padding-pc": "24px",
+                    "stack-md": "16px",
+                    "gutter": "16px",
+                    "container-padding-mobile": "16px",
+                    "stack-lg": "24px"
+            },
+            "fontFamily": {
+                    "label-bold": ["Be Vietnam Pro"],
+                    "body-lg": ["Be Vietnam Pro"],
+                    "h2": ["Be Vietnam Pro"],
+                    "h1": ["Be Vietnam Pro"],
+                    "body-sm": ["Be Vietnam Pro"],
+                    "h3": ["Be Vietnam Pro"],
+                    "body-md": ["Be Vietnam Pro"],
+                    "table-header": ["Be Vietnam Pro"]
+            },
+            "fontSize": {
+                    "label-bold": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "h2": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "h1": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "table-header": ["13px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background font-body-md text-on-surface antialiased">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-screen w-60 border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col h-full overflow-y-auto z-50">
+<div class="p-6">
+<h1 class="text-lg font-black text-green-800 dark:text-green-400 uppercase tracking-tight font-label-bold">水果日记</h1>
+<p class="text-xs text-slate-500 font-body-sm">商户后台</p>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold text-sm">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span> 仪表盘
+            </div>
+<div class="flex items-center gap-3 px-4 py-3 border-l-4 border-green-700 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 font-bold font-label-bold text-sm">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span> 订单管理
+            </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold text-sm">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span> 商品管理
+            </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold text-sm">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span> 营销推广
+            </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold text-sm">
+<span class="material-symbols-outlined" data-icon="rate_review">rate_review</span> 评价管理
+            </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold text-sm">
+<span class="material-symbols-outlined" data-icon="group">group</span> 客户管理
+            </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold text-sm">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span> 配送管理
+            </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all duration-150 cursor-pointer active:scale-95 font-label-bold text-sm">
+<span class="material-symbols-outlined" data-icon="settings">settings</span> 系统设置
+            </div>
+</nav>
+<div class="mt-auto border-t border-slate-200 dark:border-zinc-800 p-4 space-y-1">
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 hover:bg-slate-50 transition-all duration-150 cursor-pointer font-label-bold text-sm">
+<span class="material-symbols-outlined" data-icon="help">help</span> 帮助中心
+            </div>
+<div class="flex items-center gap-3 px-4 py-3 text-error hover:bg-red-50 transition-all duration-150 cursor-pointer font-label-bold text-sm">
+<span class="material-symbols-outlined" data-icon="logout">logout</span> 退出登录
+            </div>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 left-60 h-16 border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md z-40 flex items-center justify-between px-6 shadow-sm">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-slate-100 rounded-lg">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<div>
+<h2 class="text-base font-bold text-slate-900 font-h3 leading-none">订单详情 #ORD-2024-8842</h2>
+<p class="text-xs text-slate-500 font-body-sm mt-1">下单时间：2024年10月24日 10:45 AM</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold font-label-bold">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+                营业中
+            </div>
+<div class="flex items-center gap-4">
+<button class="relative text-slate-500 hover:text-green-700 transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</button>
+<button class="text-slate-500 hover:text-green-700 transition-colors">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200">
+<img alt="商户管理员" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEIlgmNkPsRe5MLIw2OYhfiYsc8mQkrRqMUlfCiIrsyOZTBuRpYLUQGO_ToPF9gko3EwdFeIRxNyb5clWbTSJH49bgi_EVtZIpuPF6dDo_soxUpupec34Lg-fIz7sn0AVkcf47RSbO4lLQ2Q1iKrFFve4eKH_feJ3MbsOuEaQyLAelYok8PIDeadho8A5RKshV3HoDzf5D_N8YULGSokC6S5znRmvQEi6yUiUBkmWgEFpO7eInnlyx4jveWsjywyonk0LNQbf2sGY_"/>
+<span class="text-sm font-medium text-slate-900 font-label-bold">Alex Chen</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-60 pt-16 pb-24 min-h-screen">
+<div class="p-stack-lg max-w-7xl mx-auto space-y-6">
+<!-- Order Progress Tracker -->
+<div class="bg-white border border-outline-variant p-6 rounded-lg">
+<div class="relative flex justify-between items-start">
+<!-- Progress Line -->
+<div class="absolute top-4 left-0 w-full h-[2px] bg-slate-200 -z-0">
+<div class="h-full bg-primary" style="width: 66.66%;"></div>
+</div>
+<!-- Step 1 -->
+<div class="relative z-10 flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center mb-2 shadow-sm">
+<span class="material-symbols-outlined text-base" data-icon="check">check</span>
+</div>
+<span class="text-label-bold font-label-bold text-primary">已下单</span>
+<span class="text-[10px] text-slate-500 font-body-sm">10月24日, 10:45 AM</span>
+</div>
+<!-- Step 2 -->
+<div class="relative z-10 flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center mb-2 shadow-sm">
+<span class="material-symbols-outlined text-base" data-icon="check">check</span>
+</div>
+<span class="text-label-bold font-label-bold text-primary">已确认</span>
+<span class="text-[10px] text-slate-500 font-body-sm">10月24日, 11:02 AM</span>
+</div>
+<!-- Step 3 -->
+<div class="relative z-10 flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center mb-2 shadow-sm animate-pulse">
+<span class="material-symbols-outlined text-base" data-icon="local_shipping">local_shipping</span>
+</div>
+<span class="text-label-bold font-label-bold text-primary">派送中</span>
+<span class="text-[10px] text-slate-500 font-body-sm">预计 2:00 PM</span>
+</div>
+<!-- Step 4 -->
+<div class="relative z-10 flex flex-col items-center text-center">
+<div class="w-8 h-8 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center mb-2 border-2 border-white">
+<span class="material-symbols-outlined text-base" data-icon="inventory">inventory</span>
+</div>
+<span class="text-label-bold font-label-bold text-slate-400">已送达</span>
+<span class="text-[10px] text-slate-400 font-body-sm">待更新</span>
+</div>
+</div>
+</div>
+<!-- Info Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Customer Info -->
+<div class="bg-white border border-outline-variant p-5 rounded-lg flex flex-col">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" data-icon="person">person</span>
+<h3 class="font-label-bold text-label-bold uppercase tracking-wider text-slate-500">客户信息</h3>
+</div>
+<div class="space-y-3">
+<div>
+<p class="text-slate-900 font-bold font-body-lg">Sarah Jenkins</p>
+<p class="text-slate-500 font-body-sm">白金会员 (ID: #SJ-992)</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="p-2 bg-slate-50 rounded text-slate-600">
+<span class="material-symbols-outlined text-lg" data-icon="mail">mail</span>
+</div>
+<span class="text-body-md font-body-md">s.jenkins@example.com</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="p-2 bg-slate-50 rounded text-slate-600">
+<span class="material-symbols-outlined text-lg" data-icon="call">call</span>
+</div>
+<span class="text-body-md font-body-md">+1 (555) 0123-4567</span>
+</div>
+</div>
+</div>
+<!-- Shipping Info -->
+<div class="bg-white border border-outline-variant p-5 rounded-lg flex flex-col">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+<h3 class="font-label-bold text-label-bold uppercase tracking-wider text-slate-500">配送信息</h3>
+</div>
+<div class="space-y-3">
+<div class="flex items-start gap-3">
+<div class="p-2 bg-slate-50 rounded text-slate-600 flex-shrink-0">
+<span class="material-symbols-outlined text-lg" data-icon="home">home</span>
+</div>
+<div>
+<p class="text-body-md font-body-md font-bold">主要居所</p>
+<p class="text-body-sm font-body-sm text-slate-500">742 Evergreen Terrace, Springfield, IL 62704, United States</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="p-2 bg-slate-50 rounded text-slate-600">
+<span class="material-symbols-outlined text-lg" data-icon="local_shipping">local_shipping</span>
+</div>
+<span class="text-body-md font-body-md">联邦快递 (FedEx Express Priority)</span>
+</div>
+</div>
+</div>
+<!-- Order Info -->
+<div class="bg-white border border-outline-variant p-5 rounded-lg flex flex-col">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" data-icon="receipt_long">receipt_long</span>
+<h3 class="font-label-bold text-label-bold uppercase tracking-wider text-slate-500">订单统计</h3>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-3 bg-slate-50 rounded">
+<p class="text-[10px] uppercase font-bold text-slate-500 mb-1">订单状态</p>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[11px] font-bold">处理中</span>
+</div>
+<div class="p-3 bg-slate-50 rounded">
+<p class="text-[10px] uppercase font-bold text-slate-500 mb-1">支付方式</p>
+<span class="text-body-sm font-bold text-slate-900">Visa •••• 4242</span>
+</div>
+<div class="p-3 bg-slate-50 rounded">
+<p class="text-[10px] uppercase font-bold text-slate-500 mb-1">结算货币</p>
+<span class="text-body-sm font-bold text-slate-900">美元 ($)</span>
+</div>
+<div class="p-3 bg-slate-50 rounded">
+<p class="text-[10px] uppercase font-bold text-slate-500 mb-1">商品数量</p>
+<span class="text-body-sm font-bold text-slate-900">共 12 件</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Product List Table -->
+<div class="bg-white border border-outline-variant rounded-lg overflow-hidden">
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-h3 text-h3 text-slate-900">已购商品</h3>
+<div class="text-body-sm font-body-sm text-slate-500">
+                        总重量: <span class="font-bold text-slate-900">4.5 kg</span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 border-b border-outline-variant">
+<th class="px-6 py-4 font-table-header text-table-header text-slate-600 uppercase tracking-wider">商品名称</th>
+<th class="px-6 py-4 font-table-header text-table-header text-slate-600 uppercase tracking-wider">规格说明</th>
+<th class="px-6 py-4 font-table-header text-table-header text-slate-600 uppercase tracking-wider">单价</th>
+<th class="px-6 py-4 font-table-header text-table-header text-slate-600 uppercase tracking-wider">数量</th>
+<th class="px-6 py-4 font-table-header text-table-header text-slate-600 uppercase tracking-wider text-right">小计</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded border border-slate-200 overflow-hidden bg-slate-100 flex-shrink-0">
+<img alt="金菠萝" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8YcMRzJuzMV7bSR67F4YBL2w0w2E2dFnSyJyiLAn0h-rneqVhY5NF24y2xhXVdggq8cHgO9opApe4uyDV6z59F8ITH6h88mlU_eBRgALHBp4CSz-zc88RPETd9NV5g1hAhG3TAi_fNSgBJRkwwaYV0e_YlE1xLxq6lEuvQidELiSeIvLcYCDFPw2gFsRpWPzErO7vVj6N0UcrsWTsCtiOiCUlCcWvRDD6SefNxIETkYXys2I8YWmxL52qbG3ekcl86_WBSJbTwrWq"/>
+</div>
+<div>
+<p class="font-bold text-slate-900 text-body-md">特级金钻菠萝</p>
+<p class="text-xs text-slate-500 font-body-sm">ID: PRD-PA-001</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm text-slate-600">大果 (1.2kg - 1.5kg)</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm text-slate-600">$4.99</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm font-bold text-slate-900">2 件</span>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="text-body-md font-bold text-slate-900">$9.98</span>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded border border-slate-200 overflow-hidden bg-slate-100 flex-shrink-0">
+<img alt="草莓" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQPECac8h9ZbXKMT03cqH4AcaihkFjcK1HlifZlj1pNzoZjwVx1vIKpfpRUOpbRXgkOGw2XTtETShnFOJuDkpHEXo44UrlWsHKKwhoO5sH6WgJzhN4v21_MICqJq2QCIxi9Lf7W1okskqjtm8D5SRPRFYtaCP8isfqJmE0HljYSKgLm35V5SRT7OT2EBmqhU1p0t9GOxgoRP0-epmCi-mvJBtqL4IRBiPxz1jSVeWSA-UcquSQQ60vr5vJgbe9MBn7H74_1GN3r46Y"/>
+</div>
+<div>
+<p class="font-bold text-slate-900 text-body-md">有机高山草莓</p>
+<p class="text-xs text-slate-500 font-body-sm">ID: PRD-SB-008</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm text-slate-600">500g 环保装</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm text-slate-600">$8.50</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm font-bold text-slate-900">3 件</span>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="text-body-md font-bold text-slate-900">$25.50</span>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded border border-slate-200 overflow-hidden bg-slate-100 flex-shrink-0">
+<img alt="橙子" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwPtKATxcvSMRoOOWA5xgjmbYFIiA5P5EjuwOJdYbP1Ae9hpPaeG5vLdQL-1nWA6zCQOpSVtwvfrKA2_bJLmbOobu8u-QYXyrspAjaJYEArluBmSCu9vEqa-7iX0wIKyjb0rXHeHenNJZCi2BumRfigybSP1NGtw03qd4zBX20dpLrxxsuO_-vAa8GiV4GBxruvmko7OjQ5JcnLfJorZ33Fb8ibdWisAuZlulAeDqW2lkNWTCCBtxzx_2SG_xB7tGb09DgNJLw5JdR"/>
+</div>
+<div>
+<p class="font-bold text-slate-900 text-body-md">脐橙 (散装)</p>
+<p class="text-xs text-slate-500 font-body-sm">ID: PRD-OR-012</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm text-slate-600">3kg 家庭装</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm text-slate-600">$12.90</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-body-sm font-bold text-slate-900">1 件</span>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="text-body-md font-bold text-slate-900">$12.90</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Price Breakdown & Summary -->
+<div class="grid grid-cols-1 md:grid-cols-2 p-6 border-t border-outline-variant gap-8 bg-slate-50/50">
+<!-- Operation Log -->
+<div class="space-y-4">
+<h4 class="font-label-bold text-label-bold uppercase text-slate-500 tracking-wider">操作日志</h4>
+<div class="relative space-y-4 before:absolute before:left-2 before:top-2 before:h-[calc(100%-16px)] before:w-[1px] before:bg-slate-200">
+<div class="relative pl-8">
+<div class="absolute left-0 top-1.5 w-4 h-4 rounded-full border-4 border-white bg-green-600 shadow-sm"></div>
+<p class="text-body-sm font-bold text-slate-900">已从 4B 仓库发出</p>
+<p class="text-[10px] text-slate-500">10月24日, 11:45 AM • 系统自动</p>
+</div>
+<div class="relative pl-8">
+<div class="absolute left-0 top-1.5 w-4 h-4 rounded-full border-4 border-white bg-slate-300"></div>
+<p class="text-body-sm text-slate-600 font-medium">商户管理员已确认订单</p>
+<p class="text-[10px] text-slate-500">10月24日, 11:02 AM • 操作人：Alex Chen</p>
+</div>
+<div class="relative pl-8">
+<div class="absolute left-0 top-1.5 w-4 h-4 rounded-full border-4 border-white bg-slate-300"></div>
+<p class="text-body-sm text-slate-600 font-medium">订单已创建并完成支付授权</p>
+<p class="text-[10px] text-slate-500">10月24日, 10:45 AM • 操作人：客户</p>
+</div>
+</div>
+</div>
+<!-- Financial Summary -->
+<div class="space-y-3">
+<div class="flex justify-between items-center text-body-md">
+<span class="text-slate-500">商品小计</span>
+<span class="font-medium text-slate-900">$48.38</span>
+</div>
+<div class="flex justify-between items-center text-body-md">
+<span class="text-slate-500">运费 (特快)</span>
+<span class="font-medium text-slate-900">$12.50</span>
+</div>
+<div class="flex justify-between items-center text-body-md">
+<span class="text-slate-500">预估税费 (8%)</span>
+<span class="font-medium text-slate-900">$4.87</span>
+</div>
+<div class="flex justify-between items-center text-body-md text-primary font-bold">
+<span>促销折扣 (FRESH10)</span>
+<span>-$5.00</span>
+</div>
+<div class="pt-3 border-t border-slate-200 flex justify-between items-end">
+<div>
+<p class="text-xs font-bold text-slate-500 uppercase tracking-tighter">订单总额</p>
+<p class="text-h1 font-h1 text-slate-900">$60.75</p>
+</div>
+<div class="text-right">
+<span class="px-3 py-1 bg-green-700 text-white rounded text-xs font-bold uppercase tracking-widest">已支付</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Action Bar -->
+<footer class="fixed bottom-0 right-0 left-60 h-16 bg-white border-t border-slate-200 dark:border-zinc-800 px-8 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)] z-40">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-4 py-2 border border-error text-error hover:bg-red-50 rounded transition-colors font-label-bold text-sm">
+<span class="material-symbols-outlined text-base" data-icon="undo">undo</span> 订单退款
+            </button>
+<button class="flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded transition-colors font-label-bold text-sm">
+<span class="material-symbols-outlined text-base" data-icon="print">print</span> 打印发票
+            </button>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-primary transition-colors font-label-bold text-sm">
+<span class="material-symbols-outlined text-base" data-icon="chat">chat</span> 联系客户
+            </button>
+<button class="flex items-center gap-2 px-8 py-2 bg-primary text-on-primary hover:bg-primary/90 rounded transition-all shadow-md active:scale-95 font-label-bold text-sm">
+                更新配送状态 <span class="material-symbols-outlined text-base" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</footer>
+</body></html>

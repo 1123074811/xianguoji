@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#b35200",
+                    "on-primary-fixed": "#002204",
+                    "surface-container-high": "#e9e8e7",
+                    "tertiary-fixed-dim": "#ffb68d",
+                    "on-secondary-fixed": "#031d2f",
+                    "surface": "#fbf9f9",
+                    "on-secondary-fixed-variant": "#32495d",
+                    "surface-container-low": "#f5f3f3",
+                    "outline-variant": "#bfcaba",
+                    "primary-fixed-dim": "#88d982",
+                    "primary": "#0d631b",
+                    "secondary-fixed-dim": "#b1c9e1",
+                    "on-tertiary-fixed": "#321200",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f2f0f0",
+                    "secondary-container": "#cde5fe",
+                    "on-tertiary-fixed-variant": "#763300",
+                    "on-background": "#1b1c1c",
+                    "surface-dim": "#dbdad9",
+                    "on-secondary-container": "#50677b",
+                    "outline": "#707a6c",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed": "#ffdbc9",
+                    "on-surface-variant": "#40493d",
+                    "surface-bright": "#fbf9f9",
+                    "secondary-fixed": "#cde5fe",
+                    "surface-container-highest": "#e3e2e2",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#303031",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-error": "#ffffff",
+                    "surface-tint": "#1b6d24",
+                    "inverse-primary": "#88d982",
+                    "on-primary-container": "#cbffc2",
+                    "on-primary": "#ffffff",
+                    "background": "#fbf9f9",
+                    "primary-fixed": "#a3f69c",
+                    "on-primary-fixed-variant": "#005312",
+                    "secondary": "#4a6175",
+                    "on-tertiary-container": "#ffeee6",
+                    "on-surface": "#1b1c1c",
+                    "tertiary": "#8d3f00",
+                    "surface-container": "#efeded",
+                    "surface-variant": "#e3e2e2",
+                    "primary-container": "#2e7d32",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-sm": "8px",
+                    "stack-xs": "4px",
+                    "unit": "4px",
+                    "table-row-height": "48px",
+                    "container-padding-pc": "24px",
+                    "stack-md": "16px",
+                    "gutter": "16px",
+                    "container-padding-mobile": "16px",
+                    "stack-lg": "24px"
+            },
+            "fontFamily": {
+                    "label-bold": ["Be Vietnam Pro"],
+                    "body-lg": ["Be Vietnam Pro"],
+                    "h2": ["Be Vietnam Pro"],
+                    "h1": ["Be Vietnam Pro"],
+                    "body-sm": ["Be Vietnam Pro"],
+                    "h3": ["Be Vietnam Pro"],
+                    "body-md": ["Be Vietnam Pro"],
+                    "table-header": ["Be Vietnam Pro"]
+            },
+            "fontSize": {
+                    "label-bold": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "h2": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "h1": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "table-header": ["13px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #fbf9f9;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-60 border-r border-slate-200 bg-white flex flex-col h-full overflow-y-auto z-50">
+<div class="p-stack-lg border-b border-slate-200">
+<h1 class="text-lg font-black text-green-800 uppercase tracking-tight font-h1">鲜果日记</h1>
+<p class="text-xs text-slate-500 font-body-sm">商家管理后台</p>
+</div>
+<nav class="flex-1 py-stack-md">
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-body-md">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+            控制台
+        </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-body-md">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+            订单管理
+        </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-body-md">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+            商品管理
+        </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-body-md">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+            营销活动
+        </div>
+<div class="flex items-center gap-3 px-4 py-3 border-l-4 border-green-700 bg-green-50 text-green-700 font-bold font-body-md">
+<span class="material-symbols-outlined" data-icon="rate_review" style="font-variation-settings: 'FILL' 1;">rate_review</span>
+            评价管理
+        </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-body-md">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+            客户管理
+        </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-body-md">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+            配送设置
+        </div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-600 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95 font-body-md">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+            系统设置
+        </div>
+</nav>
+<div class="p-stack-md mt-auto border-t border-slate-200">
+<button class="w-full bg-primary-container text-on-primary font-label-bold py-2 px-4 rounded-xl flex items-center justify-center gap-2 mb-stack-md transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+            上架新商品
+        </button>
+<div class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 cursor-pointer font-body-sm">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+            帮助中心
+        </div>
+<div class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 cursor-pointer font-body-sm">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+            退出登录
+        </div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-60 h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 z-40 flex items-center justify-between px-6">
+<div class="flex items-center gap-stack-lg flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" data-icon="search">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-primary text-body-md" placeholder="搜索评价、商品..." type="text"/>
+</div>
+<nav class="flex items-center gap-stack-md">
+<a class="text-slate-500 hover:text-green-600 transition-colors duration-200 font-label-bold" href="#">首页</a>
+<a class="text-slate-500 hover:text-green-600 transition-colors duration-200 font-label-bold" href="#">数据分析</a>
+<a class="text-slate-500 hover:text-green-600 transition-colors duration-200 font-label-bold" href="#">报表</a>
+</nav>
+</div>
+<div class="flex items-center gap-stack-md">
+<div class="flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 rounded-full font-label-bold border border-green-200">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            营业中
+        </div>
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-slate-200 ml-2">
+<img alt="Merchant Admin" class="w-full h-full object-cover" data-alt="A professional portrait of a merchant administrator with a friendly expression, wearing a clean white shirt and dark vest. The background is a brightly lit, modern office with soft-focus greenery, conveying a corporate yet welcoming atmosphere with high-key lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZQD5fF-oC081ZvghMR0HpLc-M7uUbXEwbEq3M5F-VPgLbs4zoMTPZs_L5A_6Ja0-woVFwwaJUeY97Q7GjxXfVnFOIHCIAhrrIw2tAR_W6RBjkU9lVwTPQ-jBaitr-6wuyCk5mOrI5mltLb3fzcOUcYzKfUEDfHC-uXQMjdd-S65gePwvGJfIDe1lzR4V2rRDC36LDve3F4FLq66ZO3xaSl5rYdh4qWSmnwhSg-XbEyew8B3WVe2FH6LClrYCuABCKV7NZsukDbmqY"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-60 pt-16 min-h-screen bg-surface">
+<div class="p-stack-lg max-w-7xl mx-auto">
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-stack-lg">
+<div>
+<h2 class="font-h2 text-on-surface">评价管理</h2>
+<p class="font-body-md text-slate-500">监控并回复客户反馈，提升店铺评分与排名。</p>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 bg-white border border-slate-200 rounded-xl font-label-bold text-slate-600 flex items-center gap-2 hover:bg-slate-50 transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="filter_list">filter_list</span>
+                    高级筛选
+                </button>
+<button class="px-4 py-2 bg-white border border-slate-200 rounded-xl font-label-bold text-slate-600 flex items-center gap-2 hover:bg-slate-50 transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="download">download</span>
+                    导出数据
+                </button>
+</div>
+</div>
+<!-- Statistics Grid (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-stack-lg">
+<div class="bg-white p-stack-md border border-slate-200 rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-stack-xs">
+<span class="text-slate-500 font-label-bold text-xs uppercase">总评价数</span>
+<span class="material-symbols-outlined text-primary" data-icon="forum">forum</span>
+</div>
+<div class="text-2xl font-h2">1,284</div>
+<div class="text-xs text-green-600 flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span>
+                    较上月 +12%
+                </div>
+</div>
+<div class="bg-white p-stack-md border border-slate-200 rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-stack-xs">
+<span class="text-slate-500 font-label-bold text-xs uppercase">平均评分</span>
+<span class="material-symbols-outlined text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<div class="text-2xl font-h2">4.8 / 5.0</div>
+<div class="flex items-center gap-0.5 mt-1">
+<span class="material-symbols-outlined text-xs text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-xs text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<div class="bg-white p-stack-md border border-slate-200 rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-stack-xs">
+<span class="text-slate-500 font-label-bold text-xs uppercase">回复率</span>
+<span class="material-symbols-outlined text-secondary" data-icon="speed">speed</span>
+</div>
+<div class="text-2xl font-h2">96.4%</div>
+<div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
+<div class="bg-primary h-full" style="width: 96.4%"></div>
+</div>
+</div>
+<div class="bg-white p-stack-md border border-slate-200 rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-stack-xs">
+<span class="text-slate-500 font-label-bold text-xs uppercase">待回复评价</span>
+<span class="material-symbols-outlined text-error" data-icon="notification_important">notification_important</span>
+</div>
+<div class="text-2xl font-h2 text-error">28</div>
+<div class="text-xs text-slate-500 mt-1 italic">需在 24 小时内处理</div>
+</div>
+</div>
+<!-- Review Filter Tabs -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+<div class="flex border-b border-slate-200 bg-slate-50/50">
+<button class="px-8 py-4 font-label-bold border-b-2 border-primary text-primary bg-white transition-all">全部评价 (1,284)</button>
+<button class="px-8 py-4 font-label-bold text-slate-500 border-b-2 border-transparent hover:text-slate-800 transition-all">待回复 (28)</button>
+<button class="px-8 py-4 font-label-bold text-slate-500 border-b-2 border-transparent hover:text-slate-800 transition-all">有图评价 (456)</button>
+<button class="px-8 py-4 font-label-bold text-slate-500 border-b-2 border-transparent hover:text-slate-800 transition-all">差评 (12)</button>
+</div>
+<!-- Review Card List -->
+<div class="divide-y divide-slate-100">
+<!-- Review Card 1 (Needs Reply) -->
+<div class="p-stack-lg hover:bg-slate-50/50 transition-colors">
+<div class="flex gap-stack-md">
+<!-- User & Product Info -->
+<div class="w-48 shrink-0">
+<div class="flex items-center gap-2 mb-2">
+<div class="h-8 w-8 rounded-full overflow-hidden border border-slate-100">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A clean, minimalist high-key headshot of a female customer with a gentle smile. She is set against a warm, soft-focus interior background. The lighting is flattering and bright, maintaining a premium light-mode UI aesthetic consistent with a high-end merchant platform's user profiles." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDR6XsUzMnJ3EDXY2lo2t2v4saeH4VEjdYgh-iYU80NeS4KetyDuwv2gmGg6NUxdWU-daWcu9A7jBwc6v7aTfyNuust50_w0j4138prl_QBKsIhyrzx549Nkaoegro4kY0MdBhC6k5ubZTmLlYqDNwsaJSGgVbGpd7v7Ra9nZycKVSEgehvahREF5QBkqV1swv3v95mZuqDNZgvqr7gkyyzrJPKkBqt0ccylmrSRRdRbeJVQRh20-WsiIEx8aA9H2Tqpqz2LIXUBl21"/>
+</div>
+<span class="font-label-bold text-sm">李薇</span>
+</div>
+<div class="bg-slate-100 p-2 rounded-lg flex gap-2 items-center">
+<div class="h-10 w-10 rounded border border-white overflow-hidden shrink-0">
+<img alt="Product Thumb" class="w-full h-full object-cover" data-alt="A crisp, high-resolution product photograph of a whole ripe pineapple sitting on a clean, off-white surface. The lighting is bright and natural, casting soft shadows. The overall mood is fresh and organic, aligned with the Fresh Fruit Diary brand identity, emphasizing the quality of the produce." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmaktyeVYQlKU3zpnp-YQVfdQyB0sLxyDH9phtsKxqSHWbWaKTTiSAZ5_Gw04j1jNbvISn4yxNs-ZE0NYg0ilQLEaqKIm65HFoSBXVEvboaH0uOKSFgEwMlvRsbrl1kco4Q4nnZ3agTfnmnDMRe3XGqRd0kcoQsR3uiTpJ5ZtUndMgT1QVOmYYhSfpigi7DH0zmpuNvuBhHeJ75kZYvq6l2_gMvpuCLe8aW0p492zXoTlaeFddHqiP8LnEfzdyGet5iSM3INlyO9V9"/>
+</div>
+<div class="min-w-0">
+<p class="text-[11px] font-bold truncate">特级金钻凤梨</p>
+<p class="text-[10px] text-slate-500 uppercase">批次 #9921</p>
+</div>
+</div>
+</div>
+<!-- Review Content -->
+<div class="flex-1">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
+<div class="flex">
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="text-xs text-slate-400 font-body-sm">2 小时前</span>
+<span class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-label-bold rounded uppercase">需处理</span>
+</div>
+<div class="flex gap-2">
+<button class="p-1 hover:text-error transition-colors"><span class="material-symbols-outlined text-lg" data-icon="report">report</span></button>
+<button class="p-1 hover:text-secondary transition-colors"><span class="material-symbols-outlined text-lg" data-icon="visibility_off">visibility_off</span></button>
+</div>
+</div>
+<p class="font-body-md text-on-surface mb-stack-md leading-relaxed">
+                                凤梨非常甜，汁水也很足！物流非常快，不到24小时就送到了。包装得很好，没有任何磕碰。一定会回购的。
+                            </p>
+<div class="flex gap-2 mb-stack-lg">
+<div class="h-24 w-24 rounded-lg overflow-hidden border border-slate-100 group cursor-pointer relative">
+<img alt="Review Photo 1" class="w-full h-full object-cover" data-alt="A close-up photograph of sliced pineapple wedges arranged beautifully on a rustic wooden board. The lighting is soft and golden, highlighting the texture and moisture of the fruit. This photo represents high-quality customer content in a merchant review context, looking natural and appetizing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtqAsoqfR8wLDDh4xHbGJ6rLd2c81F6l-d11rthsFlDIo-zi1rcamy9vvd7mGI8LAL7CbnR5jMtLumndkrMFgLK5SU0PRmvQA9sjZFMf9x_bfi0OvSxAntdXMP_i34MaxUKL5e0mGBJvstn-ctIcwJ_0QS3KTmSjUBGk6W-6zZ05X3OKfCu3Gwn4R9VQbkyhL4vTDykelV7TbJktYhCei0FHoFr7gMeler7hgeqRV9nwrH0ebIgpsCkdu6AojkFtJjRoSsesNY8PuQ"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+<span class="material-symbols-outlined text-white opacity-0 group-hover:opacity-100" data-icon="zoom_in">zoom_in</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container p-stack-md rounded-xl">
+<textarea class="w-full bg-white border-slate-200 rounded-lg text-sm p-3 focus:ring-primary focus:border-primary border min-h-[80px] mb-2" placeholder="撰写专业回复..."></textarea>
+<div class="flex justify-end gap-2">
+<button class="px-3 py-1.5 text-xs font-label-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-all">保存草稿</button>
+<button class="px-4 py-1.5 bg-primary-container text-on-primary text-xs font-label-bold rounded-lg hover:shadow-md transition-all">发表回复</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Review Card 2 (Already Replied) -->
+<div class="p-stack-lg hover:bg-slate-50/50 transition-colors opacity-90">
+<div class="flex gap-stack-md">
+<div class="w-48 shrink-0">
+<div class="flex items-center gap-2 mb-2">
+<div class="h-8 w-8 rounded-full overflow-hidden border border-slate-100">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A clean professional headshot of a male customer with a friendly, neutral expression. The background is a minimalist studio setting with high-key lighting that fits perfectly into a modern, light-themed web interface for a fruit delivery service merchant dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC386tuTHA7hz_01GzbqqGKqt25J0Nx1fo2nx655Y0FXDf3c-hF-_gpwcEmgO-IuTXydIYUDjR37aiSG3MmGKDuA5AHdXbi_2ZwhnqwN7Qmk6zfoK81bSD64SAUoIm7VyeZn8Rz4Mgg4nxeuc-En5wfqAgL8O_meQ-oTlx2HQ0yT5dCmyvDvSfV9sP1QG18i5YnOblk-KICLOqHydEuD3KnGrxdq1edAbjyloWaRvG4kWvYO0QaciAhjcC2amHkKxnsizVU4REV5urY"/>
+</div>
+<span class="font-label-bold text-sm">张浩</span>
+</div>
+<div class="bg-slate-100 p-2 rounded-lg flex gap-2 items-center">
+<div class="h-10 w-10 rounded border border-white overflow-hidden shrink-0">
+<img alt="Product Thumb" class="w-full h-full object-cover" data-alt="A professional product shot of fresh organic oranges with water droplets on their skin. The lighting is bright and crisp, showcasing the vibrant orange color and texture. The background is a soft, light gray to maintain the corporate and clean design aesthetic of the merchant portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATeVCJTCdQlPgspaDnEkca9Lhvxyfhy836kTScl_Zs9_pohkuxVa_RFt9jGdtOcaNP-aquMrqGW85zA-HJZ4Vs_MhhNhRSrFIOgaFPfXNcbHpznUIm392VYd46wshC1VD_dcPM8jvsL96taS7XSGXSu9RxY0ZO0WhoaITvbLydJNvUc0Dj6eWE-pHXsgrrcZLNik5Dn1_1WfXK7u9Nb8mG-rL8b6Hny2DqFMRMK3C9RNdMiyIjyN2Y8NVmOKv67GlyAJPUMTjwNxbE"/>
+</div>
+<div class="min-w-0">
+<p class="text-[11px] font-bold truncate">瓦伦西亚橙 (5kg)</p>
+<p class="text-[10px] text-slate-500 uppercase">批次 #8812</p>
+</div>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
+<div class="flex">
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-slate-200" data-icon="star">star</span>
+</div>
+<span class="text-xs text-slate-400 font-body-sm">昨天, 14:20</span>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-label-bold rounded uppercase">已回复</span>
+</div>
+<div class="flex gap-2">
+<button class="p-1 hover:text-error transition-colors"><span class="material-symbols-outlined text-lg" data-icon="report">report</span></button>
+<button class="p-1 hover:text-secondary transition-colors"><span class="material-symbols-outlined text-lg" data-icon="visibility_off">visibility_off</span></button>
+</div>
+</div>
+<p class="font-body-md text-on-surface mb-stack-md">
+                                橙子很新鲜，但在运输过程中有一个被挤压坏了。总体质量还是不错的。
+                            </p>
+<div class="bg-white border-l-4 border-primary p-stack-md rounded-r-xl bg-primary/5">
+<div class="flex items-center justify-between mb-1">
+<span class="text-[11px] font-label-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="store">store</span>
+                                        商家回复
+                                    </span>
+<button class="text-[10px] text-slate-400 font-label-bold hover:text-primary transition-colors">编辑</button>
+</div>
+<p class="text-sm font-body-md text-slate-700 italic">
+                                    “张浩您好，非常抱歉听到有橙子被挤压了！下次我们会加强包装缓冲。感谢您的真实反馈。”
+                                </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Review Card 3 (Negative Review) -->
+<div class="p-stack-lg hover:bg-slate-50/50 transition-colors border-l-4 border-error/50">
+<div class="flex gap-stack-md">
+<div class="w-48 shrink-0">
+<div class="flex items-center gap-2 mb-2">
+<div class="h-8 w-8 rounded-full overflow-hidden border border-slate-100">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A clean, professionally lit headshot of a male customer for a merchant platform user profile. The subject has a neutral expression, positioned against a minimalist, bright interior background. The lighting is high-key and soft, maintaining the corporate and professional visual standards of a premium fruit merchant application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmEIl_u8fiDPGxBDJr61rSsfkcltgIvqIaS2ZnS8Ei2tHIVGh7riaoLNNJhAUDWDg8zbrBb-__73N8L781no8sRuOyufK-SU2qN2eEmAEiKS6M52skxNfgnL1lW7UZ0-xr1qgwyzcJagE0VtpFHvmvgz6EsUUe7yF3KQWxrPsNi8p8wHjXqtG9Sf9MR9f2I33TdBaE2tjfiJyuuMJhVBTIwLXbkFdPiSTqxY2bbxD_l9eJPQcG3nzM2y2ZjJTiC1R9RB2aYOVVVRW8"/>
+</div>
+<span class="font-label-bold text-sm">王小二</span>
+</div>
+<div class="bg-slate-100 p-2 rounded-lg flex gap-2 items-center">
+<div class="h-10 w-10 rounded border border-white overflow-hidden shrink-0">
+<img alt="Product Thumb" class="w-full h-full object-cover" data-alt="A macro photograph of fresh strawberries in a white ceramic bowl. The lighting is crisp and bright, highlighting the texture and deep red color of the fruit. This image is used as a product thumbnail in a merchant review interface, following a clean, light-mode aesthetic that communicates freshness and quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCitEqX37k9JiRNwwkwgxT9CH7MK3KZRZa1yhEAN9ItjNoBjxluQO8Du_0gK1PKbDRk1T9nWYTeyxXOj8Ewre_xm_wOWu4wSgs-XQbofQnCtwRL4ki95etZN3EfCJkSIMvZVQQcoGP1W8eG4dZ1hbIeySDZT5QQ12BLH52YnyAUjtJ1upbrrmVGk0L86Qxgk1SiVQPpVFVGwZNB-npsR2U4k-EQNo5a_tLQflhpqc_kBSSiPIYKp_uF1abGpN3xno2NOOqnMRP8O5aX"/>
+</div>
+<div class="min-w-0">
+<p class="text-[11px] font-bold truncate">有机草莓</p>
+<p class="text-[10px] text-slate-500 uppercase">批次 #7743</p>
+</div>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
+<div class="flex">
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-slate-200" data-icon="star">star</span>
+<span class="material-symbols-outlined text-sm text-slate-200" data-icon="star">star</span>
+<span class="material-symbols-outlined text-sm text-slate-200" data-icon="star">star</span>
+</div>
+<span class="text-xs text-slate-400 font-body-sm">3 天前</span>
+<span class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-label-bold rounded uppercase">高优先级</span>
+</div>
+<div class="flex gap-2">
+<button class="p-1 text-error hover:scale-110 transition-transform"><span class="material-symbols-outlined text-lg" data-icon="report" style="font-variation-settings: 'FILL' 1;">report</span></button>
+<button class="p-1 hover:text-secondary transition-colors"><span class="material-symbols-outlined text-lg" data-icon="visibility_off">visibility_off</span></button>
+</div>
+</div>
+<p class="font-body-md text-on-surface mb-stack-md">
+                                草莓送到的时候已经熟透了，半盒都变成了烂泥。这个价格买到这种质量真的很失望。
+                            </p>
+<div class="bg-error-container/30 p-stack-md rounded-xl border border-error/10">
+<div class="flex items-center gap-2 mb-stack-xs">
+<span class="material-symbols-outlined text-error text-sm" data-icon="auto_fix_high">auto_fix_high</span>
+<p class="text-[11px] font-label-bold text-error">AI 回复建议 (针对差评推荐)</p>
+</div>
+<p class="text-sm font-body-md text-on-error-container mb-3 italic">
+                                    “王先生您好，对于草莓的质量问题我们深表歉意。我们一直以有机品质为荣，但这次确实没能做好。我们愿意为您办理全额退款或立即重发一盒新鲜草莓。请查收您的站内信了解详情。”
+                                </p>
+<div class="flex justify-end gap-2">
+<button class="px-3 py-1.5 text-xs font-label-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-all">人工回复</button>
+<button class="px-4 py-1.5 bg-error text-white text-xs font-label-bold rounded-lg shadow-sm hover:shadow-md transition-all">使用 AI 回复</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="px-stack-lg py-stack-md border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
+<span class="text-xs text-slate-500 font-body-sm">显示第 1 至 10 条，共 1,284 条评价</span>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-white transition-all"><span class="material-symbols-outlined text-lg" data-icon="chevron_left">chevron_left</span></button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white font-label-bold text-xs">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white transition-all font-label-bold text-xs">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white transition-all font-label-bold text-xs">3</button>
+<span class="text-slate-400 px-1">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white transition-all font-label-bold text-xs">129</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-white transition-all"><span class="material-symbols-outlined text-lg" data-icon="chevron_right">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

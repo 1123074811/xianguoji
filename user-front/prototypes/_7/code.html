@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "on-background": "#1b1c1c",
+                        "surface-container-low": "#f6f3f2",
+                        "surface-container-highest": "#e5e2e1",
+                        "on-primary-container": "#cbffc2",
+                        "on-tertiary-fixed": "#410002",
+                        "inverse-primary": "#88d982",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#b9f474",
+                        "tertiary-container": "#d22a2a",
+                        "background": "#fcf9f8",
+                        "secondary": "#3e6a00",
+                        "primary-fixed": "#a3f69c",
+                        "on-primary-fixed-variant": "#005312",
+                        "surface-container": "#f0eded",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb4ac",
+                        "primary-fixed-dim": "#88d982",
+                        "surface-variant": "#e5e2e1",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f3f0ef",
+                        "outline-variant": "#bfcaba",
+                        "surface-bright": "#fcf9f8",
+                        "tertiary": "#ae0714",
+                        "surface-container-high": "#eae7e7",
+                        "on-surface": "#1b1c1c",
+                        "on-tertiary-fixed-variant": "#93000d",
+                        "tertiary-fixed": "#ffdad6",
+                        "inverse-surface": "#303030",
+                        "on-secondary-container": "#437000",
+                        "on-secondary-fixed-variant": "#2e4f00",
+                        "on-error-container": "#93000a",
+                        "surface": "#fcf9f8",
+                        "on-tertiary-container": "#ffeeec",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#9ed75b",
+                        "surface-tint": "#1b6d24",
+                        "primary": "#0d631b",
+                        "surface-dim": "#dcd9d9",
+                        "on-primary-fixed": "#002204",
+                        "outline": "#707a6c",
+                        "on-secondary-fixed": "#0f2000",
+                        "secondary-container": "#b9f474",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#40493d",
+                        "primary-container": "#2e7d32"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "xl": "24px",
+                        "sm": "8px",
+                        "md": "12px",
+                        "section-gap": "24px",
+                        "lg": "16px",
+                        "container-margin": "16px",
+                        "card-gap": "12px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "h3": ["PingFang SC"],
+                        "body-md": ["PingFang SC"],
+                        "label-sm": ["PingFang SC"],
+                        "body-lg": ["PingFang SC"],
+                        "h2": ["PingFang SC"],
+                        "h1": ["PingFang SC"],
+                        "price-display": ["PingFang SC"]
+                    },
+                    "fontSize": {
+                        "h3": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "price-display": ["20px", {"lineHeight": "20px", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body {
+            background-color: #fcf9f8;
+            color: #1b1c1c;
+        }
+        .premium-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="flex justify-between items-center h-14 px-4 w-full max-w-md mx-auto">
+<button class="material-symbols-outlined text-zinc-500 active:opacity-70 transition-opacity">arrow_back</button>
+<h1 class="font-['Be_Vietnam_Pro'] text-lg font-bold text-green-800 tracking-tight">确认订单</h1>
+<button class="material-symbols-outlined text-zinc-500 active:opacity-70 transition-opacity">more_horiz</button>
+</div>
+</header>
+<main class="pt-14 pb-32 px-container-margin w-full max-w-md mx-auto space-y-section-gap overflow-x-hidden">
+<!-- Delivery Method Selection -->
+<section class="mt-lg grid grid-cols-2 gap-card-gap">
+<!-- Active: Delivery -->
+<div class="premium-card p-md border-2 border-primary relative flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-xs" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+<span class="font-h3 text-primary text-body-md font-semibold mb-1">外卖配送</span>
+<span class="text-label-sm text-outline">最快 30 分钟送达</span>
+<div class="absolute -top-1 -right-1 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded-full">已选</div>
+</div>
+<!-- Inactive: Pickup -->
+<div class="premium-card p-md border border-transparent bg-surface-container-low flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-outline mb-xs">storefront</span>
+<span class="text-body-md font-semibold text-on-surface mb-1">到店自提</span>
+<span class="text-label-sm text-outline">离您 1.2km</span>
+</div>
+</section>
+<!-- Delivery Address Details -->
+<section class="premium-card p-lg space-y-md">
+<div class="flex items-start justify-between">
+<div class="flex-1">
+<div class="flex items-center gap-xs mb-1">
+<span class="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full font-semibold">家</span>
+<h2 class="font-h2 text-on-background">静安区南京西路 1618 号</h2>
+</div>
+<p class="text-body-md text-on-surface-variant">久光百货 5 楼 502 (张先生) 138****8888</p>
+</div>
+<span class="material-symbols-outlined text-outline">chevron_right</span>
+</div>
+<div class="h-px bg-surface-container-highest"></div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">schedule</span>
+<span class="text-body-md font-medium">立即送达</span>
+</div>
+<span class="text-primary text-body-md font-semibold">预计 14:35 分送达</span>
+</div>
+</section>
+<!-- Product List -->
+<section class="premium-card overflow-hidden">
+<div class="p-lg border-b border-surface-container-highest flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">eco</span>
+<span class="font-h3 text-on-background">鲜果记 (精品果园店)</span>
+</div>
+<div class="p-lg space-y-lg">
+<!-- Product Item 1 -->
+<div class="flex gap-md">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Close-up photography of premium honey peaches, featuring velvety pink skin and water droplets reflecting soft morning light. The peaches are nestled in a rustic, minimalist wooden crate, emphasizing the farm-to-table boutique aesthetic. The color palette is dominated by warm blush tones and natural wood browns, creating a clean, high-end marketplace feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2o_l6Jrov02Df0P04eTW5VFGRQiXjsqNnq53Ha8PSwOjowt1s99vBvDEU9_Ml72WfcMa-RqcrFY2nMNniLP6ulOCF2NMM6QXsTK5U32748z82PPrCCctZsD0InkzSRbDXJtoc5Ya8_RqthONW3pqApsMkeXRrRq_YZromq-3Ke4zN1KBZ4cRXuWXKJmOy6q4LrWdTXoE6sf8PCG9m1ZVsbrSDZPTgKTG6Een5xFc2ZD2n3KrAeyPcJ9HT2vBooXbLfK0K4WCa_Pvn"/>
+</div>
+<div class="flex flex-col justify-between flex-1 py-1">
+<div>
+<h3 class="font-h3 text-on-background line-clamp-1">阳山水蜜桃</h3>
+<p class="text-label-sm text-outline">约 250g-300g / 个</p>
+</div>
+<div class="flex justify-between items-end">
+<span class="font-price-display text-on-background">¥18.9</span>
+<span class="text-label-sm text-outline">x 2</span>
+</div>
+</div>
+</div>
+<!-- Product Item 2 -->
+<div class="flex gap-md">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A macro shot of vibrant green shine muscat grapes, glossy and translucent under bright, diffuse studio lighting. The clusters are artfully arranged against a pristine white background, highlighting their fresh and crisp texture. The image utilizes a natural green and clean white color scheme to evoke a sophisticated, boutique orchard experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWFNBnM5a-y7cJJ_W3hTraS9ToZK_0NmPZC9mwEqgllS-WWc7wrQJ_ufeqNhJ2MXUteKcwmGeSM2_eOPcjueC7W0WRe7PMuJMAJupDpFA3CK1MvuhjJTbN465wfqLYi0V9VZXAcLI62tS30JoNCJzK2S3zUUX_YguS8R_qbJgAVtPH_V_pIo_qDV_wai31Vhai1qhXZb81EKdLc61mtysKdonhm-jFuKQGtWTVzCct73tSbvqssvYERhhupbd7ok4gsR9qdimL18-m"/>
+</div>
+<div class="flex flex-col justify-between flex-1 py-1">
+<div>
+<h3 class="font-h3 text-on-background line-clamp-1">阳光玫瑰葡萄</h3>
+<p class="text-label-sm text-outline">约 500g / 盒</p>
+</div>
+<div class="flex justify-between items-end">
+<span class="font-price-display text-on-background">¥35.0</span>
+<span class="text-label-sm text-outline">x 1</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Coupon & Remarks -->
+<section class="premium-card divide-y divide-surface-container-highest">
+<!-- Coupon Selection -->
+<div class="p-lg flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-tertiary">confirmation_number</span>
+<span class="text-body-md font-medium">平台优惠券</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="bg-tertiary/10 text-tertiary text-label-sm px-2 py-0.5 rounded-full">2 张可用</span>
+<span class="text-tertiary text-body-md font-semibold">-¥5.00</span>
+<span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+</div>
+</div>
+<!-- Remark Input -->
+<div class="p-lg flex items-start gap-sm">
+<span class="material-symbols-outlined text-outline">notes</span>
+<div class="flex-1">
+<p class="text-body-md font-medium mb-1">备注说明</p>
+<input class="w-full bg-transparent border-none p-0 text-body-md focus:ring-0 placeholder:text-outline/50" placeholder="Anything for the shopkeeper?" type="text"/>
+</div>
+</div>
+</section>
+<!-- Price Details -->
+<section class="premium-card p-lg space-y-md">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant">商品小计</span>
+<span class="text-on-background font-medium">¥72.8</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant">满减优惠</span>
+<span class="text-tertiary">-¥5.0</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant">优惠券抵扣</span>
+<span class="text-tertiary">-¥5.0</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-xs">
+<span class="text-on-surface-variant">配送费</span>
+<span class="text-label-sm text-primary bg-primary/5 px-1.5 py-0.5 rounded">满39免运费</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="text-outline line-through text-label-sm">¥6.0</span>
+<span class="text-on-background font-medium">¥0.0</span>
+</div>
+</div>
+<div class="h-px bg-surface-container-highest"></div>
+<div class="flex justify-end items-baseline gap-xs pt-1">
+<span class="text-label-sm text-on-surface-variant">共 3 件, 实付合计</span>
+<span class="text-primary font-price-display text-[24px]">¥62.8</span>
+</div>
+</section>
+</main>
+<!-- Bottom Bar (Submission) -->
+<footer class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
+<div class="flex items-center justify-between h-16 px-4 w-full max-w-md mx-auto">
+<div class="flex flex-col">
+<div class="flex items-baseline gap-xs">
+<span class="text-label-sm text-on-surface-variant">合计:</span>
+<span class="text-primary text-price-display font-bold text-[22px]">¥62.8</span>
+</div>
+<span class="text-label-sm text-tertiary font-medium">已优惠 ¥10.0</span>
+</div>
+<button class="bg-primary text-on-primary px-8 h-11 rounded-full font-h3 flex items-center justify-center active:scale-95 transition-all">
+                提交订单
+            </button>
+</div>
+</footer>
+</body></html>

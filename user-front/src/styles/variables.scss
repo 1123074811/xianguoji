@@ -1,0 +1,44 @@
+// === 颜色 === 
+$color-primary: #2E7D32;          // 品牌主色 - 自然绿 
+$color-primary-light: #8BC34A;    // 辅助色 - 嫩芽绿 
+$color-primary-bg: #F1F8E9;       // 主色浅底（hover/选中态） 
+$color-price: #E53935;            // 价格红 
+$color-error: #ba1a1a;            // 错误红
+$color-error-container: #ffdad6;  // 错误浅红
+$color-text-primary: #1b1c1c;     // 主文字 
+$color-text-secondary: #757575;   // 次要文字 
+$color-text-placeholder: #BDBDBD; // 占位文字 
+$color-divider: #EEEEEE;          // 分隔线 
+$color-bg-page: #fcf9f8;          // 页面背景 
+$color-bg-card: #FFFFFF;          // 卡片背景 
+
+// === 字号（rpx，uni-app 中 1px ≈ 2rpx，基于 750rpx 设计稿） === 
+$font-xs: 20rpx;     // 10px 
+$font-sm: 24rpx;     // 12px 
+$font-base: 28rpx;   // 14px 
+$font-md: 32rpx;     // 16px 
+$font-lg: 36rpx;     // 18px 
+$font-xl: 40rpx;     // 20px 
+$font-price: 44rpx;  // 价格大号 
+
+// === 字重 === 
+$weight-regular: 400; 
+$weight-medium: 500; 
+$weight-semibold: 600; 
+
+// === 圆角 === 
+$radius-sm: 8rpx; 
+$radius-md: 16rpx;     // 卡片 
+$radius-lg: 24rpx; 
+$radius-pill: 48rpx;   // 胶囊按钮 
+
+// === 阴影 === 
+$shadow-card: 0 4rpx 16rpx rgba(0, 0, 0, 0.04); 
+$shadow-float: 0 8rpx 24rpx rgba(0, 0, 0, 0.08); 
+
+// === 间距（4rpx 基准） === 
+$space-1: 8rpx; 
+$space-2: 16rpx; 
+$space-3: 24rpx; 
+$space-4: 32rpx; 
+$space-5: 48rpx; 

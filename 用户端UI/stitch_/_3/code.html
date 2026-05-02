@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;family=PingFang+SC:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "on-background": "#1b1c1c",
+                    "surface-container-low": "#f6f3f2",
+                    "surface-container-highest": "#e5e2e1",
+                    "on-primary-container": "#cbffc2",
+                    "on-tertiary-fixed": "#410002",
+                    "inverse-primary": "#88d982",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#b9f474",
+                    "tertiary-container": "#d22a2a",
+                    "background": "#fcf9f8",
+                    "secondary": "#3e6a00",
+                    "primary-fixed": "#a3f69c",
+                    "on-primary-fixed-variant": "#005312",
+                    "surface-container": "#f0eded",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb4ac",
+                    "primary-fixed-dim": "#88d982",
+                    "surface-variant": "#e5e2e1",
+                    "error-container": "#ffdad6",
+                    "inverse-on-surface": "#f3f0ef",
+                    "outline-variant": "#bfcaba",
+                    "surface-bright": "#fcf9f8",
+                    "tertiary": "#ae0714",
+                    "surface-container-high": "#eae7e7",
+                    "on-surface": "#1b1c1c",
+                    "on-tertiary-fixed-variant": "#93000d",
+                    "tertiary-fixed": "#ffdad6",
+                    "inverse-surface": "#303030",
+                    "on-secondary-container": "#437000",
+                    "on-secondary-fixed-variant": "#2e4f00",
+                    "on-error-container": "#93000a",
+                    "surface": "#fcf9f8",
+                    "on-tertiary-container": "#ffeeec",
+                    "on-tertiary": "#ffffff",
+                    "secondary-fixed-dim": "#9ed75b",
+                    "surface-tint": "#1b6d24",
+                    "primary": "#0d631b",
+                    "surface-dim": "#dcd9d9",
+                    "on-primary-fixed": "#002204",
+                    "outline": "#707a6c",
+                    "on-secondary-fixed": "#0f2000",
+                    "secondary-container": "#b9f474",
+                    "on-secondary": "#ffffff",
+                    "on-surface-variant": "#40493d",
+                    "primary-container": "#2e7d32"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "xl": "24px",
+                    "sm": "8px",
+                    "md": "12px",
+                    "section-gap": "24px",
+                    "lg": "16px",
+                    "container-margin": "16px",
+                    "card-gap": "12px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "h3": ["PingFang SC"],
+                    "body-md": ["PingFang SC"],
+                    "label-sm": ["PingFang SC"],
+                    "body-lg": ["PingFang SC"],
+                    "h2": ["PingFang SC"],
+                    "h1": ["PingFang SC"],
+                    "price-display": ["PingFang SC"]
+            },
+            "fontSize": {
+                    "h3": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "price-display": ["20px", {"lineHeight": "20px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body-md text-on-background antialiased pb-24">
+<!-- TopAppBar -->
+<header class="bg-white dark:bg-zinc-950 dock-full-width top-0 z-50 border-b border-gray-100 dark:border-zinc-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] sticky">
+<div class="flex justify-between items-center h-14 px-4 w-full max-w-md mx-auto">
+<div class="flex items-center gap-3 flex-1 mr-4">
+<div class="flex-1 bg-surface-container rounded-full flex items-center px-4 py-1.5 gap-2">
+<span class="material-symbols-outlined text-zinc-400 text-[18px]">search</span>
+<span class="text-zinc-400 font-label-sm">搜索新鲜果蔬</span>
+</div>
+</div>
+<button class="text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors p-2 rounded-full active:opacity-70">
+<span class="material-symbols-outlined">chat</span>
+</button>
+</div>
+</header>
+<main class="max-w-md mx-auto px-container-margin space-y-section-gap pt-md">
+<!-- Category Shortcuts -->
+<section class="grid grid-cols-4 gap-y-4 pt-2">
+<div class="flex flex-col items-center gap-1.5">
+<div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-green-700" style="font-variation-settings: 'FILL' 1;">eco</span>
+</div>
+<span class="font-label-sm">叶菜</span>
+</div>
+<div class="flex flex-col items-center gap-1.5">
+<div class="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-orange-600" style="font-variation-settings: 'FILL' 1;">nutrition</span>
+</div>
+<span class="font-label-sm">水果</span>
+</div>
+<div class="flex flex-col items-center gap-1.5">
+<div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-amber-700" style="font-variation-settings: 'FILL' 1;">garden_cart</span>
+</div>
+<span class="font-label-sm">根茎</span>
+</div>
+<div class="flex flex-col items-center gap-1.5">
+<div class="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-stone-600" style="font-variation-settings: 'FILL' 1;">forest</span>
+</div>
+<span class="font-label-sm">菌菇</span>
+</div>
+<div class="flex flex-col items-center gap-1.5">
+<div class="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-red-700" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+<span class="font-label-sm">肉蛋</span>
+</div>
+<div class="flex flex-col items-center gap-1.5">
+<div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-blue-600" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+</div>
+<span class="font-label-sm">水产</span>
+</div>
+<div class="flex flex-col items-center gap-1.5">
+<div class="w-12 h-12 rounded-2xl bg-yellow-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-yellow-700" style="font-variation-settings: 'FILL' 1;">liquor</span>
+</div>
+<span class="font-label-sm">豆制</span>
+</div>
+<div class="flex flex-col items-center gap-1.5">
+<div class="w-12 h-12 rounded-2xl bg-yellow-100/50 flex items-center justify-center">
+<span class="material-symbols-outlined text-yellow-800" style="font-variation-settings: 'FILL' 1;">bakery_dining</span>
+</div>
+<span class="font-label-sm">烘焙</span>
+</div>
+</section>
+<!-- Full-width Banner -->
+<section class="relative h-40 rounded-xl overflow-hidden shadow-sm">
+<img alt="Summer Watermelon Festival" class="w-full h-full object-cover" data-alt="A lush, cinematic wide shot of vibrant sliced watermelons arranged artfully on a rustic wooden table under soft, golden summer sunlight. The scene is bright and refreshing, with hints of green mint leaves and cool water droplets glistening on the fruit. The composition is clean and premium, evoking a sophisticated boutique farm-to-table aesthetic with high-key lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBINcP0ppQzO_Z6PR0v-q8VLtBmsMTkRqvCWMJSTiAtyJPfFN2WOxTjQMIx3uWsJwDPZ5gptLTreiYuyBblK6bnqo0dLGrqtg5watmZDpufMkM50oT9YZogNTJJbE1JsW7N3SDe2ZMMEcRXxAIr0VdGF5qf_k-Uu5s-el6o-RUeyORalyf_640RE5HiFhspKKVA5pfuwUaARdZIKlgiizQw2_RIN2O5_fUdWbs6ZnjE_tjPmUopedPfUe2iLUNJtMhzXKmw-D11391E"/>
+<div class="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent flex flex-col justify-center px-6">
+<h2 class="font-h1 text-white">夏日西瓜季</h2>
+<p class="text-white/90 font-label-sm mt-1">清凉一夏，甜彻心扉</p>
+<div class="mt-4">
+<span class="bg-white text-primary px-3 py-1 rounded-full font-label-sm font-semibold">立即抢购</span>
+</div>
+</div>
+</section>
+<!-- Coupon Area -->
+<section class="flex gap-md overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin">
+<div class="flex-shrink-0 w-36 h-20 bg-tertiary-fixed rounded-xl flex items-center p-3 relative overflow-hidden">
+<div class="z-10">
+<div class="text-tertiary font-h2">¥5</div>
+<div class="text-tertiary font-label-sm">满39可用</div>
+</div>
+<div class="ml-auto z-10">
+<button class="bg-tertiary text-white text-[10px] px-2 py-1 rounded-lg">领取</button>
+</div>
+<div class="absolute -right-4 top-0 bottom-0 w-8 border-l-2 border-dashed border-white/30 bg-tertiary/10"></div>
+</div>
+<div class="flex-shrink-0 w-36 h-20 bg-secondary-fixed rounded-xl flex items-center p-3 relative overflow-hidden">
+<div class="z-10">
+<div class="text-secondary font-h2">¥10</div>
+<div class="text-secondary font-label-sm">满79可用</div>
+</div>
+<div class="ml-auto z-10">
+<button class="bg-secondary text-white text-[10px] px-2 py-1 rounded-lg">领取</button>
+</div>
+<div class="absolute -right-4 top-0 bottom-0 w-8 border-l-2 border-dashed border-white/30 bg-secondary/10"></div>
+</div>
+<div class="flex-shrink-0 w-36 h-20 bg-primary-fixed rounded-xl flex items-center p-3 relative overflow-hidden">
+<div class="z-10">
+<div class="text-primary font-h2">¥20</div>
+<div class="text-primary font-label-sm">满129可用</div>
+</div>
+<div class="ml-auto z-10">
+<button class="bg-primary text-white text-[10px] px-2 py-1 rounded-lg">领取</button>
+</div>
+<div class="absolute -right-4 top-0 bottom-0 w-8 border-l-2 border-dashed border-white/30 bg-primary/10"></div>
+</div>
+</section>
+<!-- Group Buy Entry -->
+<section class="bg-surface-container-lowest rounded-xl p-md shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="flex justify-between items-end mb-3">
+<div>
+<h3 class="font-h3 text-on-background">好货拼着买</h3>
+<p class="text-zinc-400 font-label-sm">和邻居一起省</p>
+</div>
+<span class="text-primary font-label-sm flex items-center">查看更多 <span class="material-symbols-outlined text-[14px]">chevron_right</span></span>
+</div>
+<div class="grid grid-cols-3 gap-3">
+<div class="space-y-1">
+<div class="aspect-square rounded-lg bg-surface-container overflow-hidden">
+<img alt="Pineapple" class="w-full h-full object-cover" data-alt="Close-up of a fresh, ripe yellow pineapple with its distinctive texture, isolated on a clean, soft white background. The lighting is bright and airy, emphasizing the natural vibrancy of the fruit. This image aligns with a premium, boutique grocery store aesthetic, focusing on high-quality produce and minimalist presentation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDW8OXaJJVnMt0LxQjKTPItVozDfEfPQQ062JAlJudfLQOou0rspiiWHQ51z1kIfAW2H5vwy0quzV9AAW9EiLlsatLJ4EqS_VttoZ3F6sLl_2uxV6vfxsOTjLxM3OI75smeg_7D0Q5SSd8w-62sHQFPFZaIhRm1c60Tc28PuJo1qKf-b0YJcF5Ohc96s4ii3Y5hmKOv3LEbrbCJaBmcUbIdMT_dbmoLvDKVkIIdeALC32VlgqzhXBdmspE01PNhYGoJ2vOiozUH56nT"/>
+</div>
+<div class="flex flex-col">
+<span class="text-error font-h3">¥12.9</span>
+<span class="bg-error-container text-error text-[10px] px-1.5 py-0.5 rounded inline-block w-fit">3人团</span>
+</div>
+</div>
+<div class="space-y-1">
+<div class="aspect-square rounded-lg bg-surface-container overflow-hidden">
+<img alt="Carrot" class="w-full h-full object-cover" data-alt="Multiple organic orange carrots with their green feathery tops still attached, lying on a clean white linen surface. The lighting is natural and bright, showcasing the earthy texture and rich color of the vegetable. The aesthetic is clean and modern, highlighting the freshness of farm-direct produce." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJ9bFe_lTQhp7K2kyKorON-yUKDcvKdVNAi2zbJDHgL7wI0EHZ-teVHyqlg_NppNB5-onevwQ-yWpQr1qwE6RXYtV1Deajtf5aScLZs58DyuMzqK4wMBCgOQCoGRoL1foz8-6yFYPCEHS361__GwSvRX2pbiRMzJ9zn6VOG-rD9QX2BTAtx8ttEeArGTBYhx3IVbbunnzvub-fXIs94EtOQoEOKLYljiNOMaLShjlFNlI4F_G6TGaGY7sP8VKGEbgYe5CwcOZNIXPp"/>
+</div>
+<div class="flex flex-col">
+<span class="text-error font-h3">¥3.5</span>
+<span class="bg-error-container text-error text-[10px] px-1.5 py-0.5 rounded inline-block w-fit">2人团</span>
+</div>
+</div>
+<div class="space-y-1">
+<div class="aspect-square rounded-lg bg-surface-container overflow-hidden">
+<img alt="Salad Mix" class="w-full h-full object-cover" data-alt="A vibrant salad bowl featuring a mix of deep greens, cherry tomatoes, and avocado slices, set against a pristine, well-lit white background. The colors are saturated and natural, representing healthy, fresh ingredients. The photography is high-definition and professional, fitting for a curated boutique market." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBasJcWs1wP5zaWhBO4v-oCOxKJBQbfEFfEAR7dFCKrveV6h4JjpcSecPckHipFTeOB9CPX6Nype-vELlc2_WoLSYclv5QYQ7zsLz3TEEHRBLlecj2FnDHxq55KPMawOQmZ6jiATTjoaqL5p0XztupR1GGNGjkLPHwJtw57Fhg30ZSHf3sy0YKoByoqr_RnI2nhf8CC5pOh883-R7x4hIzshAfzwqWIQYNAlvjixELYg3yEc09LjFs-KWpC5GW59Weajq3AHGX5Ol2a"/>
+</div>
+<div class="flex flex-col">
+<span class="text-error font-h3">¥9.9</span>
+<span class="bg-error-container text-error text-[10px] px-1.5 py-0.5 rounded inline-block w-fit">3人团</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Shopkeeper Recommendation -->
+<section>
+<div class="mb-3">
+<h3 class="font-h3 text-on-background">店主推荐</h3>
+<p class="text-zinc-400 font-label-sm">今日新到，亲自挑选</p>
+</div>
+<div class="grid grid-cols-2 gap-card-gap">
+<!-- Card 1 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col">
+<div class="aspect-square bg-surface-container">
+<img alt="Bananas" class="w-full h-full object-cover" data-alt="A bunch of bright yellow, perfectly ripe organic bananas on a minimalist white background. The lighting is soft and even, highlighting the smooth skin and natural curves of the fruit. This high-end product shot uses a clean, bright palette to convey freshness and quality in a boutique grocery setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuClH86wi2vYb-0wNAAOiXreQCgj6g04fOnl8L93oV0BjfKDRUYOPhn4gLwZXw2B-YPHTu6yxOd10jd8n92BpccG9eyLqAMPIpmSlKBBI8qr3EkGWlNmo95qxaVW79hD5x7YY4pw4lszOgVwbE_caSFItKERhPRW8PPnAuaK3EmEEZOPSAexrSZwTtUmywXIOUBmGS_iaJkFgvYooQmXPRiymL7BNEejliLK5odv_RYc2UQkiLHl9QWtFS9dYOOGnLxgQi8pWGVngdkr"/>
+</div>
+<div class="p-3 flex-1 flex flex-col">
+<h4 class="font-body-lg font-semibold truncate">泰国金枕头榴莲</h4>
+<span class="text-zinc-400 text-xs mt-0.5">500g/份</span>
+<div class="mt-auto pt-3 flex items-end justify-between">
+<div class="flex flex-col">
+<span class="text-zinc-300 text-xs line-through leading-none mb-1">¥49.0</span>
+<span class="text-error font-price-display">¥35.8</span>
+</div>
+<button class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white active:scale-95 transition-transform shadow-md">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col">
+<div class="aspect-square bg-surface-container">
+<img alt="Strawberries" class="w-full h-full object-cover" data-alt="A macro shot of vibrant, glistening red strawberries with tiny green stems, arranged on a clean, bright white surface. Natural, soft sunlight creates gentle shadows and highlights the juicy texture of the fruit. The aesthetic is extremely fresh, high-definition, and minimal, reflecting a premium farm-to-table brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8EIqOJLQLLlQPiJX_v5zfIJijNnhzIqk9u0oMOEB9Cb3NSK988hCh2_vc3CmyMJHfoWzv8fjJoA8_RBt1f3yZXkA09gfmfP9-C-kKXeV0nHEJke9FkMQAdtf7jJKqyEfsr_C5gyhfhUY0YvIyDOfFaZ5QPuLC1WVr6_X69BBs1bu8sYNculN92oSCXSlQON3uMlqVo0jwLH3G40ZFziGoahNltfDtxy86ON94snyubXOfIK0ffc8oARddTTsoxSKEQf0q6yql5jW0"/>
+</div>
+<div class="p-3 flex-1 flex flex-col">
+<h4 class="font-body-lg font-semibold truncate">红颜草莓</h4>
+<span class="text-zinc-400 text-xs mt-0.5">250g/盒</span>
+<div class="mt-auto pt-3 flex items-end justify-between">
+<div class="flex flex-col">
+<span class="text-zinc-300 text-xs line-through leading-none mb-1">¥29.9</span>
+<span class="text-error font-price-display">¥19.9</span>
+</div>
+<button class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white active:scale-95 transition-transform shadow-md">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Today's Picks -->
+<section>
+<div class="mb-3 flex items-center gap-2">
+<div class="w-1 h-5 bg-primary rounded-full"></div>
+<h3 class="font-h3 text-on-background">今日精选</h3>
+</div>
+<div class="grid grid-cols-2 gap-card-gap">
+<!-- Picking Card 1 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="aspect-[4/3] bg-surface-container">
+<img alt="Greens" class="w-full h-full object-cover" data-alt="Assorted fresh, leafy green vegetables including kale and spinach, artfully arranged on a light-colored wood surface. The scene is brightened by soft, diffused daylight, highlighting the crisp textures and deep green hues. The composition is clean and modern, emphasizing the natural beauty of farm-fresh produce." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDrlGhLUgeeVS7PR-Emba230M6mmCYyDLrjc8xYAVn5VA1Sr7JSMfSs1P6DN77Ap9D8KdQr7yCF3TODRUtp88V8tdyKi8n_0VrVVow1jC97zbNKU0A7GEOW0xbAdFI99FJoS6dH4WkPDIM3mHC7q_b3sirLIdxYPfU06ddE3S9mXZety9s1q_IywElWYrn7iP60araTebVLYqKjA26vUWOyL70owUzQvrT02UPFaJt_AIcsD7mJ1U0W_cCbYmCW6llZOhCShAbWglX"/>
+</div>
+<div class="p-3">
+<h4 class="font-body-md font-semibold text-zinc-800">高山有机青菜</h4>
+<div class="flex justify-between items-center mt-2">
+<span class="text-primary font-price-display text-base">¥4.50</span>
+<span class="text-zinc-400 text-[10px]">已售 120+</span>
+</div>
+</div>
+</div>
+<!-- Picking Card 2 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="aspect-[4/3] bg-surface-container">
+<img alt="Apples" class="w-full h-full object-cover" data-alt="A basket of firm, shiny red apples with soft backlighting that makes them appear luminous. The setting is a minimalist, modern farm stand with a neutral color palette. The image is crisp and clear, focusing on the organic quality and wholesome appeal of the fruit, perfect for a boutique merchant's home page." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_XlFv7bSzQiuLhXsUM2ljoHllfeOuTds4rVUwMlsV92N5Q3O95w6p6HIwNGTU6f3ra0QOf1-HSVkXq5Zvq3V1YWzRO0vFxGa5UXv_GZNpy7UXcXMlYEcx6LBD3iVFpWkUarjLelEVLq3k_aQva_TDmvMq_r0gca-TyRYK_rr5YbZzumH4qYk0BsMdNgQ8WkNg9UxNaz92VL_F---a7vVDaaPIfewEpJWF90PyxFHqAb6GNtVs3u8-kCh6zHfNjiIau0-FmUYA9mG2"/>
+</div>
+<div class="p-3">
+<h4 class="font-body-md font-semibold text-zinc-800">阿克苏冰糖心苹果</h4>
+<div class="flex justify-between items-center mt-2">
+<span class="text-primary font-price-display text-base">¥12.80</span>
+<span class="text-zinc-400 text-[10px]">已售 80+</span>
+</div>
+</div>
+</div>
+<!-- Picking Card 3 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="aspect-[4/3] bg-surface-container">
+<img alt="Ginger" class="w-full h-full object-cover" data-alt="Freshly harvested ginger roots with soil remnants, placed on a pristine white ceramic tray. The photography uses high-key lighting to emphasize the rugged, natural texture of the root against the clean background. The aesthetic is sophisticated and culinary-focused, highlighting single-source quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlcOoKGyRZbC6lH1MXb_Zt-KNFflmKPQS7gutI2qMnMLx8K-oyv_EyvzqTIQt9hSuNFo9RXARL7v-x7Ei1j4gsjLkAZMHv7BG2Ng9pGpwbbKWbBOLi6Rz2gYENh7Msu2-zF3iCMdPmewJytHkEBopzulitkgDcywcvK5U7-V4vtDVaK38PqCx8HVXplDqw77AlTNHQCmM_utcq_aultlLc7xIgEzn37g9IaQ8cw4CFuC94KIbvmZ2otvqHnbFfwFULsudEYK4spMCj"/>
+</div>
+<div class="p-3">
+<h4 class="font-body-md font-semibold text-zinc-800">老姜头</h4>
+<div class="flex justify-between items-center mt-2">
+<span class="text-primary font-price-display text-base">¥3.20</span>
+<span class="text-zinc-400 text-[10px]">已售 200+</span>
+</div>
+</div>
+</div>
+<!-- Picking Card 4 -->
+<div class="bg-white rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="aspect-[4/3] bg-surface-container">
+<img alt="Eggs" class="w-full h-full object-cover" data-alt="A carton of high-quality brown organic eggs, with one cracked open to reveal a rich, golden yolk. The background is a clean, minimalist kitchen setting with soft, natural lighting. The focus is sharp on the texture and color, conveying a premium farm-to-table breakfast theme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSizXiXX-oKYlHisteKq5F16rnKOfQBrpVSiNJXRu9-K33DL1SF2ksheYjA8xQGxf_kCC5hRzz5WhBMQaCt74Cv03Tfs9XE4gCuTQqmYi2_2Fg-IqQQPGqTPU36HR1Iy0S_yqWsMaPM-6wW1LgxOt4CKm4aoKcByDI4hDT3hgWdZyNaEfpEjiFrVLKBwLcdUHT4RHHSEdghHQBoqdbcV1q99ZouvrlD6C0xOnQfyoT9WwDQoHbHyfKRC1JQtpwUdLKs2CgznFIaPpJ"/>
+</div>
+<div class="p-3">
+<h4 class="font-body-md font-semibold text-zinc-800">农家土鸡蛋 10枚</h4>
+<div class="flex justify-between items-center mt-2">
+<span class="text-primary font-price-display text-base">¥15.90</span>
+<span class="text-zinc-400 text-[10px]">已售 450+</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md fixed bottom-0 w-full z-50 rounded-t-2xl border-t border-gray-100 dark:border-zinc-900 shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
+<div class="flex justify-around items-center h-16 pb-safe w-full max-w-md mx-auto">
+<!-- Home Active -->
+<div class="flex flex-col items-center justify-center text-green-700 dark:text-green-400 scale-105 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium mt-0.5">首页</span>
+</div>
+<!-- Category -->
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-green-600 dark:hover:text-green-300 tap-highlight-transparent active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium mt-0.5">分类</span>
+</div>
+<!-- Cart -->
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-green-600 dark:hover:text-green-300 tap-highlight-transparent active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium mt-0.5">购物车</span>
+</div>
+<!-- Orders -->
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-green-600 dark:hover:text-green-300 tap-highlight-transparent active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium mt-0.5">订单</span>
+</div>
+<!-- Profile -->
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-green-600 dark:hover:text-green-300 tap-highlight-transparent active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium mt-0.5">我的</span>
+</div>
+</div>
+</nav>
+</body></html>

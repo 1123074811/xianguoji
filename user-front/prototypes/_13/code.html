@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "on-background": "#1b1c1c",
+                    "surface-container-low": "#f6f3f2",
+                    "surface-container-highest": "#e5e2e1",
+                    "on-primary-container": "#cbffc2",
+                    "on-tertiary-fixed": "#410002",
+                    "inverse-primary": "#88d982",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#b9f474",
+                    "tertiary-container": "#d22a2a",
+                    "background": "#fcf9f8",
+                    "secondary": "#3e6a00",
+                    "primary-fixed": "#a3f69c",
+                    "on-primary-fixed-variant": "#005312",
+                    "surface-container": "#f0eded",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb4ac",
+                    "primary-fixed-dim": "#88d982",
+                    "surface-variant": "#e5e2e1",
+                    "error-container": "#ffdad6",
+                    "inverse-on-surface": "#f3f0ef",
+                    "outline-variant": "#bfcaba",
+                    "surface-bright": "#fcf9f8",
+                    "tertiary": "#ae0714",
+                    "surface-container-high": "#eae7e7",
+                    "on-surface": "#1b1c1c",
+                    "on-tertiary-fixed-variant": "#93000d",
+                    "tertiary-fixed": "#ffdad6",
+                    "inverse-surface": "#303030",
+                    "on-secondary-container": "#437000",
+                    "on-secondary-fixed-variant": "#2e4f00",
+                    "on-error-container": "#93000a",
+                    "surface": "#fcf9f8",
+                    "on-tertiary-container": "#ffeeec",
+                    "on-tertiary": "#ffffff",
+                    "secondary-fixed-dim": "#9ed75b",
+                    "surface-tint": "#1b6d24",
+                    "primary": "#0d631b",
+                    "surface-dim": "#dcd9d9",
+                    "on-primary-fixed": "#002204",
+                    "outline": "#707a6c",
+                    "on-secondary-fixed": "#0f2000",
+                    "secondary-container": "#b9f474",
+                    "on-secondary": "#ffffff",
+                    "on-surface-variant": "#40493d",
+                    "primary-container": "#2e7d32"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "xl": "24px",
+                    "sm": "8px",
+                    "md": "12px",
+                    "section-gap": "24px",
+                    "lg": "16px",
+                    "container-margin": "16px",
+                    "card-gap": "12px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "h3": ["PingFang SC"],
+                    "body-md": ["PingFang SC"],
+                    "label-sm": ["PingFang SC"],
+                    "body-lg": ["PingFang SC"],
+                    "h2": ["PingFang SC"],
+                    "h1": ["PingFang SC"],
+                    "price-display": ["PingFang SC"]
+            },
+            "fontSize": {
+                    "h3": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "price-display": ["20px", {"lineHeight": "20px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'PingFang SC', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-20">
+<!-- Top Navigation -->
+<header class="bg-white dark:bg-zinc-950 docked full-width top-0 z-50 border-b border-gray-100 dark:border-zinc-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] sticky">
+<div class="flex justify-between items-center h-14 px-4 w-full max-w-md mx-auto">
+<button class="text-zinc-500 hover:bg-zinc-50 transition-colors p-1 rounded-full">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-['Be_Vietnam_Pro'] text-lg font-bold text-green-800 dark:text-green-400">评价中心</h1>
+<button class="text-zinc-500 hover:bg-zinc-50 transition-colors p-1 rounded-full">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+</header>
+<main class="max-w-md mx-auto p-container-margin space-y-section-gap">
+<!-- SECTION: Submission Form -->
+<section class="bg-surface-container-lowest rounded-xl p-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="flex items-center gap-md mb-lg">
+<img class="w-16 h-16 rounded-lg object-cover bg-surface-container" data-alt="A high-definition close-up shot of several vibrant, fresh red apples with soft water droplets on their skin. The lighting is bright and natural, mimicking an outdoor orchard setting at midday. The apples are presented on a clean, white minimalist surface that reflects the boutique farm-to-table aesthetic of the brand, emphasizing freshness and premium quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyC9HFO6oYMNUAI0dfthITsyPuxPWg9GnG1wl4E1FSo4WO1QE5Vkc-nO70JL3RJCn5lbjzzd3o6IOikHZGI-fpeA2OeLblcYmrmg5pNhhirBBb2h0BkeOdlPLnmkQOS7QWl1hjh8kc2t_AEvKMKSAxfLtzoyGCDeLZHWe5GDDhoUIirWzVhOVkisw9PtM2NemL_uU3IsResXATe8D-fUPCeA7mdcYwJCwPBnN26BUpLb4-lNUYkZugbzmYne_EW_uIswWgNI_pe5z2"/>
+<div class="flex-1">
+<h2 class="font-h2 text-h2 text-on-surface">红富士苹果 (4个装)</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">产地：烟台</p>
+</div>
+</div>
+<div class="flex flex-col items-center py-md border-y border-outline-variant/30 mb-lg">
+<p class="font-body-md text-body-md text-on-surface-variant mb-sm">为商品打分</p>
+<div class="flex gap-xs">
+<span class="material-symbols-outlined text-primary text-[32px] cursor-pointer" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-primary text-[32px] cursor-pointer" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-primary text-[32px] cursor-pointer" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-primary text-[32px] cursor-pointer" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-zinc-300 text-[32px] cursor-pointer">star</span>
+</div>
+</div>
+<div class="space-y-md">
+<textarea class="w-full h-32 p-md bg-surface-container-low border-none rounded-lg font-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:ring-1 focus:ring-primary focus:bg-white transition-all outline-none" placeholder="分享您的购物心得，帮助更多果友挑选好货..."></textarea>
+<div class="grid grid-cols-4 gap-md">
+<div class="aspect-square bg-surface-container-low rounded-lg border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-on-surface-variant cursor-pointer hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined">add_a_photo</span>
+<span class="font-label-sm text-[10px] mt-xs">添加图片</span>
+</div>
+<div class="aspect-square bg-surface-container rounded-lg relative overflow-hidden group">
+<img class="w-full h-full object-cover" data-alt="A beautifully composed, high-definition photo of a sliced open organic apple showing its crisp white flesh and seeds. The lighting is warm and directional, casting soft shadows that suggest a boutique kitchen environment. The fruit sits on a minimalist light beige background, maintaining a clean and sophisticated visual style consistent with a premium food brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAI_IJzg1Nswd92T2C4gx9ID732s_rAun5o5gGchilvkeRf1rRfXfDndRdgjP1kNL5mLs3363oo3A2X6_ogldfY0KBrlMwyxxqU2XLQnOizxGjLUPGsve8DCNzNTbqjsrxsqc4XuCt1zdy3oqSoZieJwRVQeamSXneRxrmHsUI599QZQeBwba4jw4h1TCXO5yn4a8JtjEowFepWUCfDPb1Sb7LyVEeouGCUWoYazp5u8GbOUBQu7LRESbf0Rfa6HmxCNxLqSP9dtBeu"/>
+<div class="absolute top-1 right-1 bg-black/40 text-white rounded-full p-1 cursor-pointer">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</div>
+</div>
+<div class="aspect-square bg-surface-container-low rounded-lg border border-outline-variant/30"></div>
+<div class="aspect-square bg-surface-container-low rounded-lg border border-outline-variant/30"></div>
+</div>
+</div>
+<div class="flex items-center justify-between mt-xl">
+<div class="flex items-center gap-xs cursor-pointer group">
+<div class="w-4 h-4 rounded border border-primary flex items-center justify-center bg-primary text-white">
+<span class="material-symbols-outlined text-[12px] font-bold">check</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">匿名评价</span>
+</div>
+<button class="bg-primary text-on-primary px-xl py-sm rounded-full font-h3 text-h3 shadow-sm hover:opacity-90 active:scale-95 transition-all">
+                    发布评价
+                </button>
+</div>
+</section>
+<!-- SECTION: Review List Headers & Filters -->
+<section class="space-y-lg">
+<div class="flex items-end justify-between">
+<div>
+<h3 class="font-h2 text-h2 text-on-background">商品评价 (128)</h3>
+<div class="flex items-center gap-xs mt-xs">
+<div class="flex text-primary">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star_half</span>
+</div>
+<span class="font-price-display text-price-display text-primary">4.8</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">满意度</span>
+</div>
+</div>
+</div>
+<div class="flex gap-sm overflow-x-auto pb-xs no-scrollbar">
+<span class="bg-primary text-on-primary px-md py-xs rounded-full font-label-sm text-label-sm whitespace-nowrap">全部 (128)</span>
+<span class="bg-surface-container text-on-surface-variant px-md py-xs rounded-full font-label-sm text-label-sm whitespace-nowrap">有图 (42)</span>
+<span class="bg-surface-container text-on-surface-variant px-md py-xs rounded-full font-label-sm text-label-sm whitespace-nowrap">好评 (115)</span>
+<span class="bg-surface-container text-on-surface-variant px-md py-xs rounded-full font-label-sm text-label-sm whitespace-nowrap">最新</span>
+<span class="bg-surface-container text-on-surface-variant px-md py-xs rounded-full font-label-sm text-label-sm whitespace-nowrap">中差评 (13)</span>
+</div>
+</section>
+<!-- SECTION: Review Cards -->
+<section class="space-y-card-gap">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-lg space-y-md">
+<div class="flex justify-between">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A soft-lit portrait of a smiling woman in a bright, modern setting with natural light coming from the side. The image is cropped to a clean circular profile shape. The background is a blurred high-end interior, suggesting a sophisticated lifestyle and a happy consumer. The color palette is warm and natural, aligning with a boutique farm-to-table brand aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8w8d1zbxSORME6jVfONtNv3nMhSOFxoyliZUPK8oETQ2g4oUxcrDcoOMIwvq8lumxWfG7NCkJCHBRC1AChRrStCXB54hE9M1X9gYxzs8rpDw-E-auyKajCkb-AUQ1Vuu6AVr7hJMyFyj_qQGVoSrTlMavte9WToWLmRYdCQOtrCmtFlGQg50wTAeXWIlNvf5Q6OWgWZzGHdpVKkkMvW0ZK6twACcKNMB4r051o9WPt9fAUe8x26JH9N-d-MF8lL7j70goDX-7uD9C"/>
+</div>
+<div>
+<p class="font-h3 text-body-md text-on-surface">林小雨</p>
+<div class="flex text-primary">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">2024.05.12</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+                    鲜果记的苹果真的不一样！包装非常用心，每一个都有保护网。口感脆甜，汁水很足，确实是现摘现发的品质。已经推荐给办公室同事了！
+                </p>
+<div class="flex gap-sm">
+<img class="w-24 h-24 rounded-lg object-cover" data-alt="A top-down aesthetic shot of several whole red apples arranged neatly on a rustic wooden table under bright, morning sunlight. The shadows are soft and natural, emphasizing the texture of the fruit and wood. The overall mood is warm and artisanal, reinforcing the boutique orchard concept with a clean, high-end photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQtJ4ysc22iEevGredIxh3MPBR__6qylH1gcPwokmnQEpz9PgzcFzWnADE2LHGxFZ3zJtEG392ksHPi1f8yVAFHrcnRdU1Su7BE30DFoFlg5F8-NarV5TM1NkBonUtirBcXPwBzryJkahRJVjZdFqdj1uICOyoX5wFPheDY5g0-j5M3g1A0gFHYMVbMpUpaVzaa57hK7VKDkAUecNAg6w68Hpvs6HzSiuPHRIPvULj03NhAY-QuBtVZmwvUiVYMv5C-lhVr9BgEFQA"/>
+<img class="w-24 h-24 rounded-lg object-cover" data-alt="A close-up shot of a gift-style fruit box containing perfectly arranged red apples nestled in recycled paper shredding. The lighting is soft and bright, creating a clean white-on-white aesthetic with pops of vibrant red. This image highlights the premium packaging and care provided by a boutique farm-to-table delivery service." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCka12VWO9XFnovksB8w0ysDL7nmZvKBDdlAuFtvZI3TIzaG5m_Zq6SPnAMD9aKkCMnuG-TmkJ5I-Os338hbXcF9iZFTx9Ab8OvhysVR7ECcJr2IeRtE8xGPxYUbnVYzzXic0Oy83fpbaS0Cu8VaEhv27za5cabdMejSdxJga8fa8T0tqe_HcF51Q4B1vYO1HxQdDziGF2txMtCxvzSJKnY9h7zhup2L312fB1SmJ7SdzKrtX3zgBDOVUqfcJ_QGp7fgOA6IkDw4PVo"/>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant pt-xs">
+<span class="material-symbols-outlined text-[18px]">thumb_up</span>
+<span class="font-label-sm text-label-sm">24</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-lg space-y-md">
+<div class="flex justify-between">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">person</span>
+</div>
+<div>
+<p class="font-h3 text-body-md text-on-surface">匿名用户</p>
+<div class="flex text-primary">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[12px]">star</span>
+</div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">2024.05.10</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+                    味道不错，就是快递稍微慢了一天，不过包装很好，水果没有破损。
+                </p>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-2xl border-t border-gray-100 dark:border-zinc-900 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
+<div class="flex justify-around items-center h-16 pb-safe w-full max-w-md mx-auto">
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-green-600 transition-all cursor-pointer">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium">首页</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-green-600 transition-all cursor-pointer">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium">分类</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-green-600 transition-all cursor-pointer">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium">购物车</span>
+</div>
+<div class="flex flex-col items-center justify-center text-green-700 dark:text-green-400 scale-105 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium">订单</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-green-600 transition-all cursor-pointer">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-medium">我的</span>
+</div>
+</div>
+</nav>
+</body></html>

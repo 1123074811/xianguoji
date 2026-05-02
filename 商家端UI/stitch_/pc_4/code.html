@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-Hans"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#b35200",
+                        "on-primary-fixed": "#002204",
+                        "surface-container-high": "#e9e8e7",
+                        "tertiary-fixed-dim": "#ffb68d",
+                        "on-secondary-fixed": "#031d2f",
+                        "surface": "#fbf9f9",
+                        "on-secondary-fixed-variant": "#32495d",
+                        "surface-container-low": "#f5f3f3",
+                        "outline-variant": "#bfcaba",
+                        "primary-fixed-dim": "#88d982",
+                        "primary": "#0d631b",
+                        "secondary-fixed-dim": "#b1c9e1",
+                        "on-tertiary-fixed": "#321200",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#f2f0f0",
+                        "secondary-container": "#cde5fe",
+                        "on-tertiary-fixed-variant": "#763300",
+                        "on-background": "#1b1c1c",
+                        "surface-dim": "#dbdad9",
+                        "on-secondary-container": "#50677b",
+                        "outline": "#707a6c",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#ffdbc9",
+                        "on-surface-variant": "#40493d",
+                        "surface-bright": "#fbf9f9",
+                        "secondary-fixed": "#cde5fe",
+                        "surface-container-highest": "#e3e2e2",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#303031",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "surface-tint": "#1b6d24",
+                        "inverse-primary": "#88d982",
+                        "on-primary-container": "#cbffc2",
+                        "on-primary": "#ffffff",
+                        "background": "#fbf9f9",
+                        "primary-fixed": "#a3f69c",
+                        "on-primary-fixed-variant": "#005312",
+                        "secondary": "#4a6175",
+                        "on-tertiary-container": "#ffeee6",
+                        "on-surface": "#1b1c1c",
+                        "tertiary": "#8d3f00",
+                        "surface-container": "#efeded",
+                        "surface-variant": "#e3e2e2",
+                        "primary-container": "#2e7d32",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "stack-xs": "4px",
+                        "unit": "4px",
+                        "table-row-height": "48px",
+                        "container-padding-pc": "24px",
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "container-padding-mobile": "16px",
+                        "stack-lg": "24px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Be Vietnam Pro"],
+                        "body-lg": ["Be Vietnam Pro"],
+                        "h2": ["Be Vietnam Pro"],
+                        "h1": ["Be Vietnam Pro"],
+                        "body-sm": ["Be Vietnam Pro"],
+                        "h3": ["Be Vietnam Pro"],
+                        "body-md": ["Be Vietnam Pro"],
+                        "table-header": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "h2": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "h1": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "table-header": ["13px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased">
+<!-- SideNavBar (Shared Component) -->
+<nav class="fixed left-0 top-0 h-screen w-60 border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col overflow-y-auto z-50">
+<div class="p-6">
+<span class="text-lg font-black text-green-800 dark:text-green-400 uppercase tracking-tight">水果日记</span>
+<p class="text-xs text-slate-500 mt-1 uppercase tracking-widest">商家管理后台</p>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-bold text-label-bold">控制台</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="font-label-bold text-label-bold">订单管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 border-l-4 border-green-700 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-label-bold text-label-bold">商品管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-bold text-label-bold">营销中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="rate_review">rate_review</span>
+<span class="font-label-bold text-label-bold">评价管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-bold text-label-bold">客户管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-label-bold text-label-bold">配送设置</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-zinc-400 border-l-4 border-transparent hover:bg-slate-50 transition-all duration-150 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-bold text-label-bold">系统设置</span>
+</a>
+</div>
+<div class="mt-auto border-t border-slate-200 p-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-green-700 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="text-xs font-medium">帮助中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-error transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="text-xs font-medium">退出登录</span>
+</a>
+</div>
+</nav>
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 right-0 left-60 h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md z-40 flex items-center justify-between px-6">
+<div class="flex items-center gap-4">
+<span class="text-base font-bold text-slate-900">编辑商品</span>
+<span class="text-slate-300">|</span>
+<nav class="flex gap-6">
+<a class="text-slate-500 hover:text-green-600 transition-colors font-medium text-sm" href="#">首页</a>
+<a class="text-green-700 border-b-2 border-green-700 font-medium text-sm" href="#">商品</a>
+<a class="text-slate-500 hover:text-green-600 transition-colors font-medium text-sm" href="#">库存</a>
+</nav>
+</div>
+<div class="flex items-center gap-5">
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-xs font-bold uppercase tracking-wider">
+<span class="w-2 h-2 rounded-full bg-green-600"></span>
+                营业中
+            </button>
+<div class="flex items-center gap-4 text-slate-500">
+<span class="material-symbols-outlined cursor-pointer hover:text-green-700" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-green-700" data-icon="mail">mail</span>
+<div class="flex items-center gap-2 ml-2">
+<div class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden">
+<img alt="管理员头像" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtdGzaF23kWFECZ5y-fvv5RbrTt-uGjuALOqJf97LRC6a8yKasHcCIawa_dKrTZg5IKu06FnoaVxSpKh8WoxixxohOma5irjmZs6Ph4MRs21f_udR6jO_24BbunNwVf4xBmd2-xPKpJslbNdnE3uSnVqX5Wda4D_T7IJnM_2rxUNcEiiYkOygtOTYwtREuCWqbOthxGSjgAt87Bg3weZ2EYTaGCu9Pu_0gbik46Wbe9ktSHEYhGMbS7g0q6sXJaOd-qP9sIunOY2PB"/>
+</div>
+<span class="material-symbols-outlined cursor-pointer hover:text-green-700 text-xl" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-60 pt-16 pb-24 min-h-screen bg-slate-50">
+<div class="max-w-6xl mx-auto p-gutter space-y-gutter">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-xs text-slate-400 font-medium mb-4">
+<span>商品管理</span>
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+<span>所有商品</span>
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+<span class="text-slate-600">编辑：季节性优质富士苹果</span>
+</nav>
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Left Column: Primary Details -->
+<div class="col-span-12 lg:col-span-8 space-y-gutter">
+<!-- Basic Info Module -->
+<section class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+<div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+<h2 class="font-h3 text-h3 text-slate-900">基本信息</h2>
+<span class="text-xs font-medium text-slate-400">必填项以 * 标记</span>
+</div>
+<div class="p-6 space-y-6">
+<div class="grid grid-cols-2 gap-stack-lg">
+<div class="col-span-2">
+<label class="block font-label-bold text-label-bold text-on-surface mb-stack-xs">商品名称 *</label>
+<input class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" type="text" value="季节性优质富士苹果 - 礼盒装"/>
+</div>
+<div class="col-span-1">
+<label class="block font-label-bold text-label-bold text-on-surface mb-stack-xs">类目 *</label>
+<select class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+<option>精品水果</option>
+<option>柑橘类</option>
+<option>莓果类</option>
+<option>礼盒系列</option>
+</select>
+</div>
+<div class="col-span-1">
+<label class="block font-label-bold text-label-bold text-on-surface mb-stack-xs">品牌</label>
+<input class="w-full border border-outline-variant rounded-lg px-4 py-2.5 outline-none focus:ring-primary" type="text" value="青森采摘"/>
+</div>
+</div>
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface mb-4">商品图片 (最多 6 张) *</label>
+<div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+<div class="aspect-square rounded-lg border-2 border-dashed border-primary bg-primary-container/10 flex items-center justify-center relative group overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="High-resolution studio photograph of a vibrant red Fuji apple with pristine water droplets on its skin, set against a clean white background in a professional light-mode aesthetic for a fresh produce catalog." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3qBrOkPseZbiH2N89v9EDcsjjJGZ4O5rjgQiH3w1AYhmdmg6OG5dhNevlSfAORfq9Eq69Gnhwk4KP26uglC48bmwMEX27k_bWDrrLQhRDl1qaCJA9WU4QKravYApopdnK0SHYLv30mSWEB6eead9-X7RiWpuBcs1r-ttzDR6tdTfPO-JmrwajOhA0G51BTYxRe-mtWybOkhn0rxtrCww0VMYmeo3LbOcXMtVsGESp4rKvVjE6VvDMCJymsb4ugNEpH7GqwbJT13Oc"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-white cursor-pointer" data-icon="delete">删除</span>
+</div>
+</div>
+<div class="aspect-square rounded-lg border border-slate-200 overflow-hidden relative group">
+<img class="w-full h-full object-cover" data-alt="Close-up shot of a wooden gift box filled with perfectly round, red apples cushioned in soft wood wool, captured in a bright, modern corporate style with soft natural lighting and high-end photographic quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmSPK-zIoIxEVRO93RHff2lk4QqNCEVy6nPlwzftGbz1d3MBnJMZA-GIbrVuIX1uhHYy9k5QasW5BZ_Mx_-3i_LzbntusNridfDTDRYsvRejEFTyoF_sKxY7LZE-P3y-65I40wfWTH8Dpj-hTlQrqEVYZQjDtoKH0w51ejxyeRYex7MkTSHEm5dpW4Qnj5KMPGG8D3F9mfsqM1LAMZN2FX_NM79D76LUPcoRu5kuA_kdnqp8OCy783C95dZKepREZH7_oGXM6YUF3Y"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-white cursor-pointer" data-icon="delete">删除</span>
+</div>
+</div>
+<div class="aspect-square rounded-lg border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-slate-50">
+<span class="material-symbols-outlined text-2xl" data-icon="add_photo_alternate">add_photo_alternate</span>
+<span class="text-[10px] mt-1 font-bold uppercase">上传图片</span>
+</div>
+<div class="aspect-square rounded-lg border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 bg-slate-50"></div>
+<div class="aspect-square rounded-lg border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 bg-slate-50"></div>
+<div class="aspect-square rounded-lg border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 bg-slate-50"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Specs & Price Table Module -->
+<section class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+<div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+<h2 class="font-h3 text-h3 text-slate-900">价格与库存</h2>
+<button class="text-primary font-label-bold text-label-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-lg" data-icon="add">add</span>
+                                添加规格
+                            </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-slate-50 border-b border-slate-200">
+<tr>
+<th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase">规格名称</th>
+<th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase">销售价</th>
+<th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase">成本价</th>
+<th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase">库存</th>
+<th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase">SKU 编码</th>
+<th class="px-6 py-3"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<tr class="hover:bg-slate-50 transition-colors h-[48px]">
+<td class="px-6 py-2">
+<input class="w-24 bg-transparent border-none p-0 focus:ring-0 text-sm font-medium" type="text" value="6枚装礼盒"/>
+</td>
+<td class="px-6 py-2">
+<div class="flex items-center gap-1">
+<span class="text-slate-400 text-sm">¥</span>
+<input class="w-16 bg-transparent border-none p-0 focus:ring-0 text-sm" type="text" value="168.00"/>
+</div>
+</td>
+<td class="px-6 py-2">
+<div class="flex items-center gap-1">
+<span class="text-slate-400 text-sm">¥</span>
+<input class="w-16 bg-transparent border-none p-0 focus:ring-0 text-sm" type="text" value="85.00"/>
+</div>
+</td>
+<td class="px-6 py-2">
+<input class="w-16 bg-transparent border-none p-0 focus:ring-0 text-sm" type="text" value="150"/>
+</td>
+<td class="px-6 py-2 text-slate-500 text-sm">FA-006-PREM</td>
+<td class="px-6 py-2 text-right">
+<span class="material-symbols-outlined text-slate-300 hover:text-error cursor-pointer text-xl" data-icon="do_not_disturb_on">do_not_disturb_on</span>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors h-[48px]">
+<td class="px-6 py-2">
+<input class="w-24 bg-transparent border-none p-0 focus:ring-0 text-sm font-medium" type="text" value="12枚装礼盒"/>
+</td>
+<td class="px-6 py-2">
+<div class="flex items-center gap-1">
+<span class="text-slate-400 text-sm">¥</span>
+<input class="w-16 bg-transparent border-none p-0 focus:ring-0 text-sm" type="text" value="298.00"/>
+</div>
+</td>
+<td class="px-6 py-2">
+<div class="flex items-center gap-1">
+<span class="text-slate-400 text-sm">¥</span>
+<input class="w-16 bg-transparent border-none p-0 focus:ring-0 text-sm" type="text" value="150.00"/>
+</div>
+</td>
+<td class="px-6 py-2">
+<input class="w-16 bg-transparent border-none p-0 focus:ring-0 text-sm" type="text" value="85"/>
+</td>
+<td class="px-6 py-2 text-slate-500 text-sm">FA-012-PREM</td>
+<td class="px-6 py-2 text-right">
+<span class="material-symbols-outlined text-slate-300 hover:text-error cursor-pointer text-xl" data-icon="do_not_disturb_on">do_not_disturb_on</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Product Intro Module (Rich Text Placeholder) -->
+<section class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+<div class="px-6 py-4 border-b border-slate-100">
+<h2 class="font-h3 text-h3 text-slate-900">商品详情介绍</h2>
+</div>
+<div class="p-6 space-y-4">
+<div class="border border-slate-200 rounded-lg overflow-hidden">
+<div class="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center gap-4 text-slate-500">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary" data-icon="format_bold">format_bold</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary" data-icon="format_italic">format_italic</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary" data-icon="format_list_bulleted">format_list_bulleted</span>
+<span class="w-[1px] h-4 bg-slate-300"></span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary" data-icon="image">image</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary" data-icon="link">link</span>
+</div>
+<div class="p-4 min-h-[200px] text-on-surface text-sm leading-relaxed">
+<p class="mb-4">我们的优质富士苹果直接源自青森县的纯净果园。这些苹果以其惊人的脆度和完美的酸甜比而闻名，是为我们的独家礼盒装手工精选的。</p>
+<div class="w-full h-48 bg-slate-100 rounded-lg flex items-center justify-center my-4 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A beautiful panoramic shot of a sun-drenched apple orchard with rolling green hills and rows of heavily laden trees, captured in a bright, clean, high-density corporate visual style with a focus on natural bounty and freshness." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsKEh-giWa-ruRqWuOlMAzAx-uaozClTVi2R1X7YIlqm-kYqiPrwJYvo00Il-auH4iEIbU1LntzOOLk1YFJtzsNYxCGXNzEnGpaVZ6XVQDv3WCFLaPDGvCiHmPIZAeveiReNqLYjoL_2TZkD87Wth7vIwuy0fxrFp9_d6SLGNNXK0o1tUgj7yFm45yJ6GQaRB0kI88abtawsKYN5nT5MsGSeTUADg8IuzAMAUh6kzSCLvsMhdYCZYq8Dh16d9pL_4hu3WXHxEWNtHh"/>
+</div>
+<p>无论是作为礼品还是个人享用，每个苹果都由可持续泡沫套保护，以确保其以完美的状态送达。</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Settings & Toggles -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<!-- Group Buy Module -->
+<section class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="groups">groups</span>
+<h3 class="font-label-bold text-label-bold text-slate-900 uppercase tracking-wide">拼团设置</h3>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-xs font-bold text-slate-500 mb-1">最低成团人数</label>
+<div class="flex items-center border border-slate-200 rounded-lg overflow-hidden">
+<button class="px-3 py-2 bg-slate-50 text-slate-500">-</button>
+<input class="flex-1 text-center border-none text-sm font-medium" type="number" value="5"/>
+<button class="px-3 py-2 bg-slate-50 text-slate-500">+</button>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-500 mb-1">拼团折扣 (%)</label>
+<input class="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm" type="text" value="15"/>
+</div>
+</div>
+</section>
+<!-- Delivery Settings Module -->
+<section class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="local_shipping">local_shipping</span>
+<h3 class="font-label-bold text-label-bold text-slate-900 uppercase tracking-wide">配送选项</h3>
+</div>
+<div class="space-y-3">
+<label class="flex items-center p-3 border border-primary bg-primary/5 rounded-lg cursor-pointer">
+<input checked="" class="rounded text-primary focus:ring-primary" type="checkbox"/>
+<div class="ml-3">
+<p class="text-sm font-bold text-slate-900">标准快递</p>
+<p class="text-[10px] text-slate-500">通过物流合作伙伴寄送</p>
+</div>
+</label>
+<label class="flex items-center p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+<input class="rounded text-primary focus:ring-primary" type="checkbox"/>
+<div class="ml-3">
+<p class="text-sm font-bold text-slate-900">到店自提</p>
+<p class="text-[10px] text-slate-500">从商家门店地址取货</p>
+</div>
+</label>
+</div>
+<div class="mt-6 pt-6 border-t border-slate-100">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="stars">stars</span>
+<span class="text-sm font-bold text-slate-700">店长推荐</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Quick Stats Widget -->
+<section class="bg-gradient-to-br from-green-700 to-green-900 rounded-xl p-6 text-white shadow-lg">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs font-bold uppercase tracking-widest opacity-80">商品健康度</span>
+<span class="material-symbols-outlined opacity-80" data-icon="info">info</span>
+</div>
+<div class="space-y-4">
+<div class="flex items-end justify-between">
+<div class="text-3xl font-black">94%</div>
+<div class="text-[10px] font-bold uppercase py-1 px-2 bg-white/20 rounded">表现优异</div>
+</div>
+<div class="w-full bg-white/20 h-1 rounded-full overflow-hidden">
+<div class="bg-white w-[94%] h-full"></div>
+</div>
+<p class="text-xs opacity-70 leading-relaxed">完善详细的产品描述可以将您的搜索可见度提升 12%。</p>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+<!-- Fixed Bottom Action Bar -->
+<footer class="fixed bottom-0 right-0 left-60 h-20 bg-white border-t border-slate-200 px-gutter flex items-center justify-between z-50">
+<div class="flex items-center gap-2 text-slate-400">
+<span class="material-symbols-outlined text-lg" data-icon="history">history</span>
+<span class="text-xs font-medium italic">最后修改于 2 分钟前，由 Admin 操作</span>
+</div>
+<div class="flex items-center gap-gutter">
+<button class="px-6 py-2.5 rounded-lg border border-slate-200 text-slate-600 font-label-bold text-label-bold hover:bg-slate-50 active:scale-95 transition-all">
+                取消
+            </button>
+<button class="px-6 py-2.5 rounded-lg border border-primary text-primary font-label-bold text-label-bold hover:bg-primary/5 active:scale-95 transition-all">
+                保存草稿
+            </button>
+<button class="px-10 py-2.5 rounded-lg bg-primary text-white font-label-bold text-label-bold shadow-md hover:bg-primary-container active:scale-95 transition-all">
+                发布商品
+            </button>
+</div>
+</footer>
+</body></html>
