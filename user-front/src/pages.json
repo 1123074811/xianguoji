@@ -146,6 +146,24 @@
           "style": {
             "navigationBarTitleText": "我的足迹"
           }
+        },
+        {
+          "path": "settings/index",
+          "style": {
+            "navigationBarTitleText": "设置"
+          }
+        },
+        {
+          "path": "feedback/index",
+          "style": {
+            "navigationBarTitleText": "意见反馈"
+          }
+        },
+        {
+          "path": "evaluation/index",
+          "style": {
+            "navigationBarTitleText": "评价中心"
+          }
         }
       ]
     }

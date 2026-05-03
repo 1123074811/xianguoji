@@ -2,7 +2,7 @@
   <view class="cart-container">
     <!-- Top Navigation -->
     <view class="header-nav-sticky">
-      <view class="left">
+      <view class="left" @tap="goToCategory">
         <svg-icon name="category" :size="40" color="#757575" />
         <text class="brand-name">鲜果记</text>
       </view>
@@ -131,14 +131,37 @@ function goToHome() {
   uni.switchTab({ url: '/pages/index/index' });
 }
 
+function goToCategory() {
+  uni.switchTab({ url: '/pages/category/category' });
+}
+
 function goToMessage() {
   uni.navigateTo({ url: '/pagesC/message/index' });
 }
 
 function handleSubmit() {
   if (isManaging.value) {
-    // 处理删除逻辑
+    const selected = cartStore.items.filter(i => i.selected);
+    if (selected.length === 0) {
+      uni.showToast({ title: '请选择要删除的商品', icon: 'none' });
+      return;
+    }
+    uni.showModal({
+      title: '提示',
+      content: `确定要删除选中的 ${selected.length} 件商品？`,
+      success: (res) => {
+        if (res.confirm) {
+          selected.forEach(item => cartStore.removeFromCart(item.id));
+          uni.showToast({ title: '已删除', icon: 'success' });
+        }
+      }
+    });
   } else {
+    const selected = cartStore.items.filter(i => i.selected);
+    if (selected.length === 0) {
+      uni.showToast({ title: '请选择要结算的商品', icon: 'none' });
+      return;
+    }
     uni.navigateTo({ url: '/pagesB/checkout/index' });
   }
 }
@@ -399,8 +422,8 @@ function handleSubmit() {
 
 .bottom-bar {
   position: fixed;
-  bottom: calc(112rpx + constant(safe-area-inset-bottom));
-  bottom: calc(112rpx + env(safe-area-inset-bottom));
+  bottom: calc(128rpx + constant(safe-area-inset-bottom));
+  bottom: calc(128rpx + env(safe-area-inset-bottom));
   left: 0;
   right: 0;
   height: 112rpx;

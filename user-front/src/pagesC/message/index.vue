@@ -1,29 +1,68 @@
 <template>
   <view class="page-container">
     <view class="message-nav">
-      <view class="nav-item" hover-class="btn-active" @tap="handleNavClick('system')">
+      <view
+        class="nav-item"
+        :class="{ active: activeType === 'system' }"
+        hover-class="btn-active"
+        @tap="handleNavClick('system')"
+      >
         <view class="icon-wrapper system">
           <svg-icon name="notification" :size="48" color="#FFFFFF" />
+          <view v-if="unreadCount('system') > 0" class="badge">{{ unreadCount('system') }}</view>
         </view>
         <text class="label">系统通知</text>
       </view>
-      <view class="nav-item" hover-class="btn-active" @tap="handleNavClick('promotion')">
+      <view
+        class="nav-item"
+        :class="{ active: activeType === 'promotion' }"
+        hover-class="btn-active"
+        @tap="handleNavClick('promotion')"
+      >
         <view class="icon-wrapper promotion">
           <svg-icon name="gift" :size="48" color="#FFFFFF" />
-          <view class="badge">1</view>
+          <view v-if="unreadCount('promotion') > 0" class="badge">{{ unreadCount('promotion') }}</view>
         </view>
         <text class="label">优惠活动</text>
       </view>
-      <view class="nav-item" hover-class="btn-active" @tap="handleNavClick('logistics')">
+      <view
+        class="nav-item"
+        :class="{ active: activeType === 'logistics' }"
+        hover-class="btn-active"
+        @tap="handleNavClick('logistics')"
+      >
         <view class="icon-wrapper logistics">
           <svg-icon name="shipping" :size="48" color="#FFFFFF" />
+          <view v-if="unreadCount('logistics') > 0" class="badge">{{ unreadCount('logistics') }}</view>
         </view>
         <text class="label">交易物流</text>
       </view>
+      <view
+        class="nav-item"
+        :class="{ active: activeType === 'all' }"
+        hover-class="btn-active"
+        @tap="handleNavClick('all')"
+      >
+        <view class="icon-wrapper all">
+          <svg-icon name="chat" :size="48" color="#FFFFFF" />
+        </view>
+        <text class="label">全部</text>
+      </view>
     </view>
 
-    <scroll-view scroll-y class="message-list" v-if="messages.length > 0">
-      <view class="message-item" v-for="msg in messages" :key="msg.id" hover-class="btn-active">
+    <view class="filter-bar">
+      <text class="title">{{ titleMap[activeType] }}</text>
+      <text v-if="filteredMessages.length > 0" class="action" @tap="markAllRead">全部已读</text>
+    </view>
+
+    <scroll-view scroll-y class="message-list" v-if="filteredMessages.length > 0">
+      <view
+        class="message-item"
+        v-for="msg in filteredMessages"
+        :key="msg.id"
+        hover-class="btn-active"
+        @tap="handleMessageTap(msg)"
+      >
         <image class="avatar" :src="msg.avatar" mode="aspectFill" />
         <view class="content-wrapper">
           <view class="top-row">
@@ -46,38 +85,110 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import SvgIcon from '@/components/svg-icon.vue';
 
-const messages = ref([
+type MsgType = 'system' | 'promotion' | 'logistics';
+
+interface Message {
+  id: number;
+  type: MsgType;
+  title: string;
+  desc: string;
+  time: string;
+  avatar: string;
+  unread: boolean;
+  link?: string;
+}
+
+const titleMap: Record<string, string> = {
+  all: '全部消息',
+  system: '系统通知',
+  promotion: '优惠活动',
+  logistics: '交易物流'
+};
+
+const messages = ref<Message[]>([
   {
     id: 1,
-    title: '鲜果记官方客服',
-    desc: '您的订单 [1234567890] 已经发货啦，请注意查收哦~',
+    type: 'logistics',
+    title: '订单已发货',
+    desc: '您的订单 [202310249988] 已发货，预计明日送达，请保持电话畅通~',
     time: '10:30',
+    avatar: '/static/images/logo.png',
+    unread: true,
+    link: '/pages/order/order'
+  },
+  {
+    id: 2,
+    type: 'system',
+    title: '会员升级',
+    desc: '恭喜您升级为 [黄金会员]，专属权益与优惠等您查看！',
+    time: '昨天',
     avatar: '/static/images/logo.png',
     unread: true
   },
   {
-    id: 2,
-    title: '系统通知',
-    desc: '恭喜您升级为 [黄金会员]，快去查看您的专属特权吧！',
-    time: '昨天',
-    avatar: '/static/images/logo.png',
-    unread: false
-  },
-  {
     id: 3,
-    title: '优惠活动',
-    desc: '周末狂欢！全场车厘子满199减50，速来抢购！',
+    type: 'promotion',
+    title: '周末狂欢',
+    desc: '全场车厘子满 199 减 50，速来抢购！',
     time: '星期三',
     avatar: '/static/images/logo.png',
-    unread: false
+    unread: false,
+    link: '/pagesC/coupons/index'
+  },
+  {
+    id: 4,
+    type: 'logistics',
+    title: '订单已签收',
+    desc: '您的订单 [202310249987] 已签收，欢迎对果园好物作出评价。',
+    time: '04-29',
+    avatar: '/static/images/logo.png',
+    unread: false,
+    link: '/pagesC/evaluation/index'
+  },
+  {
+    id: 5,
+    type: 'system',
+    title: '隐私政策更新',
+    desc: '我们更新了隐私政策，详细内容请前往设置中心查看。',
+    time: '04-25',
+    avatar: '/static/images/logo.png',
+    unread: false,
+    link: '/pagesC/settings/index'
   }
 ]);
 
-function handleNavClick(type: string) {
-  uni.showToast({ title: '开发中', icon: 'none' });
+const activeType = ref<'all' | MsgType>('all');
+
+const filteredMessages = computed(() => {
+  if (activeType.value === 'all') return messages.value;
+  return messages.value.filter(m => m.type === activeType.value);
+});
+
+function unreadCount(type: MsgType) {
+  return messages.value.filter(m => m.type === type && m.unread).length;
+}
+
+function handleNavClick(type: 'all' | MsgType) {
+  activeType.value = type;
+}
+
+function handleMessageTap(msg: Message) {
+  msg.unread = false;
+  if (msg.link) {
+    if (msg.link.startsWith('/pages/')) {
+      uni.switchTab({ url: msg.link });
+    } else {
+      uni.navigateTo({ url: msg.link });
+    }
+  }
+}
+
+function markAllRead() {
+  filteredMessages.value.forEach(m => (m.unread = false));
+  uni.showToast({ title: '已全部标为已读', icon: 'success' });
 }
 </script>
 
@@ -101,6 +212,13 @@ function handleNavClick(type: string) {
     flex-direction: column;
     align-items: center;
     gap: $space-2;
+    transition: transform .2s;
+
+    &.active {
+      transform: translateY(-4rpx);
+
+      .label { color: $color-primary; font-weight: $weight-semibold; }
+    }
 
     .icon-wrapper {
       width: 96rpx;
@@ -114,6 +232,7 @@ function handleNavClick(type: string) {
       &.system { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
       &.promotion { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); }
       &.logistics { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+      &.all { background: linear-gradient(135deg, #2E7D32 0%, #8BC34A 100%); }
 
       .badge {
         position: absolute;
@@ -137,6 +256,23 @@ function handleNavClick(type: string) {
       font-size: $font-sm;
       color: $color-text-primary;
     }
+  }
+}
+
+.filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $space-3 $space-4 $space-2;
+
+  .title {
+    font-size: $font-sm;
+    color: $color-text-secondary;
+  }
+
+  .action {
+    font-size: $font-sm;
+    color: $color-primary;
   }
 }
 

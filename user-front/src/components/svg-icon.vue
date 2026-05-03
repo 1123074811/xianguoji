@@ -1,6 +1,6 @@
 <template>
-  <view 
-    class="svg-icon" 
+  <view
+    class="svg-icon"
     :style="[style]"
     @tap="$emit('click')"
   ></view>

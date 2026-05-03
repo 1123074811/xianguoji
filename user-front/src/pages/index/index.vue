@@ -6,7 +6,7 @@
         <svg-icon name="search" :size="32" color="#BDBDBD" />
         <text class="search-placeholder">搜索新鲜果蔬</text>
       </view>
-      <view class="msg-btn" @tap="goToMessage">
+      <view class="msg-btn" hover-class="btn-active" @tap="goToMessage">
         <svg-icon name="chat" :size="40" color="#757575" />
       </view>
     </view>

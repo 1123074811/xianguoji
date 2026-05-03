@@ -60,14 +60,14 @@ function switchTab(path: string) {
 }
 
 .tab-bar-placeholder {
-  height: calc(112rpx + constant(safe-area-inset-bottom));
-  height: calc(112rpx + env(safe-area-inset-bottom));
+  height: calc(128rpx + constant(safe-area-inset-bottom));
+  height: calc(128rpx + env(safe-area-inset-bottom));
 }
 
 .tab-bar {
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20rpx);
-  height: 112rpx;
+  height: 128rpx;
   display: flex;
   border-top: 2rpx solid rgba(0, 0, 0, 0.05);
   padding-bottom: constant(safe-area-inset-bottom);
@@ -80,7 +80,8 @@ function switchTab(path: string) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4rpx;
+    gap: 6rpx;
+    padding: 12rpx 0 8rpx;
     transition: all 0.2s;
 
     .icon-box {

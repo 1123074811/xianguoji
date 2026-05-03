@@ -143,7 +143,13 @@ function goToLogin() {
 
 function goToOrders(id: string) {
   requireLogin(() => {
-    uni.switchTab({ url: '/pages/order/order' });
+    if (id === 'evaluation') {
+      uni.navigateTo({ url: '/pagesC/evaluation/index' });
+    } else {
+      // 通过全局标记把 tab 传给订单页
+      uni.$emit('order:setTab', id);
+      uni.switchTab({ url: '/pages/order/order' });
+    }
   });
 }
 
@@ -173,10 +179,9 @@ function handleServiceClick(id: string) {
     } else if (id === 'pickup') {
       uni.navigateTo({ url: '/pagesC/pickup-point/index' });
     } else if (id === 'settings') {
-      // uni.navigateTo({ url: '/pagesC/settings/index' });
-      uni.showToast({ title: '设置功能开发中', icon: 'none' });
+      uni.navigateTo({ url: '/pagesC/settings/index' });
     } else if (id === 'feedback') {
-      uni.showToast({ title: '意见反馈功能开发中', icon: 'none' });
+      uni.navigateTo({ url: '/pagesC/feedback/index' });
     }
   });
 }

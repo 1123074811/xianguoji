@@ -7,7 +7,7 @@
         <text class="title">我的订单</text>
       </view>
       <view class="right-icons" style="display: flex; gap: 24rpx;">
-        <svg-icon name="search" :size="40" color="#757575" />
+        <svg-icon name="search" :size="40" color="#757575" @click="goToSearch" />
         <svg-icon name="chat" :size="40" color="#757575" @click="goToMessage" />
       </view>
     </view>
@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
@@ -88,6 +88,13 @@ import CustomTabBar from '@/components/custom-tab-bar.vue';
 onShow(() => {
   uni.hideTabBar();
 });
+
+// 接受来自 profile 的 tab 切换事件
+const setTabHandler = (id: string) => {
+  if (tabs.find(t => t.id === id)) activeTabId.value = id;
+};
+uni.$on('order:setTab', setTabHandler);
+onUnmounted(() => uni.$off('order:setTab', setTabHandler));
 
 const tabs = [
   { id: 'all', name: '全部' },
@@ -163,9 +170,57 @@ function goToMessage() {
   uni.navigateTo({ url: '/pagesC/message/index' });
 }
 
+function goToSearch() {
+  uni.navigateTo({ url: '/pagesA/search/index' });
+}
+
 function handleAction(order: any, btn: any) {
-  if (btn.text === '查看物流') {
-    // 导航到物流
+  switch (btn.text) {
+    case '查看物流':
+    case '查看详情':
+      uni.navigateTo({ url: `/pagesB/order-detail/index?orderNo=${order.order_no}` });
+      break;
+    case '确认收货':
+      uni.showModal({
+        title: '确认收货',
+        content: '确认已收到该订单的所有商品？',
+        success: (res) => {
+          if (res.confirm) {
+            order.status = 'completed';
+            order.statusText = '已完成';
+            order.buttons = [
+              { text: '查看详情', primary: false },
+              { text: '去评价', primary: true }
+            ];
+            uni.showToast({ title: '已确认收货', icon: 'success' });
+          }
+        }
+      });
+      break;
+    case '立即支付':
+      uni.navigateTo({ url: `/pagesB/checkout/index?orderNo=${order.order_no}` });
+      break;
+    case '取消订单':
+      uni.showModal({
+        title: '取消订单',
+        content: '确定要取消该订单？',
+        success: (res) => {
+          if (res.confirm) {
+            const idx = orders.value.findIndex(o => o.id === order.id);
+            if (idx >= 0) orders.value.splice(idx, 1);
+            uni.showToast({ title: '订单已取消', icon: 'success' });
+          }
+        }
+      });
+      break;
+    case '去评价':
+      uni.navigateTo({ url: '/pagesC/evaluation/index' });
+      break;
+    case '再次购买':
+      uni.switchTab({ url: '/pages/index/index' });
+      break;
+    default:
+      uni.navigateTo({ url: `/pagesB/order-detail/index?orderNo=${order.order_no}` });
   }
 }
 </script>
