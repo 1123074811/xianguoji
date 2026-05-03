@@ -1,16 +1,15 @@
 <template>
   <main class="min-h-screen flex flex-col md:flex-row overflow-hidden">
     <!-- Left Side: Brand Illustration (60%) -->
-    <section class="relative hidden md:flex md:w-[60%] h-screen bg-gradient-to-br from-primary via-green-800 to-green-900 overflow-hidden items-center justify-center login-bg">
-      <!-- Decorative Pattern Overlay -->
-      <div class="absolute inset-0 z-0 opacity-20 login-pattern"></div>
-      <!-- Floating Fruit Icons -->
-      <div class="absolute inset-0 z-0 overflow-hidden">
-        <span class="material-symbols-outlined absolute text-white/10 text-7xl login-float-1" style="font-variation-settings: 'FILL' 1;">nutrition</span>
-        <span class="material-symbols-outlined absolute text-white/8 text-6xl login-float-2" style="font-variation-settings: 'FILL' 1;">eco</span>
-        <span class="material-symbols-outlined absolute text-white/6 text-8xl login-float-3" style="font-variation-settings: 'FILL' 1;">local_florist</span>
-        <span class="material-symbols-outlined absolute text-white/10 text-5xl login-float-4" style="font-variation-settings: 'FILL' 1;">spa</span>
+    <section class="relative hidden md:flex md:w-[60%] h-screen bg-gradient-to-br from-green-700/80 via-green-800/70 to-green-900/60 overflow-hidden items-center justify-center login-bg">
+      <!-- Background Image with Overlay -->
+      <div class="absolute inset-0 z-0">
+        <img alt="新鲜水果" class="w-full h-full object-cover opacity-70" src="/images/login-bg.jpg" />
       </div>
+      <!-- Color Tint Overlay -->
+      <div class="absolute inset-0 z-0 bg-primary/30"></div>
+      <!-- Decorative Pattern Overlay -->
+      <div class="absolute inset-0 z-0 opacity-10 login-pattern"></div>
       <!-- Branding Content -->
       <div class="relative z-10 flex flex-col items-center text-center px-12">
         <div class="mb-stack-lg p-6 glass-panel rounded-full shadow-2xl">
