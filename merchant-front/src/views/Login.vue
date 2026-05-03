@@ -1,10 +1,15 @@
 <template>
   <main class="min-h-screen flex flex-col md:flex-row overflow-hidden">
     <!-- Left Side: Brand Illustration (60%) -->
-    <section class="relative hidden md:flex md:w-[60%] h-screen bg-primary overflow-hidden items-center justify-center">
-      <!-- Background Image with Overlay -->
-      <div class="absolute inset-0 z-0">
-        <img alt="Fresh Organic Fruits" class="w-full h-full object-cover opacity-40 mix-blend-overlay" src="https://images.unsplash.com/photo-1619566636858-003a8348b1af?w=800&q=80" />
+    <section class="relative hidden md:flex md:w-[60%] h-screen bg-gradient-to-br from-primary via-green-800 to-green-900 overflow-hidden items-center justify-center login-bg">
+      <!-- Decorative Pattern Overlay -->
+      <div class="absolute inset-0 z-0 opacity-20 login-pattern"></div>
+      <!-- Floating Fruit Icons -->
+      <div class="absolute inset-0 z-0 overflow-hidden">
+        <span class="material-symbols-outlined absolute text-white/10 text-7xl login-float-1" style="font-variation-settings: 'FILL' 1;">nutrition</span>
+        <span class="material-symbols-outlined absolute text-white/8 text-6xl login-float-2" style="font-variation-settings: 'FILL' 1;">eco</span>
+        <span class="material-symbols-outlined absolute text-white/6 text-8xl login-float-3" style="font-variation-settings: 'FILL' 1;">local_florist</span>
+        <span class="material-symbols-outlined absolute text-white/10 text-5xl login-float-4" style="font-variation-settings: 'FILL' 1;">spa</span>
       </div>
       <!-- Branding Content -->
       <div class="relative z-10 flex flex-col items-center text-center px-12">
@@ -146,5 +151,22 @@ const handleLogin = () => {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-pattern {
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(255,255,255,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 40%),
+    radial-gradient(circle at 40% 80%, rgba(255,255,255,0.05) 0%, transparent 45%);
+}
+
+.login-float-1 { top: 10%; left: 8%; animation: float 8s ease-in-out infinite; }
+.login-float-2 { top: 60%; right: 12%; animation: float 10s ease-in-out infinite 2s; }
+.login-float-3 { bottom: 15%; left: 20%; animation: float 12s ease-in-out infinite 4s; }
+.login-float-4 { top: 30%; right: 30%; animation: float 9s ease-in-out infinite 1s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
 }
 </style>
