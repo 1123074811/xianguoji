@@ -15,12 +15,12 @@
         </router-link>
       </nav>
       <div class="mt-auto border-t border-slate-200 p-4 space-y-1">
-        <a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-green-700 transition-colors cursor-pointer">
-          <span class="material-symbols-outlined" data-icon="help">help</span>
+        <router-link to="/help" class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-green-700 transition-colors cursor-pointer">
+          <span class="material-symbols-outlined">help</span>
           <span class="text-xs font-medium">帮助中心</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-red-600 transition-colors cursor-pointer">
-          <span class="material-symbols-outlined" data-icon="logout">logout</span>
+        </router-link>
+        <a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-red-600 transition-colors cursor-pointer" @click="handleLogout">
+          <span class="material-symbols-outlined">logout</span>
           <span class="text-xs font-medium">退出登录</span>
         </a>
       </div>
@@ -34,9 +34,9 @@
           <input class="w-full pl-10 pr-4 py-1.5 bg-slate-100 border-transparent rounded-full text-xs focus:ring-1 focus:ring-primary focus:bg-white transition-all outline-none" placeholder="搜索订单、商品..." type="text" />
         </div>
         <nav class="hidden lg:flex items-center gap-6">
-          <a class="text-green-700 border-b-2 border-green-700 h-16 flex items-center font-medium text-sm cursor-pointer">首页</a>
-          <a class="text-slate-500 hover:text-green-600 transition-colors h-16 flex items-center font-medium text-sm cursor-pointer">经营分析</a>
-          <a class="text-slate-500 hover:text-green-600 transition-colors h-16 flex items-center font-medium text-sm cursor-pointer">报表导出</a>
+          <router-link to="/dashboard" class="h-16 flex items-center font-medium text-sm transition-colors" :class="route.path === '/dashboard' ? 'text-green-700 border-b-2 border-green-700' : 'text-slate-500 hover:text-green-600'">首页</router-link>
+          <router-link to="/analysis" class="h-16 flex items-center font-medium text-sm transition-colors" :class="route.path.startsWith('/analysis') ? 'text-green-700 border-b-2 border-green-700' : 'text-slate-500 hover:text-green-600'">经营分析</router-link>
+          <router-link to="/reports" class="h-16 flex items-center font-medium text-sm transition-colors" :class="route.path.startsWith('/reports') ? 'text-green-700 border-b-2 border-green-700' : 'text-slate-500 hover:text-green-600'">报表导出</router-link>
         </nav>
       </div>
       <div class="flex items-center gap-5">
@@ -45,13 +45,13 @@
           店铺营业中
         </div>
         <div class="flex items-center gap-3">
-          <button class="text-slate-500 hover:text-primary transition-colors relative">
+          <router-link to="/messages" class="text-slate-500 hover:text-primary transition-colors relative">
             <span class="material-symbols-outlined">notifications</span>
             <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
-          <button class="text-slate-500 hover:text-primary transition-colors">
+          </router-link>
+          <router-link to="/messages" class="text-slate-500 hover:text-primary transition-colors">
             <span class="material-symbols-outlined">mail</span>
-          </button>
+          </router-link>
           <div class="w-8 h-8 rounded-full overflow-hidden border border-slate-200 bg-slate-100">
             <img alt="商家管理员" class="w-full h-full object-cover" src="https://ui-avatars.com/api/?name=张&background=2e7d32&color=fff" />
           </div>
@@ -67,9 +67,10 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 
 const menus = [
   { name: '控制面板', path: '/dashboard', icon: 'dashboard' },
@@ -84,5 +85,9 @@ const menus = [
 
 const isActive = (path: string) => {
   return route.path.startsWith(path)
+}
+
+const handleLogout = () => {
+  router.push('/login')
 }
 </script>

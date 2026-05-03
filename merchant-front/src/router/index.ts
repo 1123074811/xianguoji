@@ -62,6 +62,26 @@ const router = createRouter({
           path: 'settings',
           name: 'Settings',
           component: () => import('../views/Settings.vue')
+        },
+        {
+          path: 'analysis',
+          name: 'BusinessAnalysis',
+          component: () => import('../views/BusinessAnalysis.vue')
+        },
+        {
+          path: 'reports',
+          name: 'ReportExport',
+          component: () => import('../views/ReportExport.vue')
+        },
+        {
+          path: 'messages',
+          name: 'Messages',
+          component: () => import('../views/Messages.vue')
+        },
+        {
+          path: 'help',
+          name: 'HelpCenter',
+          component: () => import('../views/HelpCenter.vue')
         }
       ]
     }

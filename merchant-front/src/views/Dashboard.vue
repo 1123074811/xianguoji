@@ -95,7 +95,7 @@
           <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded">4 个任务</span>
         </div>
         <div class="space-y-3 flex-1 overflow-y-auto">
-          <div v-for="task in todoItems" :key="task.title" class="group flex items-start gap-3 p-3 bg-slate-50 hover:bg-green-50 rounded-lg border border-transparent hover:border-green-100 transition-all cursor-pointer">
+          <router-link v-for="task in todoItems" :key="task.title" :to="task.link" class="group flex items-start gap-3 p-3 bg-slate-50 hover:bg-green-50 rounded-lg border border-transparent hover:border-green-100 transition-all cursor-pointer">
             <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" :class="task.iconBg">
               <span class="material-symbols-outlined text-sm" :class="task.iconColor">{{ task.icon }}</span>
             </div>
@@ -104,7 +104,7 @@
               <p class="text-[10px] text-slate-500">{{ task.desc }}</p>
             </div>
             <span class="material-symbols-outlined text-slate-300 group-hover:text-primary ml-auto">chevron_right</span>
-          </div>
+          </router-link>
         </div>
       </div>
     </section>
@@ -212,10 +212,10 @@ const chartData = [
 ]
 
 const todoItems = [
-  { icon: 'schedule', iconBg: 'bg-error/10 text-error', title: '28 个待处理订单', desc: '等待时长已超过1小时' },
-  { icon: 'inventory', iconBg: 'bg-orange-100 text-orange-600', title: '库存预警', desc: '泰国金枕榴莲库存不足 (仅剩3件)' },
-  { icon: 'star', iconBg: 'bg-blue-100 text-blue-600', title: '新评价提醒', desc: '有5条未读客户评价' },
-  { icon: 'undo', iconBg: 'bg-purple-100 text-purple-600', title: '退款申请', desc: '2个退款请求待审核' }
+  { icon: 'schedule', iconBg: 'bg-error/10 text-error', title: '28 个待处理订单', desc: '等待时长已超过1小时', link: '/orders' },
+  { icon: 'inventory', iconBg: 'bg-orange-100 text-orange-600', title: '库存预警', desc: '泰国金枕榴莲库存不足 (仅剩3件)', link: '/goods' },
+  { icon: 'star', iconBg: 'bg-blue-100 text-blue-600', title: '新评价提醒', desc: '有5条未读客户评价', link: '/reviews' },
+  { icon: 'undo', iconBg: 'bg-purple-100 text-purple-600', title: '退款申请', desc: '2个退款请求待审核', link: '/orders' }
 ]
 
 const topProducts = [
