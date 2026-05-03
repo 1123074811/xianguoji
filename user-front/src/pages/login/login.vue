@@ -3,7 +3,7 @@
     <!-- Top Brand Area -->
     <view class="header">
       <view class="logo-box">
-        <svg-icon name="eco" :size="72" color="#FFFFFF" />
+        <svg-icon name="potted_plant" :size="72" color="#FFFFFF" />
       </view>
       <text class="brand-name">鲜果记</text>
       <text class="brand-slogan">精品果园 · 产地直采</text>

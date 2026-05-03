@@ -77,22 +77,57 @@
         </view>
       </view>
 
-      <!-- Order Summary -->
-      <view class="summary-card card">
-        <view class="row">
-          <text class="label">商品总额</text>
-          <text class="value">¥{{ cartStore.totalPrice }}</text>
-        </view>
-        <view class="row">
-          <text class="label">配送费</text>
-          <text class="value">¥0.00</text>
-        </view>
-        <view class="row">
-          <text class="label">优惠券</text>
-          <view class="value discount">
-            <text>-¥5.00</text>
-            <svg-icon name="chevron-right" :size="24" color="#E53935" />
+      <!-- Coupon & Remarks -->
+      <view class="coupon-remark-card card">
+        <view class="coupon-row" @tap="showCouponPicker">
+          <view class="left">
+            <svg-icon name="star" :size="36" color="#BA1A1A" />
+            <text class="label">平台优惠券</text>
           </view>
+          <view class="right">
+            <text class="coupon-avail">2 张可用</text>
+            <text class="coupon-discount">-¥5.00</text>
+            <svg-icon name="chevron-right" :size="28" color="#BDBDBD" />
+          </view>
+        </view>
+        <view class="divider"></view>
+        <view class="remark-row">
+          <svg-icon name="edit" :size="36" color="#BDBDBD" />
+          <view class="remark-content">
+            <text class="label">备注说明</text>
+            <input class="remark-input" placeholder="Anything for the shopkeeper?" v-model="remark" />
+          </view>
+        </view>
+      </view>
+
+      <!-- Price Details -->
+      <view class="price-detail-card card">
+        <view class="row">
+          <text class="label">商品小计</text>
+          <text class="value">¥{{ cartStore.totalPrice.toFixed(2) }}</text>
+        </view>
+        <view class="row">
+          <text class="label">满减优惠</text>
+          <text class="value discount">-¥5.0</text>
+        </view>
+        <view class="row">
+          <text class="label">优惠券抵扣</text>
+          <text class="value discount">-¥5.0</text>
+        </view>
+        <view class="row">
+          <view class="label-with-tag">
+            <text class="label">配送费</text>
+            <text class="free-tag">满39免运费</text>
+          </view>
+          <view class="value-group">
+            <text class="value line-through">¥6.0</text>
+            <text class="value">¥0.0</text>
+          </view>
+        </view>
+        <view class="total-divider"></view>
+        <view class="total-row">
+          <text class="total-label">共 {{ cartStore.totalCount }} 件, 实付合计</text>
+          <text class="total-price">¥{{ finalPrice }}</text>
         </view>
       </view>
     </scroll-view>
@@ -100,8 +135,11 @@
     <!-- Bottom Bar -->
     <view class="bottom-bar">
       <view class="price-info">
-        <text class="label">实付款：</text>
-        <text class="price">¥{{ finalPrice }}</text>
+        <view class="price-row">
+          <text class="label">合计:</text>
+          <text class="price">¥{{ finalPrice }}</text>
+        </view>
+        <text class="discount-text">已优惠 ¥10.0</text>
       </view>
       <button class="submit-btn" @tap="submitOrder">提交订单</button>
     </view>
@@ -115,12 +153,17 @@ import SvgIcon from '@/components/svg-icon.vue';
 
 const cartStore = useCartStore();
 const deliveryType = ref('express');
+const remark = ref('');
 
 const finalPrice = computed(() => {
-  // 简单计算：商品总价 - 优惠券(5元)
-  const total = cartStore.totalPrice - 5;
+  // 商品总价 - 满减优惠(5) - 优惠券抵扣(5)
+  const total = cartStore.totalPrice - 10;
   return total > 0 ? total.toFixed(2) : '0.00';
 });
+
+function showCouponPicker() {
+  uni.showToast({ title: '优惠券选择功能开发中', icon: 'none' });
+}
 
 function goBack() {
   uni.navigateBack();
@@ -381,7 +424,83 @@ function submitOrder() {
   }
 }
 
-.summary-card {
+.coupon-remark-card {
+  display: flex;
+  flex-direction: column;
+
+  .coupon-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .left {
+      display: flex;
+      align-items: center;
+      gap: $space-2;
+
+      .label {
+        font-size: $font-base;
+        font-weight: $weight-medium;
+        color: $color-text-primary;
+      }
+    }
+
+    .right {
+      display: flex;
+      align-items: center;
+      gap: $space-1;
+
+      .coupon-avail {
+        font-size: $font-xs;
+        background-color: rgba($color-price, 0.1);
+        color: $color-price;
+        padding: 4rpx 12rpx;
+        border-radius: $radius-pill;
+      }
+
+      .coupon-discount {
+        font-size: $font-base;
+        font-weight: $weight-semibold;
+        color: $color-price;
+      }
+    }
+  }
+
+  .divider {
+    height: 2rpx;
+    background-color: $color-divider;
+    margin: $space-3 0;
+  }
+
+  .remark-row {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-2;
+
+    .remark-content {
+      flex: 1;
+
+      .label {
+        font-size: $font-base;
+        font-weight: $weight-medium;
+        color: $color-text-primary;
+        margin-bottom: $space-1;
+        display: block;
+      }
+
+      .remark-input {
+        width: 100%;
+        font-size: $font-sm;
+        color: $color-text-primary;
+        background: transparent;
+        border: none;
+        padding: 0;
+      }
+    }
+  }
+}
+
+.price-detail-card {
   display: flex;
   flex-direction: column;
   gap: $space-2;
@@ -396,6 +515,20 @@ function submitOrder() {
       color: $color-text-secondary;
     }
 
+    .label-with-tag {
+      display: flex;
+      align-items: center;
+      gap: $space-1;
+
+      .free-tag {
+        font-size: $font-xs;
+        background-color: $color-primary-bg;
+        color: $color-primary;
+        padding: 2rpx 8rpx;
+        border-radius: 4rpx;
+      }
+    }
+
     .value {
       font-size: $font-sm;
       color: $color-text-primary;
@@ -403,9 +536,46 @@ function submitOrder() {
 
       &.discount {
         color: $color-price;
-        display: flex;
-        align-items: center;
       }
+
+      &.line-through {
+        text-decoration: line-through;
+        color: $color-text-placeholder;
+        font-weight: normal;
+        font-size: $font-xs;
+        margin-right: $space-2;
+      }
+    }
+
+    .value-group {
+      display: flex;
+      align-items: center;
+      gap: $space-1;
+    }
+  }
+
+  .total-divider {
+    height: 2rpx;
+    background-color: $color-divider;
+    margin: $space-2 0;
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: $space-1;
+    padding-top: $space-1;
+
+    .total-label {
+      font-size: $font-xs;
+      color: $color-text-secondary;
+    }
+
+    .total-price {
+      font-size: 48rpx;
+      color: $color-primary;
+      font-weight: bold;
     }
   }
 }
@@ -428,17 +598,29 @@ function submitOrder() {
 
   .price-info {
     display: flex;
-    align-items: baseline;
+    flex-direction: column;
 
-    .label {
-      font-size: $font-sm;
-      color: $color-text-primary;
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 4rpx;
+
+      .label {
+        font-size: $font-xs;
+        color: $color-text-secondary;
+      }
+
+      .price {
+        font-size: 44rpx;
+        color: $color-primary;
+        font-weight: bold;
+      }
     }
 
-    .price {
-      font-size: 40rpx;
+    .discount-text {
+      font-size: $font-xs;
       color: $color-price;
-      font-weight: bold;
+      font-weight: $weight-medium;
     }
   }
 

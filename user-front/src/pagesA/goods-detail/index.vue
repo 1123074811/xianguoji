@@ -104,6 +104,47 @@
           </view>
         </view>
       </view>
+
+      <!-- User Reviews -->
+      <view class="reviews-section">
+        <view class="reviews-header">
+          <text class="reviews-title">用户评价 (128)</text>
+          <view class="reviews-score">
+            <text class="score-num">4.8</text>
+            <svg-icon name="star" :size="24" color="#FFA000" />
+            <text class="satisfaction">满意度 99%</text>
+          </view>
+        </view>
+        <view class="review-list">
+          <view v-for="review in reviews" :key="review.id" class="review-card">
+            <view class="review-top">
+              <view class="user-info">
+                <view class="avatar">{{ review.avatarText }}</view>
+                <text class="username">{{ review.username }}</text>
+              </view>
+              <text class="review-time">{{ review.time }}</text>
+            </view>
+            <text class="review-content">{{ review.content }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- Product Details -->
+      <view class="product-detail-section">
+        <view class="detail-title-bar">
+          <view class="accent-bar"></view>
+          <text class="detail-title">产品详情</text>
+        </view>
+        <view class="detail-content">
+          <text class="detail-text">源自云南高原阳光产区，昼夜温差带来的极致糖分积累。每一颗阳光玫瑰都经过严格筛选，确保甜度在18度以上。</text>
+          <image class="detail-img" src="https://picsum.photos/750/400?random=50" mode="widthFix" />
+          <view class="detail-img-grid">
+            <image class="detail-img-sm" src="https://picsum.photos/375/375?random=51" mode="aspectFill" />
+            <image class="detail-img-sm" src="https://picsum.photos/375/375?random=52" mode="aspectFill" />
+          </view>
+          <text class="detail-quote">“让每一份来自自然的馈赠，都带有阳光的味道。”</text>
+        </view>
+      </view>
     </scroll-view>
 
     <!-- Bottom Action Bar -->
@@ -145,6 +186,11 @@ const goods = ref<any>({
 const buyType = ref('single');
 const specs = ['500g 精装', '1kg 家庭装', '2kg 礼盒装'];
 const activeSpec = ref('500g 精装');
+
+const reviews = ref([
+  { id: 1, avatarText: '李', username: '李女士', time: '昨天', content: '葡萄非常新鲜，果肉结实脆甜，真的有股玫瑰的清香，送过来的时候冰袋还没化。' },
+  { id: 2, avatarText: '王', username: '王先生', time: '3天前', content: '产地直发就是不一样，比超市便宜而且口感更好。包装很精致，适合送人。' }
+]);
 
 function goBack() {
   uni.navigateBack();
@@ -433,6 +479,162 @@ function handleBuyNow() {
         font-size: $font-xs;
         color: $color-text-secondary;
       }
+    }
+  }
+}
+
+.reviews-section {
+  padding: $space-4;
+
+  .reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $space-3;
+
+    .reviews-title {
+      font-size: $font-lg;
+      font-weight: $weight-semibold;
+      color: $color-text-primary;
+    }
+
+    .reviews-score {
+      display: flex;
+      align-items: center;
+      gap: 8rpx;
+      color: $color-primary;
+
+      .score-num {
+        font-weight: bold;
+        font-size: $font-md;
+      }
+
+      .satisfaction {
+        font-size: $font-xs;
+        color: $color-text-secondary;
+        margin-left: $space-2;
+      }
+    }
+  }
+
+  .review-list {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+  }
+
+  .review-card {
+    background-color: #ffffff;
+    padding: $space-3;
+    border-radius: $radius-md;
+    box-shadow: $shadow-card;
+
+    .review-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $space-2;
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+
+        .avatar {
+          width: 64rpx;
+          height: 64rpx;
+          border-radius: 50%;
+          background-color: $color-bg-page;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          color: $color-primary;
+          font-size: $font-md;
+        }
+
+        .username {
+          font-size: $font-md;
+          font-weight: $weight-semibold;
+          color: $color-text-primary;
+        }
+      }
+
+      .review-time {
+        font-size: $font-xs;
+        color: $color-text-secondary;
+      }
+    }
+
+    .review-content {
+      font-size: $font-sm;
+      color: $color-text-primary;
+      @include text-ellipsis-2;
+    }
+  }
+}
+
+.product-detail-section {
+  margin-top: $space-5;
+
+  .detail-title-bar {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 0 $space-4 $space-4;
+
+    .accent-bar {
+      width: 8rpx;
+      height: 40rpx;
+      background-color: $color-primary;
+      border-radius: 4rpx;
+    }
+
+    .detail-title {
+      font-size: $font-lg;
+      font-weight: $weight-semibold;
+      color: $color-text-primary;
+    }
+  }
+
+  .detail-content {
+    .detail-text {
+      display: block;
+      font-size: $font-base;
+      line-height: 1.6;
+      color: $color-text-primary;
+      padding: $space-4;
+      background-color: #ffffff;
+    }
+
+    .detail-img {
+      width: 100%;
+      display: block;
+      border-radius: $radius-lg;
+      margin-bottom: $space-3;
+    }
+
+    .detail-img-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: $space-2;
+      padding: 0 $space-3;
+
+      .detail-img-sm {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: $radius-lg;
+      }
+    }
+
+    .detail-quote {
+      display: block;
+      text-align: center;
+      font-style: italic;
+      font-size: $font-sm;
+      color: $color-text-secondary;
+      padding: $space-4;
+      background-color: #ffffff;
     }
   }
 }

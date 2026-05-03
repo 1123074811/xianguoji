@@ -37,6 +37,27 @@
         </view>
       </view>
 
+      <!-- Coupon Area -->
+      <scroll-view scroll-x class="coupon-scroll">
+        <view class="coupon-list">
+          <view
+            v-for="coupon in coupons"
+            :key="coupon.id"
+            class="coupon-card"
+            :style="{ backgroundColor: coupon.bgColor }"
+          >
+            <view class="coupon-info">
+              <text class="coupon-amount" :style="{ color: coupon.textColor }">¥{{ coupon.amount }}</text>
+              <text class="coupon-condition" :style="{ color: coupon.textColor }">满{{ coupon.threshold }}可用</text>
+            </view>
+            <view class="coupon-action">
+              <text class="coupon-btn" :style="{ backgroundColor: coupon.textColor, color: '#ffffff' }" @tap="claimCoupon(coupon)">领取</text>
+            </view>
+            <view class="coupon-notch" :style="{ borderLeftColor: coupon.bgColor }"></view>
+          </view>
+        </view>
+      </scroll-view>
+
       <!-- Group Buy Section Entry -->
       <view class="section-header">
         <text class="section-title">限时拼团</text>
@@ -91,6 +112,16 @@ const shortcuts = [
   { name: '豆制', icon: 'liquor', bgColor: '#FFFDE7', iconColor: '#FBC02D' },
   { name: '烘焙', icon: 'bakery_dining', bgColor: '#FFF9C4', iconColor: '#F57F17' }
 ];
+
+const coupons = [
+  { id: 1, amount: 5, threshold: 39, bgColor: '#FFDAD6', textColor: '#BA1A1A' },
+  { id: 2, amount: 10, threshold: 79, bgColor: '#B9F474', textColor: '#3E6A00' },
+  { id: 3, amount: 20, threshold: 129, bgColor: '#A3F69C', textColor: '#0D631B' }
+];
+
+function claimCoupon(coupon: any) {
+  uni.showToast({ title: `已领取 ¥${coupon.amount} 优惠券`, icon: 'success' });
+}
 
 const recommendedGoods = ref<any[]>([]);
 const loading = ref(false);
@@ -293,6 +324,65 @@ function goToGroupBuy() {
     gap: 4rpx;
     font-size: $font-sm;
     color: $color-primary;
+  }
+}
+
+.coupon-scroll {
+  white-space: nowrap;
+  padding: 0 $space-4 $space-2;
+
+  .coupon-list {
+    display: inline-flex;
+    gap: $space-3;
+  }
+
+  .coupon-card {
+    display: inline-flex;
+    align-items: center;
+    width: 288rpx;
+    height: 160rpx;
+    border-radius: $radius-md;
+    padding: $space-3;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    .coupon-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4rpx;
+      z-index: 1;
+
+      .coupon-amount {
+        font-size: 36rpx;
+        font-weight: $weight-semibold;
+      }
+
+      .coupon-condition {
+        font-size: $font-xs;
+      }
+    }
+
+    .coupon-action {
+      margin-left: auto;
+      z-index: 1;
+
+      .coupon-btn {
+        font-size: 20rpx;
+        padding: 8rpx 16rpx;
+        border-radius: 8rpx;
+      }
+    }
+
+    .coupon-notch {
+      position: absolute;
+      right: -16rpx;
+      top: 0;
+      bottom: 0;
+      width: 32rpx;
+      border-left: 4rpx dashed rgba(255,255,255,0.3);
+      background-color: rgba(0,0,0,0.03);
+    }
   }
 }
 

@@ -25,6 +25,7 @@
     "@dcloudio/uni-cli-shared": "3.0.0-alpha-3080220230511001",
     "@dcloudio/uni-stacktracey": "3.0.0-alpha-3080220230511001",
     "@dcloudio/vite-plugin-uni": "3.0.0-alpha-3080220230511001",
+    "@material-symbols/svg-400": "^0.44.4",
     "@types/node": "^18.16.16",
     "sass": "^1.62.1",
     "typescript": "^5.0.4",

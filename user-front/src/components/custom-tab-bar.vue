@@ -36,10 +36,10 @@ const cartStore = useCartStore();
 
 const list = computed(() => [
   { pagePath: 'pages/index/index', text: '首页', icon: 'home' },
-  { pagePath: 'pages/category/category', text: '分类', icon: 'category' },
-  { pagePath: 'pages/cart/cart', text: '购物车', icon: 'cart', badge: cartStore.totalCount },
-  { pagePath: 'pages/order/order', text: '订单', icon: 'order' },
-  { pagePath: 'pages/profile/profile', text: '我的', icon: 'user' }
+  { pagePath: 'pages/category/category', text: '分类', icon: 'grid_view' },
+  { pagePath: 'pages/cart/cart', text: '购物车', icon: 'shopping_cart', badge: cartStore.totalCount },
+  { pagePath: 'pages/order/order', text: '订单', icon: 'receipt_long' },
+  { pagePath: 'pages/profile/profile', text: '我的', icon: 'person' }
 ]);
 
 function switchTab(path: string) {

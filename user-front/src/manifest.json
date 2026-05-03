@@ -6,7 +6,7 @@
     "versionCode" : "100",
     "transformPx" : false,
     "mp-weixin" : {
-        "appid" : "",
+        "appid" : "REDACTED_WECHAT_APPID",
         "setting" : {
             "urlCheck" : false
         },
