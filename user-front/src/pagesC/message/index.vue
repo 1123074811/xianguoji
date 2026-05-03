@@ -115,7 +115,7 @@ const messages = ref<Message[]>([
     title: '订单已发货',
     desc: '您的订单 [202310249988] 已发货，预计明日送达，请保持电话畅通~',
     time: '10:30',
-    avatar: '/static/images/logo.png',
+    avatar: '/static/images/wechat-logo.png',
     unread: true,
     link: '/pages/order/order'
   },
@@ -125,7 +125,7 @@ const messages = ref<Message[]>([
     title: '会员升级',
     desc: '恭喜您升级为 [黄金会员]，专属权益与优惠等您查看！',
     time: '昨天',
-    avatar: '/static/images/logo.png',
+    avatar: '/static/images/wechat-logo.png',
     unread: true
   },
   {
@@ -134,7 +134,7 @@ const messages = ref<Message[]>([
     title: '周末狂欢',
     desc: '全场车厘子满 199 减 50，速来抢购！',
     time: '星期三',
-    avatar: '/static/images/logo.png',
+    avatar: '/static/images/wechat-logo.png',
     unread: false,
     link: '/pagesC/coupons/index'
   },
@@ -144,7 +144,7 @@ const messages = ref<Message[]>([
     title: '订单已签收',
     desc: '您的订单 [202310249987] 已签收，欢迎对果园好物作出评价。',
     time: '04-29',
-    avatar: '/static/images/logo.png',
+    avatar: '/static/images/wechat-logo.png',
     unread: false,
     link: '/pagesC/evaluation/index'
   },
@@ -154,7 +154,7 @@ const messages = ref<Message[]>([
     title: '隐私政策更新',
     desc: '我们更新了隐私政策，详细内容请前往设置中心查看。',
     time: '04-25',
-    avatar: '/static/images/logo.png',
+    avatar: '/static/images/wechat-logo.png',
     unread: false,
     link: '/pagesC/settings/index'
   }
@@ -343,3 +343,4 @@ function markAllRead() {
   margin-top: 200rpx;
 }
 </style>
+

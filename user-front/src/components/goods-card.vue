@@ -1,7 +1,7 @@
 <template>
   <view class="goods-card" hover-class="btn-active" @tap="handleTap">
     <view class="image-wrapper">
-      <image :src="goods.image" mode="aspectFill" class="goods-image" />
+      <image :src="imageSrc" mode="aspectFill" class="goods-image" @error="handleImageError" />
       <view v-if="goods.isGroupBuy" class="tag group-buy-tag">拼团</view>
       <view v-if="goods.stock <= 0" class="out-of-stock-mask">已售罄</view>
     </view>
@@ -22,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import { useCartStore } from '@/stores/cart';
 import SvgIcon from './svg-icon.vue';
 
@@ -30,6 +31,9 @@ const props = defineProps<{
 }>();
 
 const cartStore = useCartStore();
+const imageLoadFailed = ref(false);
+const fallbackImage = '/static/images/goods/apple.png';
+const imageSrc = computed(() => imageLoadFailed.value ? fallbackImage : (props.goods.image || fallbackImage));
 
 function handleTap() {
   uni.navigateTo({
@@ -44,6 +48,10 @@ function handleAddToCart() {
     icon: 'success',
     duration: 1000
   });
+}
+
+function handleImageError() {
+  imageLoadFailed.value = true;
 }
 </script>
 

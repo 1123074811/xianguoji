@@ -51,7 +51,7 @@
       <!-- WeChat Login -->
       <view class="social-login">
         <view class="wechat-btn" hover-class="btn-active" @tap="wechatLogin">
-          <image class="wechat-icon" src="/static/images/wechat-logo.png" mode="aspectFit" />
+          <svg-icon name="wechat" :size="64" color="#07C160" />
         </view>
         <text class="social-text">微信快捷登录</text>
       </view>
@@ -301,10 +301,6 @@ function wechatLogin() {
       justify-content: center;
       box-shadow: 0 4rpx 8rpx rgba(0,0,0,0.04);
 
-      .wechat-icon {
-        width: 64rpx;
-        height: 64rpx;
-      }
     }
 
     .social-text {

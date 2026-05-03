@@ -67,15 +67,18 @@ function switchTab(path: string) {
 .tab-bar {
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20rpx);
-  height: 128rpx;
+  height: calc(128rpx + constant(safe-area-inset-bottom));
+  height: calc(128rpx + env(safe-area-inset-bottom));
   display: flex;
   border-top: 2rpx solid rgba(0, 0, 0, 0.05);
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
   box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.02);
 
   .tab-item {
     flex: 1;
+    height: 128rpx;
     display: flex;
     flex-direction: column;
     align-items: center;

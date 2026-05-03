@@ -103,13 +103,13 @@ onShow(() => {
 });
 
 const shortcuts = [
-  { name: '叶菜', icon: 'eco', bgColor: '#E8F5E9', iconColor: '#2E7D32' },
-  { name: '水果', icon: 'nutrition', bgColor: '#FFF3E0', iconColor: '#EF6C00' },
-  { name: '根茎', icon: 'garden_cart', bgColor: '#FFF8E1', iconColor: '#F9A825' },
-  { name: '菌菇', icon: 'forest', bgColor: '#F5F5F5', iconColor: '#616161' },
-  { name: '肉蛋', icon: 'restaurant', bgColor: '#FFEBEE', iconColor: '#C62828' },
+  { name: '叶菜', icon: 'leafy_greens', bgColor: '#E8F5E9', iconColor: '#2E7D32' },
+  { name: '水果', icon: 'fruit_cherries', bgColor: '#FFF3E0', iconColor: '#EF6C00' },
+  { name: '根茎', icon: 'root_vegetable', bgColor: '#FFF8E1', iconColor: '#F9A825' },
+  { name: '菌菇', icon: 'mushroom', bgColor: '#F5F5F5', iconColor: '#616161' },
+  { name: '肉蛋', icon: 'meat_egg', bgColor: '#FFEBEE', iconColor: '#C62828' },
   { name: '水产', icon: 'water_drop', bgColor: '#E3F2FD', iconColor: '#1565C0' },
-  { name: '豆制', icon: 'liquor', bgColor: '#FFFDE7', iconColor: '#FBC02D' },
+  { name: '豆制', icon: 'tofu', bgColor: '#FFFDE7', iconColor: '#FBC02D' },
   { name: '烘焙', icon: 'bakery_dining', bgColor: '#FFF9C4', iconColor: '#F57F17' }
 ];
 
