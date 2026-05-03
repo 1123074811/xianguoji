@@ -1,0 +1,11 @@
+package com.xianguoji.server.common.annotation;
+
+import java.lang.annotation.*;
+
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface AdminRequired {
+
+    String[] roles() default {};
+}

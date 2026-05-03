@@ -27,3 +27,16 @@ npm-debug.log*
 # Cache
 .cache/
 .temp/
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+.mvn/
+mvnw
+mvnw.cmd
+HELP.md
+
+# Redis snapshot accidentally written into project
+dump.rdb
