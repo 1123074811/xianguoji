@@ -93,7 +93,7 @@
               <input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox" v-model="form.remember" />
               <span class="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">记住我</span>
             </label>
-            <a class="font-body-sm text-body-sm text-primary hover:underline font-medium cursor-pointer">忘记密码？</a>
+            <router-link to="/forgot-password" class="font-body-sm text-body-sm text-primary hover:underline font-medium cursor-pointer">忘记密码？</router-link>
           </div>
 
           <!-- Login Button -->

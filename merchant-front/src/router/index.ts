@@ -9,6 +9,11 @@ const router = createRouter({
       component: () => import('../views/Login.vue')
     },
     {
+      path: '/forgot-password',
+      name: 'ForgotPassword',
+      component: () => import('../views/ForgotPassword.vue')
+    },
+    {
       path: '/',
       component: () => import('../layout/DefaultLayout.vue'),
       redirect: '/dashboard',
