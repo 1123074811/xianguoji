@@ -50,6 +50,11 @@ const router = createRouter({
           component: () => import('../views/Campaign.vue')
         },
         {
+          path: 'campaign/coupon/create',
+          name: 'CouponCreate',
+          component: () => import('../views/CouponCreate.vue')
+        },
+        {
           path: 'reviews',
           name: 'Reviews',
           component: () => import('../views/Reviews.vue')

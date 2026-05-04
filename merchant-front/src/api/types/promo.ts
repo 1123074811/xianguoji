@@ -3,22 +3,24 @@ export interface AdminCouponVO {
   name: string;
   type: number;
   amount: string;
-  threshold: string;
+  minAmount: string;
   startTime: string;
   endTime: string;
-  totalCount: number;
-  claimedCount: number;
+  total: number;
+  receivedCount: number;
   usedCount: number;
   status: number;
+  createdAt: string;
+  updatedAt: string;
 }
 export interface CouponCreateDto {
   name: string;
   type: number;
   amount: string;
-  threshold: string;
+  minAmount: string;
   startTime: string;
   endTime: string;
-  totalCount: number;
+  total: number;
 }
 export interface AdminGroupBuyVO {
   id: number;

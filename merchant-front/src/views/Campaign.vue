@@ -6,10 +6,10 @@
         <h1 class="font-h1 text-h1 text-on-surface mb-1">营销管理</h1>
         <p class="font-body-md text-body-md text-slate-500">优惠券与促销活动管理，助力销售增长。</p>
       </div>
-      <button class="bg-primary text-on-primary px-6 py-2.5 rounded-lg flex items-center gap-2 font-label-bold shadow-md hover:translate-y-[-1px] transition-all">
+      <router-link to="/campaign/coupon/create" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg flex items-center gap-2 font-label-bold shadow-md hover:translate-y-[-1px] transition-all">
         <span class="material-symbols-outlined">add</span>
         创建优惠券
-      </button>
+      </router-link>
     </div>
 
     <!-- Marketing Stats Grid -->
@@ -31,15 +31,32 @@
     <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
       <!-- Tabs -->
       <div class="flex items-center px-6 border-b border-slate-100 overflow-x-auto">
-        <button v-for="tab in couponTabs" :key="tab.label" @click="activeTab = tab.label"
+        <button v-for="tab in couponTabs" :key="tab.label" @click="switchTab(tab.status)"
           class="px-6 py-4 font-label-bold border-b-2 whitespace-nowrap transition-colors"
-          :class="activeTab === tab.label ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-600'">
+          :class="currentStatus === tab.status ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-600'">
           {{ tab.label }} ({{ tab.count }})
         </button>
       </div>
 
+      <!-- Loading State -->
+      <div v-if="loading" class="flex items-center justify-center py-12">
+        <span class="material-symbols-outlined animate-spin text-4xl text-primary">refresh</span>
+        <span class="ml-3 text-slate-500">加载中...</span>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else-if="coupons.length === 0" class="flex flex-col items-center justify-center py-12">
+        <span class="material-symbols-outlined text-6xl text-slate-300 mb-4">coupon</span>
+        <p class="text-slate-500 font-label-bold mb-2">暂无优惠券</p>
+        <p class="text-slate-400 text-sm mb-6">点击上方按钮创建您的第一个优惠券</p>
+        <router-link to="/campaign/coupon/create" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg flex items-center gap-2 font-label-bold shadow-md hover:translate-y-[-1px] transition-all">
+          <span class="material-symbols-outlined">add</span>
+          创建优惠券
+        </router-link>
+      </div>
+
       <!-- Coupon Table -->
-      <div class="overflow-x-auto">
+      <div v-else class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead class="bg-slate-50 border-b border-slate-200">
             <tr>
@@ -54,22 +71,33 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            <tr v-for="coupon in coupons" :key="coupon.name" class="hover:bg-slate-50 transition-colors h-[48px]">
+            <tr v-for="coupon in coupons" :key="coupon.id" class="hover:bg-slate-50 transition-colors h-[48px]">
               <td class="px-6 py-3 font-label-bold text-slate-800">{{ coupon.name }}</td>
               <td class="px-6 py-3">
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold" :class="coupon.typeClass">{{ coupon.type }}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold" :class="getCouponTypeClass(coupon.type)">
+                  {{ getCouponTypeText(coupon.type) }}
+                </span>
               </td>
-              <td class="px-6 py-3 text-sm font-medium text-error">{{ coupon.discount }}</td>
-              <td class="px-6 py-3 text-sm text-slate-600">{{ coupon.threshold }}</td>
-              <td class="px-6 py-3 text-sm text-slate-600">{{ coupon.claimed }}/{{ coupon.total }}</td>
-              <td class="px-6 py-3 text-sm text-slate-600">{{ coupon.validity }}</td>
+              <td class="px-6 py-3 text-sm font-medium text-error">{{ getDiscountDisplay(coupon) }}</td>
+              <td class="px-6 py-3 text-sm text-slate-600">{{ getThresholdDisplay(coupon) }}</td>
+              <td class="px-6 py-3 text-sm text-slate-600">{{ coupon.receivedCount || 0 }}/{{ coupon.total }}</td>
+              <td class="px-6 py-3 text-sm text-slate-600">{{ getValidityDisplay(coupon) }}</td>
               <td class="px-6 py-3">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="coupon.statusClass">{{ coupon.status }}</span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="getStatusClass(coupon.status)">
+                  {{ getStatusText(coupon.status) }}
+                </span>
               </td>
               <td class="px-6 py-3 text-right">
                 <div class="flex items-center justify-end gap-2 text-slate-400">
-                  <button class="p-1 hover:text-primary transition-colors" title="编辑"><span class="material-symbols-outlined text-[20px]">edit</span></button>
-                  <button class="p-1 hover:text-error transition-colors" title="停用"><span class="material-symbols-outlined text-[20px]">pause_circle</span></button>
+                  <button @click="editCoupon(coupon)" class="p-1 hover:text-primary transition-colors" title="编辑">
+                    <span class="material-symbols-outlined text-[20px]">edit</span>
+                  </button>
+                  <button @click="toggleCouponStatus(coupon)" class="p-1 hover:text-error transition-colors" :title="coupon.status === 1 ? '停用' : '启用'">
+                    <span class="material-symbols-outlined text-[20px]">{{ coupon.status === 1 ? 'pause_circle' : 'play_circle' }}</span>
+                  </button>
+                  <button @click="deleteCoupon(coupon)" class="p-1 hover:text-error transition-colors" title="删除">
+                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -78,13 +106,22 @@
       </div>
 
       <!-- Pagination -->
-      <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-surface-container-low">
-        <span class="text-body-sm text-slate-500">显示第 1-5 条，共 18 条优惠券</span>
+      <div v-if="!loading && coupons.length > 0" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-surface-container-low">
+        <span class="text-body-sm text-slate-500">
+          显示第 {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, totalCount) }} 条，共 {{ totalCount }} 条优惠券
+        </span>
         <div class="flex items-center gap-1">
-          <button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white transition-colors"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
-          <button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-on-primary font-bold text-sm shadow-sm">1</button>
-          <button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-600 hover:bg-white transition-colors text-sm">2</button>
-          <button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white transition-colors"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+          <button @click="prevPage" :disabled="currentPage <= 1" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-sm">chevron_left</span>
+          </button>
+          <button v-for="page in visiblePages" :key="page" @click="goToPage(page)" 
+            class="w-8 h-8 flex items-center justify-center rounded font-bold text-sm transition-colors"
+            :class="page === currentPage ? 'bg-primary text-on-primary shadow-sm' : 'border border-outline-variant text-slate-600 hover:bg-white'">
+            {{ page }}
+          </button>
+          <button @click="nextPage" :disabled="currentPage >= totalPages" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-sm">chevron_right</span>
+          </button>
         </div>
       </div>
     </div>
@@ -92,28 +129,218 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { adminPromoApi } from '@/api/modules/promo'
+import type { AdminCouponVO } from '@/api/types/promo'
 
-const activeTab = ref('生效中')
+const router = useRouter()
 
-const stats = [
-  { label: '活跃优惠券', value: '8', change: '+2 本周', changeColor: 'text-green-600', desc: '正在发放中', icon: 'confirmation_number', iconClass: 'text-primary bg-primary/10' },
-  { label: '累计领取量', value: '2,840', change: '+18.5%', changeColor: 'text-green-600', desc: '较上月增长', icon: 'redeem', iconClass: 'text-tertiary bg-tertiary-fixed' },
-  { label: '核销率', value: '67.3%', change: '+3.2%', changeColor: 'text-green-600', desc: '高于行业均值', icon: 'verified', iconClass: 'text-secondary bg-secondary-fixed' },
-  { label: '带来营收', value: '¥48.2K', change: '+22%', changeColor: 'text-green-600', desc: '优惠券贡献营收', icon: 'payments', iconClass: 'text-primary bg-primary/10' }
-]
+// 响应式数据
+const loading = ref(false)
+const coupons = ref<AdminCouponVO[]>([])
+const totalCount = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const currentStatus = ref<number | null>(null) // null表示全部，1=生效中，2=已过期，3=待生效
 
-const couponTabs = [
-  { label: '生效中', count: 8 },
-  { label: '已过期', count: 12 },
-  { label: '待生效', count: 3 }
-]
+// 统计数据
+const stats = ref([
+  { label: '活跃优惠券', value: '0', change: '+0 本周', changeColor: 'text-green-600', desc: '正在发放中', icon: 'confirmation_number', iconClass: 'text-primary bg-primary/10' },
+  { label: '累计领取量', value: '0', change: '+0%', changeColor: 'text-green-600', desc: '较上月增长', icon: 'redeem', iconClass: 'text-tertiary bg-tertiary-fixed' },
+  { label: '核销率', value: '0%', change: '+0%', changeColor: 'text-green-600', desc: '高于行业均值', icon: 'verified', iconClass: 'text-secondary bg-secondary-fixed' },
+  { label: '带来营收', value: '¥0', change: '+0%', changeColor: 'text-green-600', desc: '优惠券贡献营收', icon: 'payments', iconClass: 'text-primary bg-primary/10' }
+])
 
-const coupons = [
-  { name: '新人首单立减', type: '满减券', typeClass: 'bg-primary-fixed text-on-primary-fixed-variant', discount: '¥20', threshold: '满 ¥99 可用', claimed: '1,240', total: '2,000', validity: '2024.01.01 - 2024.03.31', status: '生效中', statusClass: 'bg-primary-fixed text-on-primary-fixed-variant border border-primary/20' },
-  { name: '水果满减优惠', type: '满减券', typeClass: 'bg-primary-fixed text-on-primary-fixed-variant', discount: '¥15', threshold: '满 ¥69 可用', claimed: '856', total: '1,500', validity: '2024.01.15 - 2024.06.30', status: '生效中', statusClass: 'bg-primary-fixed text-on-primary-fixed-variant border border-primary/20' },
-  { name: '周末折扣', type: '折扣券', typeClass: 'bg-tertiary-fixed text-on-tertiary-fixed-variant', discount: '8.5折', threshold: '无门槛', claimed: '420', total: '800', validity: '2024.02.01 - 2024.04.30', status: '生效中', statusClass: 'bg-primary-fixed text-on-primary-fixed-variant border border-primary/20' },
-  { name: '春节礼盒专享', type: '满减券', typeClass: 'bg-primary-fixed text-on-primary-fixed-variant', discount: '¥50', threshold: '满 ¥199 可用', claimed: '324', total: '500', validity: '2024.02.01 - 2024.02.15', status: '已过期', statusClass: 'bg-surface-variant text-on-surface-variant border border-outline-variant' },
-  { name: '老客回馈券', type: '折扣券', typeClass: 'bg-tertiary-fixed text-on-tertiary-fixed-variant', discount: '9折', threshold: '满 ¥50 可用', claimed: '0', total: '1,000', validity: '2024.04.01 - 2024.06.30', status: '待生效', statusClass: 'bg-secondary-fixed text-on-secondary-fixed-variant border border-secondary/20' }
-]
+// 标签页配置
+const couponTabs = computed(() => [
+  { label: '全部', status: null, count: totalCount.value },
+  { label: '生效中', status: 1, count: getStatusCount(1) },
+  { label: '已过期', status: 2, count: getStatusCount(2) },
+  { label: '待生效', status: 3, count: getStatusCount(3) }
+])
+
+// 分页相关
+const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value))
+const visiblePages = computed(() => {
+  const pages = []
+  const start = Math.max(1, currentPage.value - 2)
+  const end = Math.min(totalPages.value, start + 4)
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+  return pages
+})
+
+// 获取各状态的优惠券数量
+const getStatusCount = (status: number) => {
+  return coupons.value.filter(c => c.status === status).length
+}
+
+// 加载优惠券列表
+const loadCoupons = async () => {
+  loading.value = true
+  try {
+    const params: any = {
+      page: currentPage.value,
+      size: pageSize.value
+    }
+    if (currentStatus.value !== null) {
+      params.status = currentStatus.value
+    }
+    
+    // 注意：后端返回的是简单的列表，不是分页结构
+    const data = await adminPromoApi.couponPage(params)
+    coupons.value = data.list || data || []
+    totalCount.value = data.total || coupons.value.length
+    
+    // 更新统计数据
+    updateStats()
+  } catch (error) {
+    console.error('加载优惠券列表失败:', error)
+    coupons.value = []
+    totalCount.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
+// 更新统计数据
+const updateStats = () => {
+  const activeCoupons = coupons.value.filter(c => c.status === 1)
+  const totalReceived = coupons.value.reduce((sum, c) => sum + (c.receivedCount || 0), 0)
+  const totalUsed = coupons.value.reduce((sum, c) => sum + (c.usedCount || 0), 0)
+  
+  stats.value[0].value = activeCoupons.length.toString()
+  stats.value[1].value = totalReceived.toString()
+  stats.value[2].value = totalReceived > 0 ? ((totalUsed / totalReceived) * 100).toFixed(1) + '%' : '0%'
+  // 营收数据需要后端提供，暂时显示0
+  stats.value[3].value = '¥0'
+}
+
+// 切换标签页
+const switchTab = (status: number | null) => {
+  currentStatus.value = status
+  currentPage.value = 1
+  loadCoupons()
+}
+
+// 分页操作
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+    loadCoupons()
+  }
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+    loadCoupons()
+  }
+}
+
+const goToPage = (page: number) => {
+  currentPage.value = page
+  loadCoupons()
+}
+
+// 编辑优惠券
+const editCoupon = (coupon: AdminCouponVO) => {
+  router.push(`/campaign/coupon/edit/${coupon.id}`)
+}
+
+// 切换优惠券状态
+const toggleCouponStatus = async (coupon: AdminCouponVO) => {
+  const newStatus = coupon.status === 1 ? 2 : 1
+  const action = newStatus === 1 ? '启用' : '停用'
+  
+  if (!confirm(`确定要${action}优惠券"${coupon.name}"吗？`)) {
+    return
+  }
+  
+  try {
+    await adminPromoApi.updateCoupon(coupon.id, { status: newStatus })
+    coupon.status = newStatus
+    updateStats()
+    // 显示成功提示（TODO: 添加toast组件）
+    console.log(`优惠券${action}成功`)
+  } catch (error) {
+    console.error(`${action}优惠券失败:`, error)
+    // 显示错误提示
+  }
+}
+
+// 删除优惠券
+const deleteCoupon = async (coupon: AdminCouponVO) => {
+  if (!confirm(`确定要删除优惠券"${coupon.name}"吗？此操作不可撤销。`)) {
+    return
+  }
+  
+  try {
+    await adminPromoApi.deleteCoupon(coupon.id)
+    loadCoupons() // 重新加载列表
+    console.log('优惠券删除成功')
+  } catch (error) {
+    console.error('删除优惠券失败:', error)
+  }
+}
+
+// 辅助函数
+const getCouponTypeText = (type: number) => {
+  return type === 1 ? '满减券' : '折扣券'
+}
+
+const getCouponTypeClass = (type: number) => {
+  return type === 1 
+    ? 'bg-primary-fixed text-on-primary-fixed-variant' 
+    : 'bg-tertiary-fixed text-on-tertiary-fixed-variant'
+}
+
+const getDiscountDisplay = (coupon: AdminCouponVO) => {
+  if (coupon.type === 1) {
+    return `¥${coupon.amount}`
+  } else {
+    return `${coupon.amount}折`
+  }
+}
+
+const getThresholdDisplay = (coupon: AdminCouponVO) => {
+  const minAmount = parseFloat(coupon.minAmount || '0')
+  return minAmount > 0 ? `满¥${minAmount}可用` : '无门槛'
+}
+
+const getValidityDisplay = (coupon: AdminCouponVO) => {
+  const start = new Date(coupon.startTime).toLocaleDateString()
+  const end = new Date(coupon.endTime).toLocaleDateString()
+  return `${start} - ${end}`
+}
+
+const getStatusText = (status: number) => {
+  const statusMap = {
+    1: '生效中',
+    2: '已过期', 
+    3: '待生效'
+  }
+  return statusMap[status] || '未知'
+}
+
+const getStatusClass = (status: number) => {
+  const classMap = {
+    1: 'bg-primary-fixed text-on-primary-fixed-variant border border-primary/20',
+    2: 'bg-surface-variant text-on-surface-variant border border-outline-variant',
+    3: 'bg-secondary-fixed text-on-secondary-fixed-variant border border-secondary/20'
+  }
+  return classMap[status] || 'bg-surface-variant text-on-surface-variant'
+}
+
+// 监听状态变化
+watch(currentStatus, () => {
+  currentPage.value = 1
+})
+
+// 组件挂载时加载数据
+onMounted(() => {
+  loadCoupons()
+})
 </script>

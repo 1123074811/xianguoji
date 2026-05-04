@@ -106,7 +106,7 @@ async function fetchCategories() {
     categories.value = catData;
     if (catData.length > 0) activeCatId.value = catData[0].id;
   } catch (e) {
-    console.error(e);
+    console.error('分类数据获取失败:', e);
   }
 }
 

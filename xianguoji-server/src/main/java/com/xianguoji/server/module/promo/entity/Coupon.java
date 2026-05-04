@@ -31,7 +31,7 @@ public class Coupon {
     private Integer validDays;
     private Integer scope;
     @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<Long> scopeProductIds;
+    private List<Integer> scopeProductIds;
     private Integer status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
