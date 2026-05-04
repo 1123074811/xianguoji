@@ -34,7 +34,7 @@
               <svg-icon v-if="item.selected === 1" name="check" :size="24" color="#FFFFFF" />
             </view>
           </view>
-          <image :src="item.mainImage" mode="aspectFill" class="item-img" />
+          <image :src="resolveImageUrl(item.mainImage)" mode="aspectFill" class="item-img" />
           <view class="item-info">
             <view class="top">
               <text class="name">{{ item.productName }}</text>
@@ -97,6 +97,7 @@
 import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useCartStore } from '@/stores/cart';
+import { resolveImageUrl } from '@/utils/image';
 import { useUserStore } from '@/stores/user';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';

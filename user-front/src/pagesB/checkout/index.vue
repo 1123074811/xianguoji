@@ -62,7 +62,7 @@
         </view>
         <view class="goods-list">
           <view v-for="item in cartStore.items" :key="item.id" class="goods-item">
-            <image :src="item.image" mode="aspectFill" class="goods-img" />
+            <image :src="resolveImageUrl(item.image)" mode="aspectFill" class="goods-img" />
             <view class="info">
               <view class="top">
                 <text class="name">{{ item.name }}</text>
@@ -150,6 +150,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useCartStore } from '@/stores/cart';
 import { orderApi } from '@/api/modules/order';
+import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { OrderPreviewVO } from '@/api/types/order';
 

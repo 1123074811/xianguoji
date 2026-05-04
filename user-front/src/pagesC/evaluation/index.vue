@@ -24,7 +24,7 @@
         <view v-else class="list">
           <view v-for="item in pendingList" :key="item.id" class="goods-card card">
             <view class="goods-row">
-              <image :src="item.image" mode="aspectFill" class="img" />
+              <image :src="resolveImageUrl(item.image)" mode="aspectFill" class="img" />
               <view class="info">
                 <text class="name">{{ item.productName }}</text>
                 <text class="meta">规格：{{ item.specName }}</text>
@@ -47,7 +47,7 @@
         <view v-else class="list">
           <view v-for="rev in doneList" :key="rev.id" class="review-card card">
             <view class="goods-row">
-              <image :src="rev.userAvatar" mode="aspectFill" class="img-sm" />
+              <image :src="resolveImageUrl(rev.userAvatar)" mode="aspectFill" class="img-sm" />
               <view class="info">
                 <text class="name">{{ rev.userName }}</text>
                 <view class="stars">
@@ -58,7 +58,7 @@
             </view>
             <text class="content">{{ rev.content }}</text>
             <view v-if="rev.images && rev.images.length" class="img-list">
-              <image v-for="(img, i) in rev.images" :key="i" :src="img" mode="aspectFill" class="img-thumb" />
+              <image v-for="(img, i) in rev.images" :key="i" :src="resolveImageUrl(img)" mode="aspectFill" class="img-thumb" />
             </view>
           </view>
         </view>
@@ -70,6 +70,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { reviewApi } from '@/api/modules/review';
+import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { PendingReviewItemVO, ReviewVO } from '@/api/types/review';
 

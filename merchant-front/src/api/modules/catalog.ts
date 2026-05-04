@@ -13,10 +13,10 @@ export const adminCatalogApi = {
   productDetail: (id: number) =>
     request<AdminProductDetailVO>({ url: `/api/pub/product/${id}` }),
 
-  createProduct: (data: ProductCreateDto) =>
-    request<{ id: number }>({ url: '/api/admin/product', method: 'POST', data }),
+  createProduct: (data: any) =>
+    request<void>({ url: '/api/admin/product', method: 'POST', data }),
 
-  updateProduct: (id: number, data: Partial<ProductCreateDto>) =>
+  updateProduct: (id: number, data: any) =>
     request<void>({ url: `/api/admin/product/${id}`, method: 'PUT', data }),
 
   /** 后端禁止物理删除商品；下架 = status=2（回收站），与 backend-spec §7.4 一致 */

@@ -25,6 +25,7 @@
 import { computed, ref } from 'vue';
 import { useCartStore } from '@/stores/cart';
 import SvgIcon from './svg-icon.vue';
+import { resolveImageUrl } from '@/utils/image';
 
 const props = defineProps<{
   goods: any
@@ -33,7 +34,7 @@ const props = defineProps<{
 const cartStore = useCartStore();
 const imageLoadFailed = ref(false);
 const fallbackImage = '/static/images/goods/apple.png';
-const imageSrc = computed(() => imageLoadFailed.value ? fallbackImage : (props.goods.mainImage || props.goods.image || fallbackImage));
+const imageSrc = computed(() => imageLoadFailed.value ? fallbackImage : resolveImageUrl(props.goods.mainImage || props.goods.image) || fallbackImage);
 const price = computed(() => props.goods.isGroupBuy ? props.goods.groupBuyPrice : (props.goods.minPrice || props.goods.price || '0.00'));
 const stock = computed(() => props.goods.totalStock ?? props.goods.stock ?? 0);
 

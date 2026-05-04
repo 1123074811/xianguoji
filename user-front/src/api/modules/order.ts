@@ -14,7 +14,7 @@ export const orderApi = {
   pay: (orderNo: string, data: { payMethod: string }) =>
     request<any>({ url: `/api/u/order/${orderNo}/pay`, method: 'POST', data }),
 
-  page: (params: { page?: number; size?: number; status?: number }) =>
+  page: (params: { page?: number; size?: number; tab?: string }) =>
     request<PageVO<OrderVO>>({ url: '/api/u/order/page', params }),
 
   detail: (orderNo: string) =>

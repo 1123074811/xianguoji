@@ -42,7 +42,7 @@
             <tr v-for="customer in customers" :key="customer.id" class="hover:bg-slate-50 h-[48px]">
               <td class="px-6 py-3">
                 <div class="flex items-center gap-3">
-                  <img v-if="customer.avatar" :src="customer.avatar" class="w-8 h-8 rounded-full object-cover" alt="" />
+                  <img v-if="customer.avatar" :src="resolveImageUrl(customer.avatar)" class="w-8 h-8 rounded-full object-cover" alt="" />
                   <div v-else class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs bg-primary/10 text-primary">
                     {{ initials(customer.nickname) }}
                   </div>
@@ -86,6 +86,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { customerApi } from '@/api/modules/customer';
 import type { CustomerVO } from '@/api/types/customer';
+import { resolveImageUrl } from '@/utils/image';
 
 const customers = ref<CustomerVO[]>([]);
 const loading = ref(false);

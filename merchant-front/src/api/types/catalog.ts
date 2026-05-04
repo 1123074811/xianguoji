@@ -10,12 +10,25 @@ export interface AdminProductVO {
   sales: number;
   isRecommend: 0 | 1;
   status: 0 | 1;
-  createTime: string;
-  updateTime: string;
+  createdAt: string;
+  updatedAt: string;
 }
-export interface AdminProductDetailVO extends AdminProductVO {
+export interface AdminProductDetailVO {
+  id: number;
+  name: string;
+  subtitle: string;
+  categoryId: number;
+  mainImage: string;
   description: string;
   videoUrl?: string;
+  minPrice: string;
+  maxPrice: string;
+  totalStock: number;
+  sales: number;
+  isRecommend: 0 | 1;
+  supportDelivery: 0 | 1;
+  supportPickup: 0 | 1;
+  status: 0 | 1;
   skuList: AdminSkuVO[];
   carouselImages: string[];
   detailImages: string[];

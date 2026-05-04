@@ -118,7 +118,7 @@
           <view v-for="review in reviews" :key="review.id" class="review-card">
             <view class="review-top">
               <view class="user-info">
-                <image v-if="review.userAvatar" :src="review.userAvatar" class="avatar-img" />
+                <image v-if="review.userAvatar" :src="resolveImageUrl(review.userAvatar)" class="avatar-img" />
                 <view v-else class="avatar">{{ review.userName?.charAt(0) || '?' }}</view>
                 <text class="username">{{ review.userName }}</text>
               </view>
@@ -138,7 +138,7 @@
         <view class="detail-content" v-if="goods">
           <text class="detail-text">{{ goods.description }}</text>
           <template v-if="goods.detailImages.length">
-            <image v-for="(img, idx) in goods.detailImages" :key="idx" class="detail-img" :src="img" mode="widthFix" />
+            <image v-for="(img, idx) in goods.detailImages" :key="idx" class="detail-img" :src="resolveImageUrl(img)" mode="widthFix" />
           </template>
         </view>
       </view>
@@ -170,6 +170,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useCartStore } from '@/stores/cart';
 import { catalogApi } from '@/api/modules/catalog';
 import { reviewApi } from '@/api/modules/review';
+import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { ProductDetailVO } from '@/api/types/catalog';
 import type { ReviewVO, ReviewSummaryVO } from '@/api/types/review';
@@ -190,7 +191,8 @@ const activeSku = computed(() => {
 
 const displayImages = computed(() => {
   if (!goods.value) return [];
-  return goods.value.carouselImages.length > 0 ? goods.value.carouselImages : [goods.value.mainImage];
+  const raw = goods.value.carouselImages.length > 0 ? goods.value.carouselImages : [goods.value.mainImage];
+  return raw.map(resolveImageUrl);
 });
 
 async function loadDetail() {

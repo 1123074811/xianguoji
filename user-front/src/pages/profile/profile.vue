@@ -141,8 +141,8 @@ const assets = computed(() => {
 });
 
 const orderNavs = [
-  { id: 'unpaid', label: '待付款', icon: 'order' },
-  { id: 'toship', label: '待发货', icon: 'order', badge: 2 },
+  { id: 'unpaid', label: '待付款', icon: 'receipt_long' },
+  { id: 'toship', label: '待发货', icon: 'shopping_cart' },
   { id: 'toreceive', label: '待收货', icon: 'shipping' },
   { id: 'evaluation', label: '待评价', icon: 'star' },
   { id: 'aftersale', label: '售后', icon: 'arrow-back' }

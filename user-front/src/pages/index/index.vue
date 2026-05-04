@@ -30,7 +30,7 @@
       <!-- Banner -->
       <swiper v-if="banners.length" class="banner-section" autoplay circular :interval="4000">
         <swiper-item v-for="banner in banners" :key="banner.id">
-          <image class="banner-img" :src="banner.image" mode="aspectFill" />
+          <image class="banner-img" :src="resolveImageUrl(banner.image)" mode="aspectFill" />
           <view class="banner-content">
             <text class="banner-title">{{ banner.title }}</text>
             <view class="banner-btn" @tap="handleBannerClick(banner)">立即抢购</view>
@@ -92,18 +92,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import GoodsCard from '@/components/goods-card.vue';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
 import { catalogApi } from '@/api/modules/catalog';
+import { resolveImageUrl } from '@/utils/image';
 import { promoApi } from '@/api/modules/promo';
 import type { BannerVO, CategoryTreeVO, ProductVO } from '@/api/types/catalog';
 import type { CouponVO } from '@/api/types/promo';
 
 onShow(() => {
   uni.hideTabBar();
+  loadHomeData();
 });
 
 const shortcuts = ref<CategoryTreeVO[]>([]);
@@ -155,18 +157,20 @@ async function fetchGoods() {
   loading.value = true;
   try {
     const data = await catalogApi.recommend();
-    recommendedGoods.value = [...recommendedGoods.value, ...data];
-    if (recommendedGoods.value.length > 20) noMore.value = true;
+    const existingIds = new Set(recommendedGoods.value.map(g => g.id));
+    const newItems = data.filter(g => !existingIds.has(g.id));
+    if (newItems.length === 0) {
+      noMore.value = true;
+    } else {
+      recommendedGoods.value = [...recommendedGoods.value, ...newItems];
+      if (recommendedGoods.value.length > 20) noMore.value = true;
+    }
   } catch (e) {
     console.error(e);
   } finally {
     loading.value = false;
   }
 }
-
-onMounted(() => {
-  loadHomeData();
-});
 
 function loadMore() {
   fetchGoods();

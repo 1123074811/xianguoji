@@ -43,7 +43,7 @@
 
         <view class="group-list">
           <view v-for="item in groupGoods" :key="item.id" class="group-card card">
-            <image :src="item.mainImage" mode="aspectFill" class="goods-img" />
+            <image :src="resolveImageUrl(item.mainImage)" mode="aspectFill" class="goods-img" />
             <view class="info">
               <view class="top">
                 <text class="name">{{ item.productName }}</text>
@@ -70,6 +70,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { promoApi } from '@/api/modules/promo';
+import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { GroupBuyActivityVO } from '@/api/types/promo';
 

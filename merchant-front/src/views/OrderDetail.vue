@@ -81,7 +81,7 @@
           <tbody class="divide-y divide-slate-100">
             <tr v-for="item in order.items" :key="item.id" class="hover:bg-slate-50 h-[48px]">
               <td class="px-6 py-3 flex items-center gap-3">
-                <img v-if="item.image" :src="item.image" class="w-10 h-10 rounded-lg object-cover shrink-0" alt="" />
+                <img v-if="item.image" :src="resolveImageUrl(item.image)" class="w-10 h-10 rounded-lg object-cover shrink-0" alt="" />
                 <div v-else class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
                   <span class="material-symbols-outlined text-slate-400 text-sm">nutrition</span>
                 </div>
@@ -127,6 +127,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { adminOrderApi } from '@/api/modules/order';
 import type { AdminOrderVO } from '@/api/types/order';
+import { resolveImageUrl } from '@/utils/image';
 
 const route = useRoute();
 const router = useRouter();

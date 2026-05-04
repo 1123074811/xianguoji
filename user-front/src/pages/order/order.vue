@@ -41,7 +41,7 @@
               <image 
                 v-for="(item, index) in order.items" 
                 :key="index" 
-                :src="item.mainImage" 
+                :src="resolveImageUrl(item.mainImage)" 
                 mode="aspectFill" 
                 class="goods-img" 
               />
@@ -80,9 +80,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onUnmounted, watch } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { orderApi } from '@/api/modules/order';
+import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
 import type { OrderVO } from '@/api/types/order';
@@ -108,13 +109,13 @@ const tabs = [
   { id: 'aftersale', name: '退款/售后' }
 ];
 
-const statusMap: Record<string, number | undefined> = {
+const tabMap: Record<string, string | undefined> = {
   all: undefined,
-  unpaid: 10,
-  toship: 20,
-  toreceive: 30,
-  completed: 40,
-  aftersale: 50,
+  unpaid: 'pending',
+  toship: 'processing',
+  toreceive: 'delivering',
+  completed: 'done',
+  aftersale: 'aftersale',
 };
 
 const activeTabId = ref('all');
@@ -138,11 +139,11 @@ async function fetchOrders(reset = false) {
   if (noMore.value) return;
   loading.value = true;
   try {
-    const status = statusMap[activeTabId.value];
+    const tab = tabMap[activeTabId.value];
     const data = await orderApi.page({
       page: currentPage.value,
       size: pageSize,
-      status,
+      tab,
     });
     if (reset) {
       orders.value = data.list;
@@ -159,10 +160,6 @@ async function fetchOrders(reset = false) {
 }
 
 watch(activeTabId, () => fetchOrders(true));
-
-onMounted(() => {
-  fetchOrders(true);
-});
 
 function loadMore() {
   fetchOrders();

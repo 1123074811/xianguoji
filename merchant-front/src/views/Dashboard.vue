@@ -136,7 +136,7 @@
               <tr v-for="(item, i) in topProducts" :key="item.id" class="h-[48px] hover:bg-slate-50 transition-colors">
                 <td class="px-6 text-sm font-black text-slate-400">#{{ String(i + 1).padStart(2, '0') }}</td>
                 <td class="px-6 flex items-center gap-3">
-                  <img v-if="item.mainImage" :src="item.mainImage" class="w-8 h-8 rounded-lg object-cover shrink-0" alt="" />
+                  <img v-if="item.mainImage" :src="resolveImageUrl(item.mainImage)" class="w-8 h-8 rounded-lg object-cover shrink-0" alt="" />
                   <div v-else class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
                     <span class="material-symbols-outlined text-slate-400 text-sm">nutrition</span>
                   </div>
@@ -178,6 +178,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 import { statApi } from '@/api/modules/stat';
 import type { DashboardVO, OrderTrendItem, TopProductVO, TodoVO } from '@/api/types/stat';
+import { resolveImageUrl } from '@/utils/image';
 
 const adminStore = useAdminStore();
 

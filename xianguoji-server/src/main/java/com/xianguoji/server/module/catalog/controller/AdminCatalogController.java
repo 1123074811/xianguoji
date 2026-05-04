@@ -157,8 +157,28 @@ public class AdminCatalogController {
         if (body.get("categoryId") != null) product.setCategoryId(Long.valueOf(body.get("categoryId").toString()));
         if (body.get("mainImage") != null) product.setMainImage((String) body.get("mainImage"));
         if (body.get("description") != null) product.setDescription((String) body.get("description"));
+        if (body.get("videoUrl") != null) product.setVideoUrl((String) body.get("videoUrl"));
         if (body.get("isRecommend") != null) product.setIsRecommend((Integer) body.get("isRecommend"));
+        if (body.get("supportDelivery") != null) product.setSupportDelivery((Integer) body.get("supportDelivery"));
+        if (body.get("supportPickup") != null) product.setSupportPickup((Integer) body.get("supportPickup"));
         productMapper.updateById(product);
+
+        // 更新图片: 先删后增
+        if (body.containsKey("images")) {
+            productImageMapper.delete(new LambdaQueryWrapper<ProductImage>().eq(ProductImage::getProductId, id));
+            List<Map<String, Object>> images = (List<Map<String, Object>>) body.get("images");
+            if (images != null) {
+                int sort = 0;
+                for (Map<String, Object> img : images) {
+                    ProductImage pi = new ProductImage();
+                    pi.setProductId(id);
+                    pi.setUrl((String) img.get("url"));
+                    pi.setType(img.get("type") != null ? (Integer) img.get("type") : 1);
+                    pi.setSort(sort++);
+                    productImageMapper.insert(pi);
+                }
+            }
+        }
 
         // 更新 SKU: 先删后增
         if (body.containsKey("skus")) {

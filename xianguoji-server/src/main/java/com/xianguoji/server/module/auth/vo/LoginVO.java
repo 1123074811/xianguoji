@@ -28,5 +28,6 @@ public class LoginVO {
         private String phone;
         private String role;
         private String staffRole;
+        private Boolean isNew;
     }
 }

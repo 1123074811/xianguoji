@@ -55,6 +55,12 @@ export function request<T = any>(opts: RequestOptions): Promise<T> {
       success: (res) => {
         // 1. HTTP 层异常
         if (res.statusCode < 200 || res.statusCode >= 300) {
+          // 尝试从响应体识别认证错误
+          const body = res.data as R<T>;
+          if (body && (body.code === 4010 || body.code === 4011) && !opts.anonymous) {
+            handleAuthFail();
+            return reject(body);
+          }
           if ((res.statusCode === 401) && !opts.anonymous) handleAuthFail();
           !opts.silent && uni.showToast({ title: `网络异常 ${res.statusCode}`, icon: 'none' });
           return reject(res);

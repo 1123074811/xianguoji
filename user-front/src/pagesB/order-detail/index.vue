@@ -39,7 +39,7 @@
       <view class="goods-card card" v-if="order">
         <view class="goods-list">
           <view v-for="item in order.items" :key="item.skuId" class="goods-item">
-            <image :src="item.mainImage" mode="aspectFill" class="goods-img" />
+            <image :src="resolveImageUrl(item.mainImage)" mode="aspectFill" class="goods-img" />
             <view class="info">
               <view class="top">
                 <text class="name">{{ item.productName }}</text>
@@ -100,6 +100,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { orderApi } from '@/api/modules/order';
+import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { OrderVO } from '@/api/types/order';
 

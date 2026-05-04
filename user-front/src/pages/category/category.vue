@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import GoodsCard from '@/components/goods-card.vue';
 import SvgIcon from '@/components/svg-icon.vue';
@@ -76,6 +76,7 @@ import type { CategoryTreeVO, ProductVO } from '@/api/types/catalog';
 
 onShow(() => {
   uni.hideTabBar();
+  fetchCategories();
 });
 
 const categories = ref<CategoryTreeVO[]>([]);
@@ -140,10 +141,6 @@ async function fetchGoods(reset = false) {
 
 watch(activeCatId, () => {
   fetchGoods(true);
-});
-
-onMounted(() => {
-  fetchCategories();
 });
 
 function loadMore() {

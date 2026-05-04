@@ -34,8 +34,8 @@ export const useUserStore = defineStore('user', () => {
     setUserInfo(vo.userInfo);
   }
 
-  async function wechatLogin(code: string) {
-    const vo = await authApi.wechatLogin({ code });
+  async function wechatLogin(jsCode: string, nickname: string, avatar: string) {
+    const vo = await authApi.wechatLogin({ jsCode, nickname, avatar });
     setToken(vo.token);
     setUserInfo(vo.userInfo);
   }

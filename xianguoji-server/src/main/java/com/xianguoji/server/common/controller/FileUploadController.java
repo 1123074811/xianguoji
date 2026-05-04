@@ -29,6 +29,11 @@ public class FileUploadController {
     private static final long MAX_SIZE = 5 * 1024 * 1024; // 5MB
     private static final java.util.Set<String> ALLOWED_TYPES = java.util.Set.of("jpg", "jpeg", "png", "webp");
 
+    @PostMapping("/api/pub/file/upload-avatar")
+    public R<String> publicUploadAvatar(@RequestParam("file") MultipartFile file) {
+        return R.ok(upload(file));
+    }
+
     @PostMapping("/api/u/file/upload")
     public R<String> userUpload(@RequestParam("file") MultipartFile file) {
         return R.ok(upload(file));

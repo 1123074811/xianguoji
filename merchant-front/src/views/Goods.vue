@@ -55,7 +55,7 @@
           <tbody class="divide-y divide-slate-100">
             <tr v-for="product in products" :key="product.id" class="hover:bg-slate-50/80 transition-colors group">
               <td class="px-3 py-3">
-                <img v-if="product.mainImage" :src="product.mainImage" class="w-12 h-12 rounded object-cover" alt="" />
+                <img v-if="product.mainImage" :src="resolveImageUrl(product.mainImage)" class="w-12 h-12 rounded object-cover" alt="" />
                 <div v-else class="w-12 h-12 rounded bg-slate-100 border border-slate-200 flex items-center justify-center">
                   <span class="material-symbols-outlined text-slate-400">nutrition</span>
                 </div>
@@ -116,6 +116,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { adminCatalogApi } from '@/api/modules/catalog';
 import type { AdminProductVO, AdminCategoryVO } from '@/api/types/catalog';
+import { resolveImageUrl } from '@/utils/image';
 
 /** status: 0=已下架 1=在售 2=回收站 */
 const tabs: { label: string; value?: number }[] = [

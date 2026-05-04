@@ -7,6 +7,7 @@ import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.ResultCode;
 import com.xianguoji.server.common.security.JwtUtil;
 import com.xianguoji.server.common.util.SmsUtil;
+import com.xianguoji.server.common.util.WechatUtil;
 import com.xianguoji.server.module.auth.dto.AdminLoginDto;
 import com.xianguoji.server.module.auth.dto.SmsLoginDto;
 import com.xianguoji.server.module.auth.dto.SmsSendDto;
@@ -37,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final StaffMapper staffMapper;
     private final JwtUtil jwtUtil;
     private final SmsUtil smsUtil;
+    private final WechatUtil wechatUtil;
 
     private static final String SMS_CODE_PREFIX = "sms:code:";
     private static final String SMS_LIMIT_PREFIX = "sms:limit:";
@@ -125,13 +127,68 @@ public class AuthServiceImpl implements AuthService {
                         .avatar(user.getAvatar())
                         .phone(maskPhone(phone))
                         .role("user")
+                        .isNew(isNew)
                         .build())
                 .build();
     }
 
     @Override
     public LoginVO wechatLogin(WechatLoginDto dto) {
-        throw new UnsupportedOperationException("TODO: 集成微信小程序登录，需先调用 code2Session 获取 openid");
+        // 1. 调用微信 code2Session 获取 openid
+        cn.hutool.json.JSONObject session = wechatUtil.code2Session(dto.getJsCode());
+        String openid = session.getStr("openid");
+        if (openid == null || openid.isEmpty()) {
+            throw new BizException(ResultCode.BIZ_ERROR, "微信登录失败：未获取到openid");
+        }
+        String unionid = session.getStr("unionid");
+
+        // 2. 根据 openid 查找或注册用户
+        User user = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getWxOpenid, openid));
+        boolean isNew = false;
+        if (user == null) {
+            user = new User();
+            user.setWxOpenid(openid);
+            user.setWxUnionid(unionid);
+            user.setNickname(dto.getNickname());
+            user.setAvatar(dto.getAvatar() != null && !dto.getAvatar().isEmpty() ? dto.getAvatar() : null);
+            user.setTag("new");
+            user.setStatus(1);
+            user.setRegisterTime(LocalDateTime.now());
+            userMapper.insert(user);
+            isNew = true;
+        }
+        if (user.getStatus() == 0) {
+            throw new BizException(ResultCode.ACCESS_DENIED, "账号已被禁用");
+        }
+
+        // 3. 更新昵称、头像、登录时间 & unionid
+        user.setNickname(dto.getNickname());
+        if (dto.getAvatar() != null && !dto.getAvatar().isEmpty()) {
+            user.setAvatar(dto.getAvatar());
+        }
+        user.setLastLoginTime(LocalDateTime.now());
+        if (unionid != null && !unionid.equals(user.getWxUnionid())) {
+            user.setWxUnionid(unionid);
+        }
+        userMapper.updateById(user);
+
+        // 4. 签发 JWT
+        String token = jwtUtil.issueUserToken(user.getId());
+        LocalDateTime expireAt = LocalDateTime.now().plusHours(168);
+
+        return LoginVO.builder()
+                .token(token)
+                .expireAt(expireAt)
+                .userInfo(LoginVO.UserInfoVO.builder()
+                        .id(user.getId())
+                        .nickname(user.getNickname())
+                        .avatar(user.getAvatar())
+                        .phone(user.getPhone() != null ? maskPhone(user.getPhone()) : null)
+                        .role("user")
+                        .isNew(isNew)
+                        .build())
+                .build();
     }
 
     @Override

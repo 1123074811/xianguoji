@@ -164,6 +164,12 @@
           "style": {
             "navigationBarTitleText": "评价中心"
           }
+        },
+        {
+          "path": "profile-complete/index",
+          "style": {
+            "navigationBarTitleText": "完善资料"
+          }
         }
       ]
     }

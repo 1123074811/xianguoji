@@ -50,9 +50,16 @@
 
       <!-- WeChat Login -->
       <view class="social-login">
-        <view class="wechat-btn" hover-class="btn-active" @tap="wechatLogin">
+        <!-- #ifdef MP-WEIXIN -->
+        <button class="wechat-btn" hover-class="btn-active" @tap="showWechatModal = true">
+          <svg-icon name="wechat" :size="64" color="#07C160" />
+        </button>
+        <!-- #endif -->
+        <!-- #ifndef MP-WEIXIN -->
+        <view class="wechat-btn" hover-class="btn-active" @tap="() => uni.showToast({ title: '请在微信小程序中使用微信登录', icon: 'none' })">
           <svg-icon name="wechat" :size="64" color="#07C160" />
         </view>
+        <!-- #endif -->
         <text class="social-text">微信快捷登录</text>
       </view>
     </view>
@@ -70,6 +77,40 @@
           登录即代表您已阅读并同意 
           <text class="link">《用户服务协议》</text> 与 
           <text class="link">《隐私权政策》</text>，授权鲜果记使用您的账号信息。
+        </view>
+      </view>
+    </view>
+
+    <!-- WeChat Authorization Modal -->
+    <view v-if="showWechatModal" class="modal-mask" @tap="showWechatModal = false">
+      <view class="modal-content" @tap.stop>
+        <text class="modal-title">微信授权登录</text>
+        <text class="modal-subtitle">授权头像和昵称，完善你的个人信息</text>
+
+        <view class="modal-avatar-section">
+          <button class="modal-avatar-btn" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
+            <image :src="wxAvatarUrl || '/static/images/default-avatar.png'" mode="aspectFill" class="modal-avatar" />
+            <view class="modal-avatar-edit">
+              <svg-icon name="edit" :size="24" color="#ffffff" />
+            </view>
+          </button>
+          <text class="modal-avatar-hint">点击选择头像</text>
+        </view>
+
+        <view class="modal-nickname-section">
+          <text class="modal-label">昵称</text>
+          <input
+            type="nickname"
+            class="modal-nickname-input"
+            :value="wxNickname"
+            placeholder="请输入昵称"
+            @input="onNicknameInput"
+          />
+        </view>
+
+        <view class="modal-actions">
+          <button class="modal-cancel-btn" @tap="showWechatModal = false">取消</button>
+          <button class="modal-confirm-btn" :loading="wxLoginLoading" @tap="handleWechatConfirm">允许</button>
         </view>
       </view>
     </view>
@@ -92,6 +133,12 @@ const agreed = ref(false);
 const counting = ref(false);
 const count = ref(60);
 const loginLoading = ref(false);
+
+// 微信授权弹窗状态
+const showWechatModal = ref(false);
+const wxAvatarUrl = ref('');
+const wxNickname = ref('');
+const wxLoginLoading = ref(false);
 
 const userStore = useUserStore();
 
@@ -140,32 +187,72 @@ async function handleLogin() {
   }
 }
 
-function wechatLogin() {
+function onChooseAvatar(e: any) {
+  wxAvatarUrl.value = e.detail.avatarUrl || '';
+}
+
+function onNicknameInput(e: any) {
+  wxNickname.value = e.detail.value || '';
+}
+
+async function handleWechatConfirm() {
   if (!agreed.value) {
     return uni.showToast({ title: '请先同意协议', icon: 'none' });
   }
-  // #ifdef MP-WEIXIN
-  uni.login({
-    provider: 'weixin',
-    success: async (res) => {
-      if (res.code) {
-        try {
-          await userStore.wechatLogin(res.code);
-          await useCartStore().refreshCount();
-          uni.switchTab({ url: '/pages/index/index' });
-        } catch (e) {
-          console.warn('微信登录失败', e);
-        }
+  if (!wxNickname.value.trim()) {
+    return uni.showToast({ title: '请输入昵称', icon: 'none' });
+  }
+  wxLoginLoading.value = true;
+
+  try {
+    // 1. 上传头像到服务器（如果有临时头像）
+    let avatarUrl = '';
+    if (wxAvatarUrl.value) {
+      try {
+        const uploadRes = await new Promise<string>((resolve, reject) => {
+          uni.uploadFile({
+            url: (import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8080') + '/api/pub/file/upload-avatar',
+            filePath: wxAvatarUrl.value,
+            name: 'file',
+            success: (r: any) => {
+              if (r.statusCode === 200) {
+                const data = JSON.parse(r.data);
+                if (data.code === 0) resolve(data.data);
+                else reject(data);
+              } else {
+                reject(r);
+              }
+            },
+            fail: reject,
+          });
+        });
+        avatarUrl = uploadRes;
+      } catch (e) {
+        console.warn('头像上传失败，使用默认头像', e);
       }
-    },
-    fail: () => {
-      uni.showToast({ title: '微信登录失败', icon: 'none' });
-    },
-  });
-  // #endif
-  // #ifndef MP-WEIXIN
-  uni.showToast({ title: '请在微信小程序中使用微信登录', icon: 'none' });
-  // #endif
+    }
+
+    // 2. wx.login 获取 code
+    const loginRes = await new Promise<string>((resolve, reject) => {
+      uni.login({
+        provider: 'weixin',
+        success: (r: any) => r.code ? resolve(r.code) : reject(new Error('无code')),
+        fail: reject,
+      });
+    });
+
+    // 3. 调用后端登录接口
+    await userStore.wechatLogin(loginRes, wxNickname.value.trim(), avatarUrl);
+    await useCartStore().refreshCount();
+    showWechatModal.value = false;
+    uni.showToast({ title: '登录成功', icon: 'success' });
+    setTimeout(() => uni.switchTab({ url: '/pages/index/index' }), 600);
+  } catch (e) {
+    console.warn('微信登录失败', e);
+    uni.showToast({ title: '登录失败，请重试', icon: 'none' });
+  } finally {
+    wxLoginLoading.value = false;
+  }
 }
 </script>
 
@@ -387,5 +474,149 @@ function wechatLogin() {
   height: 512rpx;
   opacity: 0.1;
   pointer-events: none;
+}
+
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  width: 600rpx;
+  background-color: #ffffff;
+  border-radius: $radius-lg;
+  padding: $space-5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-3;
+
+  .modal-title {
+    font-size: $font-lg;
+    font-weight: $weight-semibold;
+    color: $color-text-primary;
+  }
+
+  .modal-subtitle {
+    font-size: $font-sm;
+    color: $color-text-secondary;
+  }
+
+  .modal-avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-1;
+    padding: $space-3 0;
+
+    .modal-avatar-btn {
+      position: relative;
+      width: 160rpx;
+      height: 160rpx;
+      padding: 0;
+      margin: 0;
+      border: none;
+      background: transparent;
+      border-radius: 50%;
+      overflow: visible;
+
+      &::after { border: none; }
+
+      .modal-avatar {
+        width: 160rpx;
+        height: 160rpx;
+        border-radius: 50%;
+        border: 4rpx solid #ffffff;
+        box-shadow: $shadow-card;
+        background-color: $color-bg-card;
+      }
+
+      .modal-avatar-edit {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 48rpx;
+        height: 48rpx;
+        background-color: $color-primary;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3rpx solid #ffffff;
+      }
+    }
+
+    .modal-avatar-hint {
+      font-size: $font-xs;
+      color: $color-text-secondary;
+    }
+  }
+
+  .modal-nickname-section {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    background-color: $color-bg-page;
+    border-radius: $radius-md;
+    padding: 0 $space-3;
+    height: 88rpx;
+
+    .modal-label {
+      width: 80rpx;
+      font-size: $font-base;
+      color: $color-text-primary;
+      font-weight: $weight-medium;
+    }
+
+    .modal-nickname-input {
+      flex: 1;
+      font-size: $font-base;
+      color: $color-text-primary;
+    }
+  }
+
+  .modal-actions {
+    width: 100%;
+    display: flex;
+    gap: $space-3;
+    margin-top: $space-2;
+
+    .modal-cancel-btn {
+      flex: 1;
+      height: 88rpx;
+      background-color: $color-bg-card;
+      color: $color-text-secondary;
+      border-radius: $radius-pill;
+      font-size: $font-base;
+      border: 2rpx solid $color-divider;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &::after { border: none; }
+    }
+
+    .modal-confirm-btn {
+      flex: 2;
+      height: 88rpx;
+      background-color: $color-primary;
+      color: #ffffff;
+      border-radius: $radius-pill;
+      font-size: $font-base;
+      font-weight: $weight-medium;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8rpx 24rpx rgba($color-primary, 0.2);
+
+      &::after { border: none; }
+      &:active { opacity: 0.9; }
+    }
+  }
 }
 </style>

@@ -23,7 +23,7 @@
     <div v-else class="space-y-gutter">
       <div v-for="review in reviews" :key="review.id" class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
         <div class="flex gap-4">
-          <img v-if="review.userAvatar" :src="review.userAvatar" class="w-10 h-10 rounded-full object-cover shrink-0" alt="" />
+          <img v-if="review.userAvatar" :src="resolveImageUrl(review.userAvatar)" class="w-10 h-10 rounded-full object-cover shrink-0" alt="" />
           <div v-else class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-xs bg-primary/10 text-primary">
             {{ initials(review.userName) }}
           </div>
@@ -90,6 +90,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { adminReviewApi } from '@/api/modules/review';
 import type { AdminReviewVO } from '@/api/types/review';
+import { resolveImageUrl } from '@/utils/image';
 
 const tabs: { label: string; value?: string }[] = [
   { label: '全部' },
