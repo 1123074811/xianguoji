@@ -90,7 +90,23 @@ public class CatalogServiceImpl implements CatalogService {
                 .eq(Product::getStatus, 1);
 
         if (qry.getCategoryId() != null) {
-            wrapper.eq(Product::getCategoryId, qry.getCategoryId());
+            Category category = categoryMapper.selectById(qry.getCategoryId());
+            if (category != null && category.getParentId() == 0) {
+                List<Long> childIds = categoryMapper.selectList(
+                                new LambdaQueryWrapper<Category>()
+                                        .eq(Category::getParentId, qry.getCategoryId())
+                                        .eq(Category::getStatus, 1))
+                        .stream()
+                        .map(Category::getId)
+                        .toList();
+                if (childIds.isEmpty()) {
+                    wrapper.eq(Product::getCategoryId, qry.getCategoryId());
+                } else {
+                    wrapper.in(Product::getCategoryId, childIds);
+                }
+            } else {
+                wrapper.eq(Product::getCategoryId, qry.getCategoryId());
+            }
         }
         if (qry.getKeyword() != null && !qry.getKeyword().isBlank()) {
             wrapper.and(w -> w.like(Product::getName, qry.getKeyword())
@@ -100,9 +116,9 @@ public class CatalogServiceImpl implements CatalogService {
         String sort = qry.getSort();
         if ("sales".equals(sort)) {
             wrapper.orderByDesc(Product::getSales);
-        } else if ("priceAsc".equals(sort)) {
+        } else if ("priceAsc".equals(sort) || "price_asc".equals(sort)) {
             wrapper.orderByAsc(Product::getMinPrice);
-        } else if ("priceDesc".equals(sort)) {
+        } else if ("priceDesc".equals(sort) || "price_desc".equals(sort)) {
             wrapper.orderByDesc(Product::getMinPrice);
         } else {
             wrapper.orderByDesc(Product::getIsRecommend).orderByDesc(Product::getSales);

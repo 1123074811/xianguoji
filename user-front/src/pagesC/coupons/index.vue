@@ -39,28 +39,88 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { promoApi } from '@/api/modules/promo';
+import type { CouponVO, UserCouponVO } from '@/api/types/promo';
+
+type CouponItem = {
+  id: number;
+  couponId?: number;
+  amount: string;
+  condition: string;
+  title: string;
+  time: string;
+  status: number;
+};
 
 const currentTab = ref(0);
+const coupons = ref<CouponItem[]>([]);
 
-const mockCoupons = ref([
-  { id: 1, amount: '10', condition: '满99元可用', title: '新人专享优惠券', time: '有效期至 2024-12-31', status: 0 },
-  { id: 2, amount: '30', condition: '满199元可用', title: '满减神券', time: '有效期至 2024-12-31', status: 0 },
-  { id: 3, amount: '5', condition: '无门槛', title: '运费券', time: '有效期至 2024-12-31', status: 1 },
-  { id: 4, amount: '50', condition: '满299元可用', title: '节日特惠券', time: '有效期至 2023-12-31', status: 2 },
-]);
+const filteredCoupons = computed(() => coupons.value);
 
-const filteredCoupons = computed(() => {
-  return mockCoupons.value.filter(c => c.status === currentTab.value);
+onMounted(loadCoupons);
+
+watch(currentTab, () => {
+  loadCoupons();
 });
 
-function receiveCoupon(coupon: any) {
-  uni.showLoading({ title: '领取中' });
-  setTimeout(() => {
-    uni.hideLoading();
-    coupon.status = 1;
+async function loadCoupons() {
+  try {
+    if (currentTab.value === 0) {
+      const data = await promoApi.couponList();
+      coupons.value = data.map(mapCoupon);
+    } else {
+      const data = await promoApi.myCoupons({ status: currentTab.value === 1 ? 0 : currentTab.value });
+      coupons.value = data.map(mapUserCoupon);
+    }
+  } catch (e) {
+    console.warn('优惠券加载失败', e);
+    coupons.value = [];
+  }
+}
+
+async function receiveCoupon(coupon: CouponItem) {
+  try {
+    await promoApi.claimCoupon(coupon.couponId || coupon.id);
     uni.showToast({ title: '领取成功', icon: 'success' });
-  }, 500);
+    loadCoupons();
+  } catch (e) {
+    console.warn('领取优惠券失败', e);
+  }
+}
+
+function mapCoupon(coupon: CouponVO): CouponItem {
+  return {
+    id: coupon.id,
+    couponId: coupon.id,
+    amount: coupon.amount,
+    condition: buildCondition(coupon.threshold),
+    title: coupon.name,
+    time: buildTime(coupon.startTime, coupon.endTime),
+    status: 0,
+  };
+}
+
+function mapUserCoupon(coupon: UserCouponVO): CouponItem {
+  return {
+    id: coupon.id,
+    couponId: coupon.couponId,
+    amount: coupon.amount,
+    condition: buildCondition(coupon.threshold),
+    title: coupon.name,
+    time: buildTime(coupon.startTime, coupon.endTime),
+    status: currentTab.value,
+  };
+}
+
+function buildCondition(threshold: string) {
+  return Number(threshold) > 0 ? `满${threshold}元可用` : '无门槛';
+}
+
+function buildTime(startTime?: string, endTime?: string) {
+  if (startTime && endTime) return `${startTime.slice(0, 10)} 至 ${endTime.slice(0, 10)}`;
+  if (endTime) return `有效期至 ${endTime.slice(0, 10)}`;
+  return '长期有效';
 }
 
 function useCoupon() {

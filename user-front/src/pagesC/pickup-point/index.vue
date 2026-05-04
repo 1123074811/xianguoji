@@ -14,7 +14,7 @@
             <text class="name">{{ point.name }}</text>
             <text class="address">{{ point.address }}</text>
             <view class="tags">
-              <text class="tag distance">距离您 {{ point.distance }}km</text>
+              <text class="tag distance">{{ point.openTime }}-{{ point.closeTime }}</text>
               <text class="tag status">营业中</text>
             </view>
           </view>
@@ -33,14 +33,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import SvgIcon from '@/components/svg-icon.vue';
+import { shopApi } from '@/api/modules/shop';
+import type { PickupPointVO } from '@/api/types/shop';
 
-const points = ref([
-  { id: '1', name: '鲜果记（朝阳路店）', address: '北京市朝阳区朝阳路1号院', distance: '0.8' },
-  { id: '2', name: '鲜果记（三里屯店）', address: '北京市朝阳区三里屯路11号', distance: '1.5' },
-  { id: '3', name: '鲜果记（望京SOHO店）', address: '北京市朝阳区望京街10号', distance: '3.2' },
-]);
+const points = ref<PickupPointVO[]>([]);
+
+onMounted(loadPickupPoints);
+
+async function loadPickupPoints() {
+  try {
+    points.value = await shopApi.pickupPointList();
+  } catch (e) {
+    console.warn('自提点加载失败', e);
+    points.value = [];
+  }
+}
 </script>
 
 <style lang="scss" scoped>

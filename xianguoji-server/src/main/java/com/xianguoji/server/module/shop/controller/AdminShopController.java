@@ -3,10 +3,12 @@ package com.xianguoji.server.module.shop.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xianguoji.server.common.annotation.AdminRequired;
 import com.xianguoji.server.common.result.R;
+import com.xianguoji.server.module.shop.entity.AdminNotification;
 import com.xianguoji.server.module.shop.entity.DeliverySetting;
 import com.xianguoji.server.module.shop.entity.NotifySetting;
 import com.xianguoji.server.module.shop.entity.PickupPoint;
 import com.xianguoji.server.module.shop.entity.Shop;
+import com.xianguoji.server.module.shop.mapper.AdminNotificationMapper;
 import com.xianguoji.server.module.shop.mapper.DeliverySettingMapper;
 import com.xianguoji.server.module.shop.mapper.NotifySettingMapper;
 import com.xianguoji.server.module.shop.mapper.PickupPointMapper;
@@ -29,6 +31,15 @@ public class AdminShopController {
     private final PickupPointMapper pickupPointMapper;
     private final DeliverySettingMapper deliverySettingMapper;
     private final NotifySettingMapper notifySettingMapper;
+    private final AdminNotificationMapper adminNotificationMapper;
+
+    @Operation(summary = "获取店铺信息")
+    @GetMapping("/shop/info")
+    @AdminRequired
+    public R<Shop> getShopInfo() {
+        Shop shop = shopMapper.selectOne(new LambdaQueryWrapper<Shop>().last("LIMIT 1"));
+        return R.ok(shop);
+    }
 
     @Operation(summary = "修改店铺信息")
     @PutMapping("/shop/info")
@@ -86,6 +97,14 @@ public class AdminShopController {
     }
 
     // ===== 配送设置 =====
+    @Operation(summary = "获取配送设置")
+    @GetMapping("/delivery-setting")
+    @AdminRequired
+    public R<DeliverySetting> getDeliverySetting() {
+        DeliverySetting ds = deliverySettingMapper.selectOne(new LambdaQueryWrapper<DeliverySetting>().last("LIMIT 1"));
+        return R.ok(ds);
+    }
+
     @Operation(summary = "修改配送设置")
     @PutMapping("/delivery-setting")
     @AdminRequired
@@ -115,5 +134,51 @@ public class AdminShopController {
         dto.setId(id);
         notifySettingMapper.updateById(dto);
         return R.ok();
+    }
+
+    // ===== 商家通知 =====
+    @Operation(summary = "通知列表")
+    @GetMapping("/notification/list")
+    @AdminRequired
+    public R<List<AdminNotification>> notificationList(@RequestParam(required = false) Integer type) {
+        LambdaQueryWrapper<AdminNotification> wrapper = new LambdaQueryWrapper<AdminNotification>()
+                .orderByDesc(AdminNotification::getCreatedAt);
+        if (type != null) {
+            wrapper.eq(AdminNotification::getType, type);
+        }
+        return R.ok(adminNotificationMapper.selectList(wrapper));
+    }
+
+    @Operation(summary = "标记通知已读")
+    @PutMapping("/notification/{id}/read")
+    @AdminRequired
+    public R<Void> markRead(@PathVariable Long id) {
+        AdminNotification n = adminNotificationMapper.selectById(id);
+        if (n != null) {
+            n.setIsRead(1);
+            adminNotificationMapper.updateById(n);
+        }
+        return R.ok();
+    }
+
+    @Operation(summary = "全部标记已读")
+    @PutMapping("/notification/read-all")
+    @AdminRequired
+    public R<Void> markAllRead() {
+        List<AdminNotification> list = adminNotificationMapper.selectList(
+                new LambdaQueryWrapper<AdminNotification>().eq(AdminNotification::getIsRead, 0));
+        for (AdminNotification n : list) {
+            n.setIsRead(1);
+            adminNotificationMapper.updateById(n);
+        }
+        return R.ok();
+    }
+
+    @Operation(summary = "未读数")
+    @GetMapping("/notification/unread-count")
+    @AdminRequired
+    public R<Long> unreadCount() {
+        return R.ok(adminNotificationMapper.selectCount(
+                new LambdaQueryWrapper<AdminNotification>().eq(AdminNotification::getIsRead, 0)));
     }
 }

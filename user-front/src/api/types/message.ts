@@ -4,7 +4,8 @@ export interface MessageVO {
   content: string;
   type: number;
   isRead: 0 | 1;
-  createTime: string;
+  createdAt: string;
+  linkUrl?: string;
 }
 export interface FeedbackVO {
   id: number;

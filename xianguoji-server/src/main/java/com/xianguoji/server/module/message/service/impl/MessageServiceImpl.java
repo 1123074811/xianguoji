@@ -30,8 +30,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public PageVO<MessageVO> getMessagePage(Long uid, Integer type, Integer page, Integer size) {
         LambdaQueryWrapper<Message> wrapper = new LambdaQueryWrapper<Message>()
-                .eq(Message::getUserId, uid)
-                .or().eq(Message::getUserId, 0);
+                .and(w -> w.eq(Message::getUserId, uid).or().eq(Message::getUserId, 0));
         if (type != null) wrapper.eq(Message::getType, type);
         wrapper.orderByDesc(Message::getCreatedAt);
 
@@ -47,16 +46,14 @@ public class MessageServiceImpl implements MessageService {
     public void markRead(Long uid, Long id) {
         messageMapper.update(null, new LambdaUpdateWrapper<Message>()
                 .eq(Message::getId, id)
-                .eq(Message::getUserId, uid)
-                .or().eq(Message::getUserId, 0)
+                .and(w -> w.eq(Message::getUserId, uid).or().eq(Message::getUserId, 0))
                 .set(Message::getIsRead, 1));
     }
 
     @Override
     public void markAllRead(Long uid) {
         messageMapper.update(null, new LambdaUpdateWrapper<Message>()
-                .eq(Message::getUserId, uid)
-                .or().eq(Message::getUserId, 0)
+                .and(w -> w.eq(Message::getUserId, uid).or().eq(Message::getUserId, 0))
                 .set(Message::getIsRead, 1));
     }
 

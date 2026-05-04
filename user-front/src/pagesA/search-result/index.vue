@@ -61,10 +61,10 @@ onLoad((options) => {
   }
 });
 
-function buildSortParam(): 'sales' | 'price_asc' | 'price_desc' | undefined {
+function buildSortParam(): 'sales' | 'priceAsc' | 'priceDesc' | undefined {
   if (currentSort.value === 'sales') return 'sales';
   if (currentSort.value === 'price') {
-    return priceOrder.value === 'desc' ? 'price_desc' : 'price_asc';
+    return priceOrder.value === 'desc' ? 'priceDesc' : 'priceAsc';
   }
   return undefined;
 }

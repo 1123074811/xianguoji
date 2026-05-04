@@ -79,10 +79,18 @@ public class AdminCatalogController {
     @GetMapping("/product/page")
     @AdminRequired
     public R<PageVO<Product>> productPage(@RequestParam(required = false) Integer status,
+                                            @RequestParam(required = false) Long categoryId,
+                                            @RequestParam(required = false) String keyword,
                                             @RequestParam(defaultValue = "1") Integer page,
                                             @RequestParam(defaultValue = "20") Integer size) {
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         if (status != null) wrapper.eq(Product::getStatus, status);
+        if (categoryId != null && categoryId > 0) wrapper.eq(Product::getCategoryId, categoryId);
+        if (keyword != null && !keyword.isBlank()) {
+            String kw = keyword.trim();
+            wrapper.and(c -> c.like(Product::getName, kw)
+                    .or().like(Product::getSubtitle, kw));
+        }
         wrapper.orderByDesc(Product::getCreatedAt);
         var p = productMapper.selectPage(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size), wrapper);
         return R.ok(new PageVO<>(p.getTotal(), p.getRecords(), page, size));

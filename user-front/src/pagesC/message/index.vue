@@ -85,8 +85,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import SvgIcon from '@/components/svg-icon.vue';
+import { messageApi } from '@/api/modules/message';
+import type { MessageVO } from '@/api/types/message';
 
 type MsgType = 'system' | 'promotion' | 'logistics';
 
@@ -108,64 +110,15 @@ const titleMap: Record<string, string> = {
   logistics: '交易物流'
 };
 
-const messages = ref<Message[]>([
-  {
-    id: 1,
-    type: 'logistics',
-    title: '订单已发货',
-    desc: '您的订单 [202310249988] 已发货，预计明日送达，请保持电话畅通~',
-    time: '10:30',
-    avatar: '/static/images/wechat-logo.png',
-    unread: true,
-    link: '/pages/order/order'
-  },
-  {
-    id: 2,
-    type: 'system',
-    title: '会员升级',
-    desc: '恭喜您升级为 [黄金会员]，专属权益与优惠等您查看！',
-    time: '昨天',
-    avatar: '/static/images/wechat-logo.png',
-    unread: true
-  },
-  {
-    id: 3,
-    type: 'promotion',
-    title: '周末狂欢',
-    desc: '全场车厘子满 199 减 50，速来抢购！',
-    time: '星期三',
-    avatar: '/static/images/wechat-logo.png',
-    unread: false,
-    link: '/pagesC/coupons/index'
-  },
-  {
-    id: 4,
-    type: 'logistics',
-    title: '订单已签收',
-    desc: '您的订单 [202310249987] 已签收，欢迎对果园好物作出评价。',
-    time: '04-29',
-    avatar: '/static/images/wechat-logo.png',
-    unread: false,
-    link: '/pagesC/evaluation/index'
-  },
-  {
-    id: 5,
-    type: 'system',
-    title: '隐私政策更新',
-    desc: '我们更新了隐私政策，详细内容请前往设置中心查看。',
-    time: '04-25',
-    avatar: '/static/images/wechat-logo.png',
-    unread: false,
-    link: '/pagesC/settings/index'
-  }
-]);
-
+const messages = ref<Message[]>([]);
 const activeType = ref<'all' | MsgType>('all');
 
 const filteredMessages = computed(() => {
   if (activeType.value === 'all') return messages.value;
   return messages.value.filter(m => m.type === activeType.value);
 });
+
+onMounted(loadMessages);
 
 function unreadCount(type: MsgType) {
   return messages.value.filter(m => m.type === type && m.unread).length;
@@ -175,8 +128,21 @@ function handleNavClick(type: 'all' | MsgType) {
   activeType.value = type;
 }
 
-function handleMessageTap(msg: Message) {
-  msg.unread = false;
+async function loadMessages() {
+  try {
+    const data = await messageApi.page({ page: 1, size: 100 });
+    messages.value = data.list.map(mapMessage);
+  } catch (e) {
+    console.warn('消息加载失败', e);
+    messages.value = [];
+  }
+}
+
+async function handleMessageTap(msg: Message) {
+  if (msg.unread) {
+    msg.unread = false;
+    messageApi.markRead(msg.id).catch(() => {});
+  }
   if (msg.link) {
     if (msg.link.startsWith('/pages/')) {
       uni.switchTab({ url: msg.link });
@@ -186,9 +152,38 @@ function handleMessageTap(msg: Message) {
   }
 }
 
-function markAllRead() {
-  filteredMessages.value.forEach(m => (m.unread = false));
-  uni.showToast({ title: '已全部标为已读', icon: 'success' });
+async function markAllRead() {
+  try {
+    await messageApi.markAllRead();
+    filteredMessages.value.forEach(m => (m.unread = false));
+    uni.showToast({ title: '已全部标为已读', icon: 'success' });
+  } catch (e) {
+    console.warn('全部已读失败', e);
+  }
+}
+
+function mapMessage(msg: MessageVO): Message {
+  return {
+    id: msg.id,
+    type: mapMsgType(msg.type),
+    title: msg.title,
+    desc: msg.content,
+    time: formatTime(msg.createdAt),
+    avatar: '/static/images/wechat-logo.png',
+    unread: msg.isRead === 0,
+    link: msg.linkUrl,
+  };
+}
+
+function mapMsgType(type: number): MsgType {
+  if (type === 3) return 'promotion';
+  if (type === 2 || type === 4) return 'logistics';
+  return 'system';
+}
+
+function formatTime(value?: string) {
+  if (!value) return '';
+  return value.length > 10 ? value.slice(5, 16) : value;
 }
 </script>
 

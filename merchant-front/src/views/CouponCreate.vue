@@ -257,6 +257,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { adminPromoApi } from '@/api/modules/promo'
 import type { CouponCreateDto } from '@/api/types/promo'
+import { toast } from '@/utils/toast'
 
 const router = useRouter()
 
@@ -331,11 +332,11 @@ const handleSubmit = async () => {
   isSubmitting.value = true
   try {
     await adminPromoApi.createCoupon(form)
-    // Show success message (TODO: add toast notification)
+    toast.success('优惠券创建成功')
     router.push('/campaign')
-  } catch (error) {
+  } catch (error: any) {
     console.error('创建优惠券失败:', error)
-    // TODO: show error message
+    toast.error(error?.message || '创建优惠券失败')
   } finally {
     isSubmitting.value = false
   }
@@ -343,8 +344,7 @@ const handleSubmit = async () => {
 
 // Save draft
 const handleSaveDraft = () => {
-  // TODO: implement draft saving
-  console.log('保存草稿功能待实现')
+  toast.info('保存草稿功能开发中')
 }
 
 // Cancel

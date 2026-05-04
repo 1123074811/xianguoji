@@ -9,6 +9,7 @@ import com.xianguoji.server.common.security.JwtUtil;
 import com.xianguoji.server.common.util.SmsUtil;
 import com.xianguoji.server.common.util.WechatUtil;
 import com.xianguoji.server.module.auth.dto.AdminLoginDto;
+import com.xianguoji.server.module.auth.dto.AdminResetPasswordDto;
 import com.xianguoji.server.module.auth.dto.SmsLoginDto;
 import com.xianguoji.server.module.auth.dto.SmsSendDto;
 import com.xianguoji.server.module.auth.dto.WechatLoginDto;
@@ -229,6 +230,28 @@ public class AuthServiceImpl implements AuthService {
                         .staffRole(staff.getRole())
                         .build())
                 .build();
+    }
+
+    @Override
+    public void adminResetPassword(AdminResetPasswordDto dto) {
+        Staff staff = staffMapper.selectOne(new LambdaQueryWrapper<Staff>().eq(Staff::getUsername, dto.getUsername()));
+        if (staff == null) {
+            throw new BizException(ResultCode.BIZ_ERROR, "账号不存在");
+        }
+        if (staff.getStatus() == 0) {
+            throw new BizException(ResultCode.ACCESS_DENIED, "账号已被禁用");
+        }
+        if (staff.getPhone() == null || !staff.getPhone().equals(dto.getPhone())) {
+            throw new BizException(ResultCode.BIZ_ERROR, "手机号与账号不匹配");
+        }
+        String redisCode = stringRedisTemplate.opsForValue().get(SMS_CODE_PREFIX + dto.getPhone());
+        if (redisCode == null || !redisCode.equals(dto.getCode())) {
+            throw new BizException(ResultCode.BIZ_ERROR, "验证码错误或已过期");
+        }
+        stringRedisTemplate.delete(SMS_CODE_PREFIX + dto.getPhone());
+
+        staff.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
+        staffMapper.updateById(staff);
     }
 
     private String maskPhone(String phone) {

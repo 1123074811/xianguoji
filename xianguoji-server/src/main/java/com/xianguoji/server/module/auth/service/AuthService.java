@@ -1,6 +1,7 @@
 package com.xianguoji.server.module.auth.service;
 
 import com.xianguoji.server.module.auth.dto.AdminLoginDto;
+import com.xianguoji.server.module.auth.dto.AdminResetPasswordDto;
 import com.xianguoji.server.module.auth.dto.SmsLoginDto;
 import com.xianguoji.server.module.auth.dto.SmsSendDto;
 import com.xianguoji.server.module.auth.dto.WechatLoginDto;
@@ -15,4 +16,6 @@ public interface AuthService {
     LoginVO wechatLogin(WechatLoginDto dto);
 
     LoginVO adminLogin(AdminLoginDto dto);
+
+    void adminResetPassword(AdminResetPasswordDto dto);
 }

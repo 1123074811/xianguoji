@@ -565,6 +565,21 @@ CREATE TABLE `notify_setting` (
 
 SET FOREIGN_KEY_CHECKS = 1;
 
+-- ---------------------------------------------------------------------
+-- 30. 商家端通知（管理员消息中心）
+-- ---------------------------------------------------------------------
+CREATE TABLE `admin_notification` (
+  `id`          BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  `type`        TINYINT NOT NULL                                    COMMENT '1订单 2库存 3评价 4营销 5系统',
+  `title`       VARCHAR(128) NOT NULL,
+  `content`     VARCHAR(500),
+  `link_url`    VARCHAR(255)                                        COMMENT '跳转地址',
+  `is_read`     TINYINT NOT NULL DEFAULT 0,
+  `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_type` (`type`),
+  KEY `idx_is_read` (`is_read`)
+) ENGINE=InnoDB COMMENT='商家端通知';
+
 -- =====================================================================
 -- 初始化数据 / 种子数据
 -- =====================================================================
@@ -1003,3 +1018,85 @@ UPDATE `product` p
 SET `min_price` = (SELECT MIN(price) FROM `product_sku` WHERE product_id = p.id),
     `max_price` = (SELECT MAX(price) FROM `product_sku` WHERE product_id = p.id),
     `total_stock` = (SELECT COALESCE(SUM(stock),0) FROM `product_sku` WHERE product_id = p.id);
+
+-- =====================================================================
+-- 商家端通知种子数据
+-- =====================================================================
+INSERT INTO `admin_notification` (`type`, `title`, `content`, `link_url`, `is_read`, `created_at`) VALUES
+(1, '新订单待处理', '客户下单了精品富士苹果和泰国榴莲，订单金额 ¥458.00，请在2小时内确认接单。', '/orders', 0, '2026-05-04 17:00:00'),
+(1, '订单超时提醒', '订单 XG20260501002 已超过备货时限（30分钟），请尽快处理以避免客户投诉。', '/orders', 0, '2026-05-04 16:45:00'),
+(2, '库存预警', '榴莲千层蛋糕当前库存仅剩 3 件，低于安全库存阈值，建议尽快补货。', '/goods', 0, '2026-05-04 16:00:00'),
+(3, '收到差评待回复', '客户对有机蓝莓给出了2星评价，建议尽快回复以维护店铺口碑。', '/reviews', 0, '2026-05-04 15:00:00'),
+(5, '系统维护通知', '系统将于今晚 02:00-04:00 进行例行维护升级，届时部分功能可能暂时不可用。', NULL, 1, '2026-05-04 14:00:00'),
+(4, '优惠券即将到期', '「已过期满减」优惠券已过期，当前核销率仅 64.8%，建议推送提醒。', '/campaign', 1, '2026-05-04 12:00:00'),
+(1, '退款申请待处理', '客户申请退款 ¥89.90，原因：商品与描述不符。请在48小时内处理。', '/orders', 0, '2026-05-04 11:00:00'),
+(3, '新好评提醒', '客户对精品富士苹果给出了5星好评："苹果非常新鲜，包装精美！"', '/reviews', 1, '2026-05-04 09:00:00');
+
+-- =====================================================================
+-- 31. 帮助中心：FAQ / 操作指南 / 用户反馈 / 报表导出记录
+-- =====================================================================
+CREATE TABLE `help_faq` (
+  `id`         BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  `section`    VARCHAR(32) NOT NULL                                  COMMENT '所属板块 orders/goods/shipping/...',
+  `question`   VARCHAR(255) NOT NULL,
+  `answer`     TEXT NOT NULL,
+  `sort`       INT NOT NULL DEFAULT 0,
+  `status`     TINYINT NOT NULL DEFAULT 1                            COMMENT '0隐藏 1启用',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_section` (`section`),
+  KEY `idx_status_sort` (`status`, `sort`)
+) ENGINE=InnoDB COMMENT='帮助中心常见问题';
+
+CREATE TABLE `help_guide` (
+  `id`         BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  `title`      VARCHAR(128) NOT NULL,
+  `icon`       VARCHAR(64),
+  `duration`   VARCHAR(32)                                            COMMENT '约5分钟',
+  `url`        VARCHAR(255)                                           COMMENT '指南详情链接',
+  `sort`       INT NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_sort` (`sort`)
+) ENGINE=InnoDB COMMENT='操作指南';
+
+CREATE TABLE `help_feedback` (
+  `id`         BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  `staff_id`   BIGINT UNSIGNED                                        COMMENT '提交者，可空（未登录）',
+  `content`    VARCHAR(1000) NOT NULL,
+  `contact`    VARCHAR(64)                                            COMMENT '联系方式',
+  `status`     TINYINT NOT NULL DEFAULT 0                             COMMENT '0待处理 1已读 2已回复',
+  `reply`      VARCHAR(1000),
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB COMMENT='用户反馈';
+
+CREATE TABLE `report_export` (
+  `id`           BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  `staff_id`     BIGINT UNSIGNED NOT NULL,
+  `report_type`  VARCHAR(32) NOT NULL                                 COMMENT 'sales/inventory/customer/delivery/finance',
+  `start_date`   DATE NOT NULL,
+  `end_date`     DATE NOT NULL,
+  `format`       VARCHAR(8) NOT NULL                                  COMMENT 'xlsx/csv/pdf',
+  `file_name`    VARCHAR(128) NOT NULL,
+  `file_size`    BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `status`       TINYINT NOT NULL DEFAULT 1                           COMMENT '0生成中 1已完成 2失败',
+  `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_staff_created` (`staff_id`, `created_at`)
+) ENGINE=InnoDB COMMENT='报表导出记录';
+
+-- 帮助中心种子数据
+INSERT INTO `help_faq` (`section`, `question`, `answer`, `sort`) VALUES
+('orders', '如何处理客户退款申请？', '进入订单管理页面，筛选"退款/售后"标签页，点击对应订单的"处理退款"按钮。您可以选择同意退款、部分退款或拒绝退款。处理时限为48小时，超时系统将自动同意退款。', 1),
+('goods', '商品库存预警阈值如何设置？', '进入商品管理页面，点击商品编辑，在"库存与价格"模块中可以设置每个SKU的库存预警阈值。当库存低于该值时，系统会自动推送通知到消息中心。', 2),
+('campaign', '如何创建拼团活动？', '进入营销中心，点击"创建优惠券"，选择"拼团活动"类型。设置成团人数、拼团折扣和活动时间即可。拼团商品会在用户端展示拼团标签。', 3),
+('shipping', '配送范围如何调整？', '进入配送设置页面，在"配送服务范围"模块中，使用地图绘制工具调整配送区域。您可以设置标准配送范围和扩展配送范围，不同范围可配置不同运费。', 4),
+('report', '如何导出经营数据？', '进入报表导出页面，选择报表类型、时间范围和导出格式，点击"生成并下载"即可。您也可以使用快捷模板快速生成常用报表，或设置定时自动生成。', 5),
+('security', '忘记密码怎么办？', '在登录页面点击"忘记密码"，输入注册手机号获取验证码，验证后即可重置密码。如果手机号已变更，请联系客服400-888-9999进行人工验证。', 6),
+('reviews', '如何查看客户评价并回复？', '进入评价管理页面，可以按"待回复"、"已回复"、"差评"筛选。点击评价卡片上的"回复"按钮即可撰写回复。对于差评，系统会提供AI建议回复供参考。', 7),
+('settings', '店铺状态如何切换？', '进入系统设置页面，在"店铺状态"模块中切换营业/休息状态。休息状态下用户端将显示"店铺休息中"，无法下单。您也可以设置定时营业时间自动切换。', 8);
+
+INSERT INTO `help_guide` (`title`, `icon`, `duration`, `url`, `sort`) VALUES
+('新手入驻指南',  'rocket_launch', '约10分钟', '/help/onboarding', 1),
+('商品发布教程',  'inventory_2',   '约8分钟',  '/help/goods',      2),
+('订单处理流程',  'receipt_long',  '约5分钟',  '/help/orders',     3),
+('营销活动设置',  'campaign',      '约6分钟',  '/help/campaign',   4),
+('数据报表解读',  'analytics',     '约7分钟',  '/help/report',     5);

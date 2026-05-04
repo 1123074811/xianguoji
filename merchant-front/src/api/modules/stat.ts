@@ -22,4 +22,22 @@ export const statApi = {
 
   todo: () =>
     request<TodoVO>({ url: '/api/admin/stat/todo' }),
+
+  analysisKpi: (days = 7) =>
+    request<any>({ url: '/api/admin/stat/analysis/kpi', params: { days } }),
+
+  revenueTrend: (months = 6) =>
+    request<any[]>({ url: '/api/admin/stat/analysis/revenue-trend', params: { months } }),
+
+  categoryDistribution: () =>
+    request<any[]>({ url: '/api/admin/stat/analysis/category-distribution' }),
+
+  hourlyHeatmap: () =>
+    request<any[]>({ url: '/api/admin/stat/analysis/hourly-heatmap' }),
+
+  customerSegments: () =>
+    request<any>({ url: '/api/admin/stat/analysis/customer-segments' }),
+
+  productPerformance: (limit = 10) =>
+    request<any[]>({ url: '/api/admin/stat/analysis/product-performance', params: { limit } }),
 };

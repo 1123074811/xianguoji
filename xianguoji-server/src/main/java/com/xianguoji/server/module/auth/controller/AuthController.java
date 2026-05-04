@@ -5,6 +5,7 @@ import com.xianguoji.server.common.annotation.LoginRequired;
 import com.xianguoji.server.common.result.R;
 import com.xianguoji.server.common.security.LoginContext;
 import com.xianguoji.server.module.auth.dto.AdminLoginDto;
+import com.xianguoji.server.module.auth.dto.AdminResetPasswordDto;
 import com.xianguoji.server.module.auth.dto.SmsLoginDto;
 import com.xianguoji.server.module.auth.dto.SmsSendDto;
 import com.xianguoji.server.module.auth.dto.WechatLoginDto;
@@ -57,6 +58,13 @@ public class AuthController {
     @PostMapping("/api/pub/admin/login")
     public R<LoginVO> adminLogin(@Valid @RequestBody AdminLoginDto dto) {
         return R.ok(authService.adminLogin(dto));
+    }
+
+    @Operation(summary = "商家重置密码")
+    @PostMapping("/api/pub/admin/reset-password")
+    public R<Void> adminResetPassword(@Valid @RequestBody AdminResetPasswordDto dto) {
+        authService.adminResetPassword(dto);
+        return R.ok();
     }
 
     @Operation(summary = "商家退出")

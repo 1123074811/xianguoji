@@ -13,4 +13,10 @@ export const adminAuthApi = {
 
   captcha: () =>
     request<CaptchaVO>({ url: '/api/pub/captcha' }),
+
+  sendSms: (phone: string) =>
+    request<void>({ url: '/api/pub/auth/sms/send', method: 'POST', data: { phone } }),
+
+  resetPassword: (data: { username: string; phone: string; code: string; newPassword: string }) =>
+    request<void>({ url: '/api/pub/admin/reset-password', method: 'POST', data }),
 };

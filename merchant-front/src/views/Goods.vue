@@ -97,15 +97,29 @@
       </div>
 
       <!-- Pagination -->
-      <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-surface-container-low">
-        <span class="text-body-sm text-slate-500">第 {{ page }} / {{ totalPages }} 页 · 共 {{ total }} 条</span>
+      <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-surface-container-low gap-4 flex-wrap">
+        <div class="flex items-center gap-3 text-body-sm text-slate-500">
+          <span>第 {{ page }} / {{ totalPages }} 页 · 共 {{ total }} 条</span>
+          <select v-model.number="size" @change="changeSize" class="border border-outline-variant rounded px-2 py-1 text-xs bg-white">
+            <option :value="10">10条/页</option>
+            <option :value="20">20条/页</option>
+            <option :value="50">50条/页</option>
+            <option :value="100">100条/页</option>
+          </select>
+        </div>
         <div class="flex items-center gap-1">
-          <button :disabled="page <= 1" @click="page--; loadProducts()" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white disabled:opacity-30">
+          <button :disabled="page <= 1" @click="goPage(1)" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-500 hover:bg-white disabled:opacity-30 text-xs">首页</button>
+          <button :disabled="page <= 1" @click="goPage(page - 1)" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white disabled:opacity-30">
             <span class="material-symbols-outlined text-sm">chevron_left</span>
           </button>
-          <button :disabled="page >= totalPages" @click="page++; loadProducts()" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white disabled:opacity-30">
+          <button v-for="n in pageNumbers" :key="n" @click="goPage(n)" class="w-8 h-8 flex items-center justify-center rounded border text-sm transition-colors"
+            :class="n === page ? 'bg-primary text-white border-primary font-bold' : 'border-outline-variant text-slate-600 hover:bg-white'">
+            {{ n }}
+          </button>
+          <button :disabled="page >= totalPages" @click="goPage(page + 1)" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white disabled:opacity-30">
             <span class="material-symbols-outlined text-sm">chevron_right</span>
           </button>
+          <button :disabled="page >= totalPages" @click="goPage(totalPages)" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-500 hover:bg-white disabled:opacity-30 text-xs">末页</button>
         </div>
       </div>
     </div>
@@ -117,6 +131,7 @@ import { ref, computed, onMounted } from 'vue';
 import { adminCatalogApi } from '@/api/modules/catalog';
 import type { AdminProductVO, AdminCategoryVO } from '@/api/types/catalog';
 import { resolveImageUrl } from '@/utils/image';
+import { toast } from '@/utils/toast';
 
 /** status: 0=已下架 1=在售 2=回收站 */
 const tabs: { label: string; value?: number }[] = [
@@ -137,6 +152,28 @@ const size = ref(20);
 const loading = ref(false);
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / size.value)));
+
+// 显示当前页前后各 2 页
+const pageNumbers = computed(() => {
+  const cur = page.value;
+  const total = totalPages.value;
+  const arr: number[] = [];
+  const start = Math.max(1, cur - 2);
+  const end = Math.min(total, start + 4);
+  for (let i = start; i <= end; i++) arr.push(i);
+  return arr;
+});
+
+function goPage(n: number) {
+  if (n < 1 || n > totalPages.value || n === page.value) return;
+  page.value = n;
+  loadProducts();
+}
+
+function changeSize() {
+  page.value = 1;
+  loadProducts();
+}
 
 async function loadProducts() {
   loading.value = true;
@@ -178,20 +215,38 @@ function applyFilter() {
 
 async function toggleStatus(p: AdminProductVO) {
   const next = (p.status === 1 ? 0 : 1) as 0 | 1;
-  await adminCatalogApi.updateProductStatus(p.id, next);
-  p.status = next;
+  try {
+    await adminCatalogApi.updateProductStatus(p.id, next);
+    p.status = next;
+    toast.success(next === 1 ? `「${p.name}」已上架` : `「${p.name}」已下架`);
+  } catch (e) {
+    console.warn('切换商品状态失败', e);
+    toast.error('操作失败，请稍后重试');
+  }
 }
 
 async function onCopy(p: AdminProductVO) {
   if (!confirm(`复制商品「${p.name}」？`)) return;
-  await adminCatalogApi.copyProduct(p.id);
-  await loadProducts();
+  try {
+    await adminCatalogApi.copyProduct(p.id);
+    await loadProducts();
+    toast.success('已复制商品');
+  } catch (e) {
+    console.warn('复制商品失败', e);
+    toast.error('复制失败，请稍后重试');
+  }
 }
 
 async function onDelete(p: AdminProductVO) {
   if (!confirm(`确定要将「${p.name}」移入回收站吗？`)) return;
-  await adminCatalogApi.deleteProduct(p.id);
-  await loadProducts();
+  try {
+    await adminCatalogApi.deleteProduct(p.id);
+    await loadProducts();
+    toast.success('已移入回收站');
+  } catch (e) {
+    console.warn('删除商品失败', e);
+    toast.error('删除失败，请稍后重试');
+  }
 }
 
 onMounted(() => {

@@ -17,7 +17,7 @@ export const catalogApi = {
   productPage: (params: {
     page?: number; size?: number;
     categoryId?: number; keyword?: string;
-    sort?: 'sales' | 'price_asc' | 'price_desc';
+    sort?: 'sales' | 'priceAsc' | 'priceDesc';
   }) =>
     request<PageVO<ProductVO>>({ url: '/api/pub/product/page', params, anonymous: true }),
 

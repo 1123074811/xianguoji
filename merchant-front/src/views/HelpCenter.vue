@@ -34,16 +34,17 @@
             <span class="text-xs text-slate-400">{{ filteredFaqs.length }} 个问题</span>
           </div>
           <div class="divide-y divide-slate-100">
-            <div v-for="faq in filteredFaqs" :key="faq.q" class="px-6 py-4 hover:bg-slate-50 transition-colors cursor-pointer" @click="toggleFaq(faq.q)">
+            <div v-if="filteredFaqs.length === 0" class="px-6 py-8 text-center text-sm text-slate-400">暂无问题</div>
+            <div v-for="faq in filteredFaqs" :key="faq.id" class="px-6 py-4 hover:bg-slate-50 transition-colors cursor-pointer" @click="toggleFaq(faq.id)">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <span class="material-symbols-outlined text-primary text-lg">help</span>
-                  <span class="font-label-bold text-slate-800">{{ faq.q }}</span>
+                  <span class="font-label-bold text-slate-800">{{ faq.question }}</span>
                 </div>
-                <span class="material-symbols-outlined text-slate-400 transition-transform" :class="{ 'rotate-180': expandedFaq === faq.q }">expand_more</span>
+                <span class="material-symbols-outlined text-slate-400 transition-transform" :class="{ 'rotate-180': expandedFaq === faq.id }">expand_more</span>
               </div>
-              <div v-if="expandedFaq === faq.q" class="mt-3 pl-9 text-sm text-slate-600 leading-relaxed">
-                {{ faq.a }}
+              <div v-if="expandedFaq === faq.id" class="mt-3 pl-9 text-sm text-slate-600 leading-relaxed">
+                {{ faq.answer }}
               </div>
             </div>
           </div>
@@ -59,11 +60,12 @@
             操作指南
           </h3>
           <div class="space-y-2">
-            <a v-for="guide in guides" :key="guide.title" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer group">
+            <div v-if="guides.length === 0" class="text-xs text-slate-400 px-3 py-2">暂无内容</div>
+            <a v-for="guide in guides" :key="guide.id" :href="guide.url || undefined" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer group">
               <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">{{ guide.icon }}</span>
               <div class="flex-1">
                 <p class="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors">{{ guide.title }}</p>
-                <p class="text-[10px] text-slate-400">{{ guide.time }}</p>
+                <p class="text-[10px] text-slate-400">{{ guide.duration }}</p>
               </div>
               <span class="material-symbols-outlined text-slate-300 group-hover:text-primary text-sm">chevron_right</span>
             </a>
@@ -98,8 +100,12 @@
             意见反馈
           </h3>
           <p class="text-xs text-slate-500 mb-4">您的建议将帮助我们改进产品</p>
-          <textarea class="w-full h-24 p-3 bg-slate-50 border border-outline-variant rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary resize-none" placeholder="请输入您的建议或问题..."></textarea>
-          <button class="mt-3 w-full py-2 bg-primary text-white rounded-lg font-label-bold text-sm hover:bg-primary/90 transition-colors">提交反馈</button>
+          <textarea v-model="feedbackContent" class="w-full h-24 p-3 bg-slate-50 border border-outline-variant rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary resize-none" placeholder="请输入您的建议或问题..."></textarea>
+          <input v-model="feedbackContact" class="mt-2 w-full px-3 py-2 bg-slate-50 border border-outline-variant rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="联系方式（可选）" />
+          <button @click="submitFeedback" :disabled="submittingFeedback" class="mt-3 w-full py-2 bg-primary text-white rounded-lg font-label-bold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50">
+            {{ submittingFeedback ? '提交中…' : '提交反馈' }}
+          </button>
+          <p v-if="feedbackTip" :class="feedbackTipClass" class="mt-2 text-xs text-center">{{ feedbackTip }}</p>
         </div>
       </div>
     </div>
@@ -107,11 +113,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { helpApi, type HelpFaqVO, type HelpGuideVO } from '@/api/modules/help'
 
 const searchQuery = ref('')
 const activeSection = ref('')
-const expandedFaq = ref('')
+const expandedFaq = ref<number | null>(null)
+const faqs = ref<HelpFaqVO[]>([])
+const guides = ref<HelpGuideVO[]>([])
+const feedbackContent = ref('')
+const feedbackContact = ref('')
+const submittingFeedback = ref(false)
+const feedbackTip = ref('')
+const feedbackTipClass = ref('text-slate-500')
 
 const quickHelp = [
   { title: '订单管理', desc: '接单、备货、发货流程', icon: 'shopping_cart', iconBg: 'bg-primary/10', iconColor: 'text-primary', section: 'orders' },
@@ -120,38 +134,61 @@ const quickHelp = [
   { title: '账户安全', desc: '密码修改、设备管理', icon: 'lock', iconBg: 'bg-purple-50', iconColor: 'text-purple-600', section: 'security' }
 ]
 
-const faqs = [
-  { q: '如何处理客户退款申请？', a: '进入订单管理页面，筛选"退款/售后"标签页，点击对应订单的"处理退款"按钮。您可以选择同意退款、部分退款或拒绝退款。处理时限为48小时，超时系统将自动同意退款。', section: 'orders' },
-  { q: '商品库存预警阈值如何设置？', a: '进入商品管理页面，点击商品编辑，在"库存与价格"模块中可以设置每个SKU的库存预警阈值。当库存低于该值时，系统会自动推送通知到消息中心。', section: 'goods' },
-  { q: '如何创建拼团活动？', a: '进入营销中心，点击"创建优惠券"，选择"拼团活动"类型。设置成团人数、拼团折扣和活动时间即可。拼团商品会在用户端展示拼团标签。', section: 'campaign' },
-  { q: '配送范围如何调整？', a: '进入配送设置页面，在"配送服务范围"模块中，使用地图绘制工具调整配送区域。您可以设置标准配送范围和扩展配送范围，不同范围可配置不同运费。', section: 'shipping' },
-  { q: '如何导出经营数据？', a: '进入报表导出页面，选择报表类型、时间范围和导出格式，点击"生成并下载"即可。您也可以使用快捷模板快速生成常用报表，或设置定时自动生成。', section: 'report' },
-  { q: '忘记密码怎么办？', a: '在登录页面点击"忘记密码"，输入注册手机号获取验证码，验证后即可重置密码。如果手机号已变更，请联系客服400-888-9999进行人工验证。', section: 'security' },
-  { q: '如何查看客户评价并回复？', a: '进入评价管理页面，可以按"待回复"、"已回复"、"差评"筛选。点击评价卡片上的"回复"按钮即可撰写回复。对于差评，系统会提供AI建议回复供参考。', section: 'reviews' },
-  { q: '店铺状态如何切换？', a: '进入系统设置页面，在"店铺状态"模块中切换营业/休息状态。休息状态下用户端将显示"店铺休息中"，无法下单。您也可以设置定时营业时间自动切换。', section: 'settings' }
-]
-
 const filteredFaqs = computed(() => {
-  let result = faqs
-  if (activeSection.value) {
-    result = result.filter(f => f.section === activeSection.value)
-  }
+  let result = faqs.value
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
-    result = result.filter(f => f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q))
+    result = result.filter(f => f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q))
   }
   return result
 })
 
-const toggleFaq = (q: string) => {
-  expandedFaq.value = expandedFaq.value === q ? '' : q
+// 模板里使用 faq.q / faq.a；兼容
+const toggleFaq = (id: number) => {
+  expandedFaq.value = expandedFaq.value === id ? null : id
 }
 
-const guides = [
-  { title: '新手入驻指南', icon: 'rocket_launch', time: '约10分钟' },
-  { title: '商品发布教程', icon: 'inventory_2', time: '约8分钟' },
-  { title: '订单处理流程', icon: 'receipt_long', time: '约5分钟' },
-  { title: '营销活动设置', icon: 'campaign', time: '约6分钟' },
-  { title: '数据报表解读', icon: 'analytics', time: '约7分钟' }
-]
+async function loadFaqs() {
+  try {
+    faqs.value = await helpApi.faqList({ section: activeSection.value || undefined })
+  } catch (e) {
+    console.warn('加载FAQ失败', e)
+  }
+}
+
+async function loadGuides() {
+  try {
+    guides.value = await helpApi.guideList()
+  } catch (e) {
+    console.warn('加载操作指南失败', e)
+  }
+}
+
+watch(activeSection, () => loadFaqs())
+
+async function submitFeedback() {
+  if (!feedbackContent.value.trim()) {
+    feedbackTip.value = '请填写反馈内容'
+    feedbackTipClass.value = 'text-error'
+    return
+  }
+  submittingFeedback.value = true
+  try {
+    await helpApi.submitFeedback({ content: feedbackContent.value, contact: feedbackContact.value || undefined })
+    feedbackContent.value = ''
+    feedbackContact.value = ''
+    feedbackTip.value = '感谢您的反馈，我们会尽快处理'
+    feedbackTipClass.value = 'text-primary'
+  } catch (e: any) {
+    feedbackTip.value = e?.message || '提交失败'
+    feedbackTipClass.value = 'text-error'
+  } finally {
+    submittingFeedback.value = false
+  }
+}
+
+onMounted(() => {
+  loadFaqs()
+  loadGuides()
+})
 </script>

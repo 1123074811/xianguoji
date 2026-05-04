@@ -48,8 +48,10 @@
             :style="{ backgroundColor: couponBgColors[idx % couponBgColors.length] }"
           >
             <view class="coupon-info">
-              <text class="coupon-amount" :style="{ color: couponTextColors[idx % couponTextColors.length] }">¥{{ coupon.amount }}</text>
-              <text class="coupon-condition" :style="{ color: couponTextColors[idx % couponTextColors.length] }">满{{ coupon.threshold }}可用</text>
+              <text class="coupon-amount" :style="{ color: couponTextColors[idx % couponTextColors.length] }">¥{{ formatAmount(coupon.amount) }}</text>
+              <text class="coupon-condition" :style="{ color: couponTextColors[idx % couponTextColors.length] }">满{{ formatAmount(coupon.threshold) }}可用</text>
+              <text class="coupon-name" :style="{ color: couponTextColors[idx % couponTextColors.length] }">{{ coupon.name }}</text>
+              <text class="coupon-expire" :style="{ color: couponTextColors[idx % couponTextColors.length] }">{{ formatExpire(coupon.endTime) }}前</text>
             </view>
             <view class="coupon-action">
               <text class="coupon-btn" :style="{ backgroundColor: couponTextColors[idx % couponTextColors.length], color: '#ffffff' }" @tap="claimCoupon(coupon)">领取</text>
@@ -141,6 +143,21 @@ async function loadHomeData() {
   } catch (e) {
     console.warn('首页数据加载失败', e);
   }
+}
+
+function formatAmount(value: string | number) {
+  const num = Number(value);
+  if (!isFinite(num)) return value;
+  return Number.isInteger(num) ? String(num) : num.toFixed(2).replace(/\.?0+$/, '');
+}
+
+function formatExpire(endTime: string) {
+  if (!endTime) return '';
+  const d = new Date(endTime.replace(' ', 'T'));
+  if (isNaN(d.getTime())) return endTime.slice(0, 10);
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${m}.${day}`;
 }
 
 async function claimCoupon(coupon: CouponVO) {
@@ -369,8 +386,8 @@ function goToGroupBuy() {
   .coupon-card {
     display: inline-flex;
     align-items: center;
-    width: 288rpx;
-    height: 160rpx;
+    width: 340rpx;
+    height: 180rpx;
     border-radius: $radius-md;
     padding: $space-3;
     position: relative;
@@ -382,6 +399,8 @@ function goToGroupBuy() {
       flex-direction: column;
       gap: 4rpx;
       z-index: 1;
+      min-width: 0;
+      flex: 1;
 
       .coupon-amount {
         font-size: 36rpx;
@@ -390,6 +409,20 @@ function goToGroupBuy() {
 
       .coupon-condition {
         font-size: $font-xs;
+      }
+
+      .coupon-name {
+        font-size: 22rpx;
+        font-weight: $weight-medium;
+        max-width: 200rpx;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .coupon-expire {
+        font-size: 18rpx;
+        opacity: 0.75;
       }
     }
 

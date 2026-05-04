@@ -132,6 +132,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAdminStore } from '@/stores/admin'
 import { adminAuthApi } from '@/api/modules/auth'
+import { toast } from '@/utils/toast'
 
 const router = useRouter()
 const adminStore = useAdminStore()
@@ -163,20 +164,22 @@ onMounted(() => {
 
 const handleLogin = async () => {
   if (!form.account || !form.password) {
-    alert('请输入账号和密码')
+    toast.warning('请输入账号和密码')
     return
   }
   if (!form.captcha) {
-    alert('请输入验证码')
+    toast.warning('请输入验证码')
     return
   }
   if (loginLoading.value) return
   loginLoading.value = true
   try {
     await adminStore.login(form.account, form.password, captchaKey.value, form.captcha)
+    toast.success('登录成功，欢迎回来')
     router.push('/dashboard')
-  } catch (e) {
+  } catch (e: any) {
     console.warn('登录失败', e)
+    toast.error(e?.message || '登录失败，请检查账号密码或验证码')
     refreshCaptcha()
     form.captcha = ''
   } finally {

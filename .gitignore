@@ -5,10 +5,11 @@ node_modules/
 dist/
 build/
 
-# Environment files
+# Environment files (含 AMap Key、API Base 等敏感配置)
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.*.example
 
 # IDE
 .idea/

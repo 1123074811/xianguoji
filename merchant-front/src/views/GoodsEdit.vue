@@ -250,6 +250,7 @@ import { adminCatalogApi } from '@/api/modules/catalog'
 import { request } from '@/api/request'
 import { resolveImageUrl } from '@/utils/image'
 import type { AdminCategoryVO, AdminProductDetailVO } from '@/api/types/catalog'
+import { toast } from '@/utils/toast'
 
 const route = useRoute()
 const router = useRouter()
@@ -428,9 +429,12 @@ async function saveDraft() {
     } else {
       await adminCatalogApi.createProduct(payload as any)
     }
+    toast.success('草稿已保存')
     router.push('/goods')
-  } catch (e) { console.warn('保存失败', e) }
-  finally { saving.value = false }
+  } catch (e) {
+    console.warn('保存失败', e)
+    toast.error('保存失败，请稍后重试')
+  } finally { saving.value = false }
 }
 
 async function publish() {
@@ -442,9 +446,12 @@ async function publish() {
     } else {
       await adminCatalogApi.createProduct(payload as any)
     }
+    toast.success(isEdit.value ? '商品已更新' : '商品已发布上架')
     router.push('/goods')
-  } catch (e) { console.warn('发布失败', e) }
-  finally { saving.value = false }
+  } catch (e) {
+    console.warn('发布失败', e)
+    toast.error('发布失败，请稍后重试')
+  } finally { saving.value = false }
 }
 
 function goBack() {

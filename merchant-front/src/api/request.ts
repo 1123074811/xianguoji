@@ -21,6 +21,10 @@ instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 instance.interceptors.response.use(
   (res) => {
+    // 二进制下载（blob/arraybuffer）直接返回原始数据
+    if (res.config.responseType === 'blob' || res.config.responseType === 'arraybuffer') {
+      return res.data;
+    }
     const body = res.data as R<any>;
     if (body.code === 0) return body.data;
     if (body.code === 4010 || body.code === 4011) {

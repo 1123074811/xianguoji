@@ -75,6 +75,12 @@
           </div>
         </div>
 
+        <!-- Error Banner -->
+        <div v-if="errorMsg" class="mb-stack-md px-4 py-2.5 bg-error/10 border border-error/30 rounded-lg text-sm text-error flex items-center gap-2">
+          <span class="material-symbols-outlined text-base">error</span>
+          {{ errorMsg }}
+        </div>
+
         <!-- Step 1: Verify Identity -->
         <form v-if="step === 1" class="space-y-stack-md" @submit.prevent="handleVerify">
           <!-- Account Input -->
@@ -154,9 +160,9 @@
           </div>
 
           <!-- Submit Button -->
-          <button class="w-full h-12 bg-primary text-white rounded-lg font-label-bold text-label-bold hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-md" type="submit">
-            <span>确认重置</span>
-            <span class="material-symbols-outlined text-sm">check_circle</span>
+          <button class="w-full h-12 bg-primary text-white rounded-lg font-label-bold text-label-bold hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50" type="submit" :disabled="submitting">
+            <span>{{ submitting ? '提交中…' : '确认重置' }}</span>
+            <span v-if="!submitting" class="material-symbols-outlined text-sm">check_circle</span>
           </button>
         </form>
 
@@ -193,6 +199,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { adminAuthApi } from '@/api/modules/auth'
 
 const router = useRouter()
 const step = ref(1)
@@ -200,6 +207,8 @@ const countdown = ref(0)
 const redirectCountdown = ref(5)
 const showNewPwd = ref(false)
 const showConfirmPwd = ref(false)
+const submitting = ref(false)
+const errorMsg = ref('')
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 let redirectTimer: ReturnType<typeof setInterval> | null = null
 
@@ -232,30 +241,70 @@ const strengthColor = computed(() => {
   return colors[passwordStrength.value] || 'text-slate-400'
 })
 
-const sendSmsCode = () => {
-  countdown.value = 60
-  countdownTimer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0 && countdownTimer) {
-      clearInterval(countdownTimer)
-      countdownTimer = null
-    }
-  }, 1000)
+const sendSmsCode = async () => {
+  errorMsg.value = ''
+  if (!/^1[3-9]\d{9}$/.test(form.phone)) {
+    errorMsg.value = '请输入正确的手机号'
+    return
+  }
+  try {
+    await adminAuthApi.sendSms(form.phone)
+    countdown.value = 60
+    countdownTimer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0 && countdownTimer) {
+        clearInterval(countdownTimer)
+        countdownTimer = null
+      }
+    }, 1000)
+  } catch (e: any) {
+    errorMsg.value = e?.message || '发送失败'
+  }
 }
 
 const handleVerify = () => {
+  errorMsg.value = ''
+  if (!form.account || !form.phone || !form.smsCode) {
+    errorMsg.value = '请填写完整信息'
+    return
+  }
+  // 进入下一步，真正校验在第二步随密码一起提交
   step.value = 2
 }
 
-const handleReset = () => {
-  step.value = 3
-  redirectTimer = setInterval(() => {
-    redirectCountdown.value--
-    if (redirectCountdown.value <= 0) {
-      if (redirectTimer) clearInterval(redirectTimer)
-      router.push('/login')
-    }
-  }, 1000)
+const handleReset = async () => {
+  errorMsg.value = ''
+  if (form.newPassword.length < 8) {
+    errorMsg.value = '新密码至少 8 位'
+    return
+  }
+  if (form.newPassword !== form.confirmPassword) {
+    errorMsg.value = '两次输入的密码不一致'
+    return
+  }
+  submitting.value = true
+  try {
+    await adminAuthApi.resetPassword({
+      username: form.account,
+      phone: form.phone,
+      code: form.smsCode,
+      newPassword: form.newPassword,
+    })
+    step.value = 3
+    redirectTimer = setInterval(() => {
+      redirectCountdown.value--
+      if (redirectCountdown.value <= 0) {
+        if (redirectTimer) clearInterval(redirectTimer)
+        router.push('/login')
+      }
+    }, 1000)
+  } catch (e: any) {
+    errorMsg.value = e?.message || '重置失败'
+    // 验证码错误退回到第一步
+    if (errorMsg.value.includes('验证码')) step.value = 1
+  } finally {
+    submitting.value = false
+  }
 }
 
 onUnmounted(() => {

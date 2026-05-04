@@ -1,5 +1,5 @@
 import { request } from '@/api/request';
-import type { AdminShopVO, AdminDeliverySettingVO, AdminPickupPointVO } from '@/api/types/shop';
+import type { AdminShopVO, AdminDeliverySettingVO, AdminPickupPointVO, AdminNotificationVO, NotifySettingVO } from '@/api/types/shop';
 
 export const adminShopApi = {
   shopInfo: () =>
@@ -8,7 +8,7 @@ export const adminShopApi = {
   updateShopInfo: (data: Partial<AdminShopVO>) =>
     request<void>({ url: '/api/admin/shop/info', method: 'PUT', data }),
 
-  updateOpenStatus: (isOpen: boolean) =>
+  updateOpenStatus: (isOpen: number) =>
     request<void>({ url: '/api/admin/shop/open-status', method: 'PUT', data: { isOpen } }),
 
   deliverySetting: () =>
@@ -28,4 +28,22 @@ export const adminShopApi = {
 
   deletePickupPoint: (id: number) =>
     request<void>({ url: `/api/admin/pickup-point/${id}`, method: 'DELETE' }),
+
+  notificationList: (type?: number) =>
+    request<AdminNotificationVO[]>({ url: '/api/admin/notification/list', params: type ? { type } : {} }),
+
+  markNotificationRead: (id: number) =>
+    request<void>({ url: `/api/admin/notification/${id}/read`, method: 'PUT' }),
+
+  markAllNotificationRead: () =>
+    request<void>({ url: '/api/admin/notification/read-all', method: 'PUT' }),
+
+  notificationUnreadCount: () =>
+    request<number>({ url: '/api/admin/notification/unread-count' }),
+
+  notifySettingList: () =>
+    request<NotifySettingVO[]>({ url: '/api/admin/notify-setting/list' }),
+
+  updateNotifySetting: (id: number, data: Partial<NotifySettingVO>) =>
+    request<void>({ url: `/api/admin/notify-setting/${id}`, method: 'PUT', data }),
 };

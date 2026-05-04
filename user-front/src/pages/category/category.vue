@@ -95,10 +95,7 @@ const subCategories = computed(() => {
   return [{ id: 0, name: '全部商品' }, ...(currentCat.children || [])];
 });
 
-const filteredGoods = computed(() => {
-  if (activeSubId.value === 0) return goods.value;
-  return goods.value.filter(g => g.categoryId === activeSubId.value);
-});
+const filteredGoods = computed(() => goods.value);
 
 async function fetchCategories() {
   try {
@@ -123,7 +120,7 @@ async function fetchGoods(reset = false) {
     const data = await catalogApi.productPage({
       page: currentPage.value,
       size: pageSize,
-      categoryId: activeCatId.value || undefined,
+      categoryId: activeSubId.value || activeCatId.value || undefined,
     });
     if (reset) {
       goods.value = data.list;
@@ -140,6 +137,14 @@ async function fetchGoods(reset = false) {
 }
 
 watch(activeCatId, () => {
+  if (activeSubId.value !== 0) {
+    activeSubId.value = 0;
+  } else {
+    fetchGoods(true);
+  }
+});
+
+watch(activeSubId, () => {
   fetchGoods(true);
 });
 
