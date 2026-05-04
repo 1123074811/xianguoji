@@ -13,22 +13,22 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/xianguoji?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: REDACTED_DB_PASSWORD
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:CHANGE_ME}
     druid:
       initial-size: 5
       min-idle: 5
       max-active: 20
       stat-view-servlet:
         enabled: true
-        login-username: druid
-        login-password: druid
+        login-username: ${DRUID_USER:druid}
+        login-password: ${DRUID_PASSWORD:CHANGE_ME}
   data:
     redis:
       host: 127.0.0.1
       port: 6379
       database: 0
-      password: REDACTED_DB_PASSWORD
+      password: ${REDIS_PASSWORD:CHANGE_ME}
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
@@ -43,7 +43,7 @@ mybatis-plus:
 
 xianguoji:
   jwt:
-    secret: REDACTED_JWT_SECRET
+    secret: ${JWT_SECRET:CHANGE_ME_TO_32_BYTES_MIN}
     user-ttl-hours: 168
     admin-ttl-hours: 12
   upload:
@@ -52,8 +52,8 @@ xianguoji:
   sms:
     provider: mock
   wechat:
-    appid: <your-appid>
-    secret: <your-secret>
+    appid: ${WECHAT_APPID:CHANGE_ME}
+    secret: ${WECHAT_SECRET:CHANGE_ME}
     pay:
       mch-id: <your-mchid>
       api-key-v3: <your-apikey>

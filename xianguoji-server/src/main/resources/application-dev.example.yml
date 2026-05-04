@@ -1,12 +1,17 @@
+# 本地开发环境配置模板
+# 复制此文件为 application-dev.yml 并填入真实值
+# application-dev.yml 已被 .gitignore 排除，不会被提交
+
 spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/xianguoji?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: REDACTED_DB_PASSWORD
+    password: YOUR_MYSQL_PASSWORD
   data:
     redis:
       host: 127.0.0.1
       port: 6379
+      password: YOUR_REDIS_PASSWORD
 
 logging:
   level:
