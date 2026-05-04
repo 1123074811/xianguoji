@@ -129,6 +129,13 @@
             <version>1.17.2</version>
         </dependency>
 
+        <!-- Dotenv (load .env file as property source) -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>spring-dotenv</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
         <!-- BCrypt (Spring Security Crypto only) -->
         <dependency>
             <groupId>org.springframework.security</groupId>

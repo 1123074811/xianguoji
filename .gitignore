@@ -41,7 +41,5 @@ HELP.md
 # Redis snapshot accidentally written into project
 dump.rdb
 
-# Sensitive config files (use environment variables instead)
-xianguoji-server/src/main/resources/application-dev.yml
-xianguoji-server/src/main/resources/application-prod.yml
+# Sensitive config files (use .env instead)
 replacements.txt
