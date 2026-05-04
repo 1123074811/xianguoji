@@ -26,83 +26,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import GoodsCard from '@/components/goods-card.vue';
+import { userApi } from '@/api/modules/user';
+import type { ProductVO } from '@/api/types/catalog';
 
-const footprintGroups = ref([
-  {
-    date: '今天',
-    items: [
-      {
-        id: '1',
-        name: '智利进口车厘子 JJJ级 2.5kg 礼盒装',
-        price: 288.00,
-        originalPrice: '358.00',
-        image: 'https://images.unsplash.com/photo-1528821128474-27f963b062bf?w=500&q=80',
-        sales: 1200,
-        stock: 50,
-        isGroupBuy: true,
-        groupBuyPrice: 258.00
-      },
-      {
-        id: '2',
-        name: '四川蒲江红心猕猴桃 15枚装',
-        price: 39.90,
-        originalPrice: '59.90',
-        image: 'https://images.unsplash.com/photo-1585059895524-72359e06138a?w=500&q=80',
-        sales: 856,
-        stock: 200,
-        isGroupBuy: false
-      }
-    ]
-  },
-  {
-    date: '昨天',
-    items: [
-      {
-        id: '3',
-        name: '泰国进口金枕榴莲 3-4斤/个',
-        price: 168.00,
-        originalPrice: '198.00',
-        image: 'https://images.unsplash.com/photo-1552089123-2d26226fc2b7?w=500&q=80',
-        sales: 432,
-        stock: 0,
-        isGroupBuy: false
-      },
-      {
-        id: '4',
-        name: '新疆阿克苏冰糖心苹果 5kg',
-        price: 58.00,
-        originalPrice: '78.00',
-        image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cb6c?w=500&q=80',
-        sales: 2100,
-        stock: 500,
-        isGroupBuy: false
-      }
-    ]
+const footprintGroups = ref<{ date: string; items: ProductVO[] }[]>([]);
+const total = ref(0);
+
+const totalCount = computed(() => total.value);
+
+async function loadFootprint() {
+  try {
+    const data = await userApi.footprintPage({ page: 1, size: 100 });
+    total.value = data.total;
+    // 后端 VO 不带浏览时间分组字段；当前一律放在「最近浏览」一组
+    footprintGroups.value = data.list.length
+      ? [{ date: '最近浏览', items: data.list }]
+      : [];
+  } catch (e) {
+    console.warn('加载足迹失败', e);
   }
-]);
-
-const totalCount = computed(() => {
-  return footprintGroups.value.reduce((acc, group) => acc + group.items.length, 0);
-});
+}
 
 function clearFootprints() {
   uni.showModal({
     title: '提示',
     content: '确定要清空所有浏览足迹吗？',
-    success: (res) => {
-      if (res.confirm) {
+    success: async (res) => {
+      if (!res.confirm) return;
+      try {
+        await userApi.clearFootprint();
         footprintGroups.value = [];
+        total.value = 0;
         uni.showToast({ title: '已清空', icon: 'success' });
+      } catch (e) {
+        console.warn('清空失败', e);
       }
-    }
+    },
   });
 }
 
 function goShopping() {
   uni.switchTab({ url: '/pages/index/index' });
 }
+
+onMounted(loadFootprint);
 </script>
 
 <style lang="scss" scoped>

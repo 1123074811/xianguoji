@@ -1,64 +1,60 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import { cartApi } from '@/api/modules/cart';
+import type { CartItemVO, CartListVO } from '@/api/types/cart';
 
 export const useCartStore = defineStore('cart', () => {
-  const items = ref<any[]>([
-    {
-      id: '1',
-      name: '智利进口车厘子 JJJ级 2.5kg 礼盒装',
-      price: 288.00,
-      image: 'https://images.unsplash.com/photo-1528821128474-27f963b062bf?w=500&q=80',
-      count: 1,
-      selected: true
-    },
-    {
-      id: '2',
-      name: '四川蒲江红心猕猴桃 15枚装',
-      price: 39.90,
-      image: 'https://images.unsplash.com/photo-1585059895524-72359e06138a?w=500&q=80',
-      count: 2,
-      selected: true
-    }
-  ]);
+  const items = ref<CartItemVO[]>([]);
+  const totalAmount = ref('0.00');
+  const discountAmount = ref('0.00');
+  const promotionTip = ref('');
+  const count = ref(0);
 
-  const totalCount = computed(() => {
-    return items.value.reduce((total, item) => total + item.count, 0);
-  });
+  const totalCount = computed(() => count.value);
+  const totalPrice = computed(() => totalAmount.value);
+  const selectedItems = computed(() => items.value.filter(i => i.selected === 1));
 
-  const totalPrice = computed(() => {
-    return items.value.reduce((total, item) => total + item.price * item.count, 0);
-  });
-
-  function addToCart(product: any) {
-    const existingItem = items.value.find(item => item.id === product.id);
-    if (existingItem) {
-      existingItem.count++;
-    } else {
-      items.value.push({ ...product, count: 1 });
-    }
+  async function refreshList() {
+    const data = await cartApi.list();
+    items.value = data.items;
+    totalAmount.value = data.totalAmount;
+    discountAmount.value = data.discountAmount;
+    promotionTip.value = data.promotionTip;
+    count.value = data.items.reduce((s, i) => s + i.quantity, 0);
   }
 
-  function removeFromCart(productId: string) {
-    const index = items.value.findIndex(item => item.id === productId);
-    if (index > -1) {
-      if (items.value[index].count > 1) {
-        items.value[index].count--;
-      } else {
-        items.value.splice(index, 1);
-      }
-    }
+  async function refreshCount() {
+    count.value = await cartApi.count();
   }
 
-  function clearCart() {
-    items.value = [];
+  async function addToCart(skuId: number, quantity = 1) {
+    await cartApi.add({ skuId, quantity });
+    await refreshCount();
+  }
+
+  async function updateQty(id: number, quantity: number) {
+    await cartApi.updateQuantity(id, quantity);
+    await refreshList();
+  }
+
+  async function setSelected(ids: number[], selected: 0 | 1) {
+    await cartApi.updateSelected({ ids, selected });
+    await refreshList();
+  }
+
+  async function remove(id: number) {
+    await cartApi.delete(id);
+    await refreshList();
+  }
+
+  async function clear() {
+    await cartApi.clear();
+    await refreshList();
   }
 
   return {
-    items,
-    totalCount,
-    totalPrice,
-    addToCart,
-    removeFromCart,
-    clearCart,
+    items, totalAmount, discountAmount, promotionTip, count,
+    totalCount, totalPrice, selectedItems,
+    refreshList, refreshCount, addToCart, updateQty, setSelected, remove, clear,
   };
 });

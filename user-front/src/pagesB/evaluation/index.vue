@@ -13,10 +13,8 @@
       <!-- Form Section -->
       <view class="form-section card">
         <view class="goods-info">
-          <image src="https://picsum.photos/128/128?random=50" mode="aspectFill" class="goods-img" />
           <view class="info">
-            <text class="name">红富士苹果 (4个装)</text>
-            <text class="specs">产地：烟台</text>
+            <text class="name">评价订单 {{ orderNo }}</text>
           </view>
         </view>
 
@@ -90,18 +88,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { reviewApi } from '@/api/modules/review';
 import SvgIcon from '@/components/svg-icon.vue';
 
+const orderId = ref(0);
+const orderItemId = ref(0);
 const rating = ref(5);
 const content = ref('');
-const images = ref<string[]>(['https://picsum.photos/200/200?random=51']);
+const images = ref<string[]>([]);
 const isAnonymous = ref(true);
 
+onMounted(() => {
+  const pages = getCurrentPages();
+  const page = pages[pages.length - 1] as any;
+  orderId.value = Number(page?.options?.orderId || 0);
+  orderItemId.value = Number(page?.options?.orderItemId || 0);
+});
+
 const tags = [
-  { name: '全部', count: 128, active: true },
-  { name: '有图', count: 42, active: false },
-  { name: '好评', count: 115, active: false },
+  { name: '全部', count: 0, active: true },
+  { name: '有图', count: 0, active: false },
+  { name: '好评', count: 0, active: false },
   { name: '最新', count: 0, active: false }
 ];
 
@@ -110,16 +118,42 @@ function goBack() {
 }
 
 function handleUpload() {
-  // 模拟上传
+  uni.chooseImage({
+    count: 9 - images.value.length,
+    success: (res) => {
+      images.value = [...images.value, ...res.tempFilePaths];
+    }
+  });
 }
 
 function removeImg(index: number) {
   images.value.splice(index, 1);
 }
 
-function handleSubmit() {
-  uni.showToast({ title: '评价发布成功', icon: 'success' });
-  setTimeout(() => uni.navigateBack(), 1500);
+async function handleSubmit() {
+  if (!content.value.trim()) {
+    return uni.showToast({ title: '请输入评价内容', icon: 'none' });
+  }
+  if (!orderId.value || !orderItemId.value) {
+    return uni.showToast({ title: '缺少订单评价信息', icon: 'none' });
+  }
+  try {
+    await reviewApi.submit({
+      orderId: orderId.value,
+      orderItemId: orderItemId.value,
+      rating: rating.value,
+      freshnessRating: rating.value,
+      valueRating: rating.value,
+      packageRating: rating.value,
+      content: content.value,
+      images: images.value,
+      isAnonymous: isAnonymous.value ? 1 : 0,
+    });
+    uni.showToast({ title: '评价发布成功', icon: 'success' });
+    setTimeout(() => uni.navigateBack(), 1500);
+  } catch (e) {
+    console.warn('评价提交失败', e);
+  }
 }
 </script>
 

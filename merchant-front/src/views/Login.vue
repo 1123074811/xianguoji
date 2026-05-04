@@ -81,8 +81,9 @@
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">verified_user</span>
                 <input class="w-full pl-10 pr-4 h-12 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all font-body-md text-body-md outline-none" id="captcha" placeholder="输入验证码" type="text" v-model="form.captcha" />
               </div>
-              <div class="w-32 h-12 bg-surface-container rounded-lg border border-outline-variant overflow-hidden cursor-pointer flex items-center justify-center text-xs text-slate-400 font-bold">
-                验证码图
+              <div class="w-32 h-12 bg-surface-container rounded-lg border border-outline-variant overflow-hidden cursor-pointer flex items-center justify-center" @click="refreshCaptcha">
+                <img v-if="captchaImage" :src="captchaImage" alt="验证码" class="w-full h-full object-cover" />
+                <span v-else class="text-xs text-slate-400 font-bold">点击获取</span>
               </div>
             </div>
           </div>
@@ -127,12 +128,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAdminStore } from '@/stores/admin'
+import { adminAuthApi } from '@/api/modules/auth'
 
 const router = useRouter()
+const adminStore = useAdminStore()
 
 const showPassword = ref(false)
+const loginLoading = ref(false)
+const captchaImage = ref('')
+const captchaKey = ref('')
 const form = reactive({
   account: '',
   password: '',
@@ -140,8 +147,41 @@ const form = reactive({
   remember: false
 })
 
-const handleLogin = () => {
-  router.push('/dashboard')
+const refreshCaptcha = async () => {
+  try {
+    const data = await adminAuthApi.captcha()
+    captchaKey.value = data.captchaKey
+    captchaImage.value = data.captchaImage
+  } catch (e) {
+    console.warn('获取验证码失败', e)
+  }
+}
+
+onMounted(() => {
+  refreshCaptcha()
+})
+
+const handleLogin = async () => {
+  if (!form.account || !form.password) {
+    alert('请输入账号和密码')
+    return
+  }
+  if (!form.captcha) {
+    alert('请输入验证码')
+    return
+  }
+  if (loginLoading.value) return
+  loginLoading.value = true
+  try {
+    await adminStore.login(form.account, form.password, captchaKey.value, form.captcha)
+    router.push('/dashboard')
+  } catch (e) {
+    console.warn('登录失败', e)
+    refreshCaptcha()
+    form.captcha = ''
+  } finally {
+    loginLoading.value = false
+  }
 }
 </script>
 

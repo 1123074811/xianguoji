@@ -20,15 +20,15 @@
       <!-- Image Carousel -->
       <view class="carousel">
         <swiper class="swiper" circular autoplay interval="3000">
-          <swiper-item v-for="(img, index) in goods.images" :key="index">
+          <swiper-item v-for="(img, index) in displayImages" :key="index">
             <image :src="img" mode="aspectFill" class="slide-image" />
           </swiper-item>
         </swiper>
-        <view class="indicator">1/5</view>
+        <view class="indicator">{{ displayImages.length > 0 ? 1 : 0 }}/{{ displayImages.length }}</view>
       </view>
 
       <!-- Price & Buy Tabs -->
-      <view class="price-section card-flat">
+      <view class="price-section card-flat" v-if="goods">
         <view class="buy-tabs">
           <view 
             class="tab" 
@@ -44,32 +44,31 @@
         <view class="price-row">
           <view class="left">
             <text class="currency">¥</text>
-            <text class="price">{{ buyType === 'group' ? goods.groupBuyPrice : goods.price }}</text>
-            <text class="original-price">¥{{ goods.originalPrice }}</text>
-            <view class="save-tag">立省 ¥19</view>
+            <text class="price">{{ activeSku ? activeSku.price : goods.minPrice }}</text>
+            <text class="original-price" v-if="activeSku && activeSku.originalPrice">¥{{ activeSku.originalPrice }}</text>
           </view>
-          <text class="sales">月销 2.4k+</text>
+          <text class="sales">月销 {{ goods.sales }}+</text>
         </view>
       </view>
 
       <!-- Title & Slogan -->
-      <view class="info-section card-flat">
+      <view class="info-section card-flat" v-if="goods">
         <text class="goods-title">{{ goods.name }}</text>
-        <text class="slogan">出口级品质 · 颗颗爆汁 · 浓郁玫瑰芬芳 · 产地直达</text>
+        <text class="slogan">{{ goods.subtitle }}</text>
       </view>
 
       <!-- Specs -->
-      <view class="specs-section card-flat">
+      <view class="specs-section card-flat" v-if="goods && goods.skuList.length">
         <text class="section-title">规格选择</text>
         <view class="specs-list">
           <view 
-            v-for="spec in specs" 
-            :key="spec" 
+            v-for="sku in goods.skuList" 
+            :key="sku.id" 
             class="spec-item"
-            :class="{ active: activeSpec === spec }"
-            @tap="activeSpec = spec"
+            :class="{ active: activeSkuId === sku.id }"
+            @tap="activeSkuId = sku.id"
           >
-            {{ spec }}
+            {{ sku.specName }}
           </view>
         </view>
       </view>
@@ -106,23 +105,24 @@
       </view>
 
       <!-- User Reviews -->
-      <view class="reviews-section">
+      <view class="reviews-section" v-if="reviewSummary">
         <view class="reviews-header">
-          <text class="reviews-title">用户评价 (128)</text>
+          <text class="reviews-title">用户评价 ({{ reviewSummary.totalCount }})</text>
           <view class="reviews-score">
-            <text class="score-num">4.8</text>
+            <text class="score-num">{{ reviewSummary.avgRating }}</text>
             <svg-icon name="star" :size="24" color="#FFA000" />
-            <text class="satisfaction">满意度 99%</text>
+            <text class="satisfaction">满意度 {{ reviewSummary.goodRate }}%</text>
           </view>
         </view>
         <view class="review-list">
           <view v-for="review in reviews" :key="review.id" class="review-card">
             <view class="review-top">
               <view class="user-info">
-                <view class="avatar">{{ review.avatarText }}</view>
-                <text class="username">{{ review.username }}</text>
+                <image v-if="review.userAvatar" :src="review.userAvatar" class="avatar-img" />
+                <view v-else class="avatar">{{ review.userName?.charAt(0) || '?' }}</view>
+                <text class="username">{{ review.userName }}</text>
               </view>
-              <text class="review-time">{{ review.time }}</text>
+              <text class="review-time">{{ review.createdAt }}</text>
             </view>
             <text class="review-content">{{ review.content }}</text>
           </view>
@@ -135,14 +135,11 @@
           <view class="accent-bar"></view>
           <text class="detail-title">产品详情</text>
         </view>
-        <view class="detail-content">
-          <text class="detail-text">源自云南高原阳光产区，昼夜温差带来的极致糖分积累。每一颗阳光玫瑰都经过严格筛选，确保甜度在18度以上。</text>
-          <image class="detail-img" src="https://picsum.photos/750/400?random=50" mode="widthFix" />
-          <view class="detail-img-grid">
-            <image class="detail-img-sm" src="https://picsum.photos/375/375?random=51" mode="aspectFill" />
-            <image class="detail-img-sm" src="https://picsum.photos/375/375?random=52" mode="aspectFill" />
-          </view>
-          <text class="detail-quote">“让每一份来自自然的馈赠，都带有阳光的味道。”</text>
+        <view class="detail-content" v-if="goods">
+          <text class="detail-text">{{ goods.description }}</text>
+          <template v-if="goods.detailImages.length">
+            <image v-for="(img, idx) in goods.detailImages" :key="idx" class="detail-img" :src="img" mode="widthFix" />
+          </template>
         </view>
       </view>
     </scroll-view>
@@ -169,28 +166,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useCartStore } from '@/stores/cart';
+import { catalogApi } from '@/api/modules/catalog';
+import { reviewApi } from '@/api/modules/review';
 import SvgIcon from '@/components/svg-icon.vue';
+import type { ProductDetailVO } from '@/api/types/catalog';
+import type { ReviewVO, ReviewSummaryVO } from '@/api/types/review';
 
 const cartStore = useCartStore();
 
-const goods = ref<any>({
-  name: '云南阳光玫瑰青提 (Shine Muscat)',
-  price: 59.00,
-  groupBuyPrice: 39.90,
-  originalPrice: 78.00,
-  images: ['https://picsum.photos/750/560?random=30', 'https://picsum.photos/750/560?random=31']
+const productId = ref(0);
+const goods = ref<ProductDetailVO | null>(null);
+const reviewSummary = ref<ReviewSummaryVO | null>(null);
+const reviews = ref<ReviewVO[]>([]);
+
+const activeSkuId = ref(0);
+
+const activeSku = computed(() => {
+  if (!goods.value) return null;
+  return goods.value.skuList.find(s => s.id === activeSkuId.value) || goods.value.skuList.find(s => s.isDefault === 1) || goods.value.skuList[0];
 });
 
-const buyType = ref('single');
-const specs = ['500g 精装', '1kg 家庭装', '2kg 礼盒装'];
-const activeSpec = ref('500g 精装');
+const displayImages = computed(() => {
+  if (!goods.value) return [];
+  return goods.value.carouselImages.length > 0 ? goods.value.carouselImages : [goods.value.mainImage];
+});
 
-const reviews = ref([
-  { id: 1, avatarText: '李', username: '李女士', time: '昨天', content: '葡萄非常新鲜，果肉结实脆甜，真的有股玫瑰的清香，送过来的时候冰袋还没化。' },
-  { id: 2, avatarText: '王', username: '王先生', time: '3天前', content: '产地直发就是不一样，比超市便宜而且口感更好。包装很精致，适合送人。' }
-]);
+async function loadDetail() {
+  try {
+    const detail = await catalogApi.productDetail(productId.value);
+    goods.value = detail;
+    // 设置默认SKU
+    const defaultSku = detail.skuList.find(s => s.isDefault === 1) || detail.skuList[0];
+    if (defaultSku) activeSkuId.value = defaultSku.id;
+
+    // 加载评价摘要和评价列表
+    const [summary, reviewList] = await Promise.all([
+      reviewApi.summary(productId.value).catch(() => null),
+      reviewApi.productReviews(productId.value, { size: 3 }).catch(() => null),
+    ]);
+    if (summary) reviewSummary.value = summary;
+    if (reviewList) reviews.value = reviewList.list;
+  } catch (e) {
+    console.warn('加载商品详情失败', e);
+  }
+}
+
+onMounted(() => {
+  const pages = getCurrentPages();
+  const page = pages[pages.length - 1] as any;
+  productId.value = Number(page?.options?.id || page?.options?.productId || 0);
+  if (productId.value) loadDetail();
+});
 
 function goBack() {
   uni.navigateBack();
@@ -204,13 +232,28 @@ function goToCart() {
   uni.switchTab({ url: '/pages/cart/cart' });
 }
 
-function handleAddToCart() {
-  cartStore.addToCart({ ...goods.value, id: 'muscat' });
-  uni.showToast({ title: '已加入购物车', icon: 'success' });
+async function handleAddToCart() {
+  if (!activeSku.value) {
+    return uni.showToast({ title: '请选择规格', icon: 'none' });
+  }
+  try {
+    await cartStore.addToCart(activeSku.value.id, 1);
+    uni.showToast({ title: '已加入购物车', icon: 'success' });
+  } catch (e) {
+    console.warn('加车失败', e);
+  }
 }
 
-function handleBuyNow() {
-  uni.navigateTo({ url: '/pagesB/checkout/index' });
+async function handleBuyNow() {
+  if (!activeSku.value) {
+    return uni.showToast({ title: '请选择规格', icon: 'none' });
+  }
+  try {
+    await cartStore.addToCart(activeSku.value.id, 1);
+    uni.navigateTo({ url: '/pagesB/checkout/index' });
+  } catch (e) {
+    console.warn('立即购买失败', e);
+  }
 }
 </script>
 

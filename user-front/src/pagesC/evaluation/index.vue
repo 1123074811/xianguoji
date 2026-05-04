@@ -26,9 +26,9 @@
             <view class="goods-row">
               <image :src="item.image" mode="aspectFill" class="img" />
               <view class="info">
-                <text class="name">{{ item.name }}</text>
-                <text class="meta">下单时间：{{ item.orderTime }}</text>
-                <text class="meta">订单号：{{ item.orderNo }}</text>
+                <text class="name">{{ item.productName }}</text>
+                <text class="meta">规格：{{ item.specName }}</text>
+                <text class="meta">数量：{{ item.quantity }}</text>
               </view>
             </view>
             <view class="actions">
@@ -47,12 +47,12 @@
         <view v-else class="list">
           <view v-for="rev in doneList" :key="rev.id" class="review-card card">
             <view class="goods-row">
-              <image :src="rev.image" mode="aspectFill" class="img-sm" />
+              <image :src="rev.userAvatar" mode="aspectFill" class="img-sm" />
               <view class="info">
-                <text class="name">{{ rev.name }}</text>
+                <text class="name">{{ rev.userName }}</text>
                 <view class="stars">
-                  <svg-icon v-for="n in 5" :key="n" name="star" :size="28" :color="n <= rev.score ? '#FFB300' : '#E0E0E0'" />
-                  <text class="time">{{ rev.time }}</text>
+                  <svg-icon v-for="n in 5" :key="n" name="star" :size="28" :color="n <= rev.rating ? '#FFB300' : '#E0E0E0'" />
+                  <text class="time">{{ rev.createdAt }}</text>
                 </view>
               </view>
             </view>
@@ -68,48 +68,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { reviewApi } from '@/api/modules/review';
 import SvgIcon from '@/components/svg-icon.vue';
+import type { PendingReviewItemVO, ReviewVO } from '@/api/types/review';
 
-const pendingList = ref([
-  {
-    id: 'p1',
-    orderNo: '202310249988',
-    orderTime: '2024-05-01 14:20',
-    name: '智利车厘子 J 级 2斤装',
-    image: 'https://picsum.photos/200/200?random=51',
-    spec: '2斤/箱'
-  },
-  {
-    id: 'p2',
-    orderNo: '202310249987',
-    orderTime: '2024-04-28 10:05',
-    name: '海南金钻凤梨 3只装',
-    image: 'https://picsum.photos/200/200?random=52',
-    spec: '约 3kg'
-  }
-]);
+const pendingList = ref<PendingReviewItemVO[]>([]);
+const doneList = ref<ReviewVO[]>([]);
 
-const doneList = ref([
-  {
-    id: 'd1',
-    name: '新疆吐鲁番葡萄 玫瑰香 1kg',
-    image: 'https://picsum.photos/200/200?random=53',
-    score: 5,
-    time: '2024-04-22',
-    content: '葡萄非常新鲜，颗粒饱满，甜度也很高，全家都爱吃，下次还会回购！',
-    images: ['https://picsum.photos/200/200?random=63', 'https://picsum.photos/200/200?random=64']
-  },
-  {
-    id: 'd2',
-    name: '云南高山雪莲果 2.5kg',
-    image: 'https://picsum.photos/200/200?random=54',
-    score: 4,
-    time: '2024-04-15',
-    content: '口感清甜，爽脆多汁，包装也比较严实，运输完好。',
-    images: []
+async function loadData() {
+  try {
+    pendingList.value = await reviewApi.pendingReviews();
+    doneList.value = [];
+  } catch (e) {
+    console.warn('加载评价数据失败', e);
   }
-]);
+}
+
+onMounted(() => loadData());
 
 const tabs = computed(() => [
   { id: 'pending', name: '待评价', count: pendingList.value.length },
@@ -119,7 +95,7 @@ const tabs = computed(() => [
 const activeTab = ref('pending');
 
 function goReview(item: any) {
-  uni.navigateTo({ url: `/pagesB/evaluation/index?orderNo=${item.orderNo}&goodsId=${item.id}` });
+  uni.navigateTo({ url: `/pagesB/evaluation/index?orderId=${item.orderId}&orderItemId=${item.id}&productId=${item.productId}&skuId=${item.skuId}` });
 }
 
 function skipReview(item: any) {

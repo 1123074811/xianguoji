@@ -16,16 +16,13 @@
       </view>
 
       <!-- Discount Progress Bar -->
-      <view class="discount-bar card">
+      <view v-if="cartStore.promotionTip" class="discount-bar card">
         <view class="info-row">
           <view class="tag">满减</view>
-          <text class="desc">再买 <text class="highlight">¥12</text> 可减 <text class="highlight">¥5</text></text>
+          <text class="desc">{{ cartStore.promotionTip }}</text>
           <view class="more-btn" @tap="goToHome">
             去凑单 <svg-icon name="chevron-right" :size="24" color="#2E7D32" />
           </view>
-        </view>
-        <view class="progress-bg">
-          <view class="progress-inner" style="width: 76%"></view>
         </view>
       </view>
 
@@ -33,24 +30,24 @@
       <view v-if="cartStore.items.length > 0" class="cart-list">
         <view v-for="item in cartStore.items" :key="item.id" class="cart-item card">
           <view class="check-box" @tap="toggleSelect(item)">
-            <view class="circle" :class="{ checked: item.selected }">
-              <svg-icon v-if="item.selected" name="check" :size="24" color="#FFFFFF" />
+            <view class="circle" :class="{ checked: item.selected === 1 }">
+              <svg-icon v-if="item.selected === 1" name="check" :size="24" color="#FFFFFF" />
             </view>
           </view>
-          <image :src="item.image" mode="aspectFill" class="item-img" />
+          <image :src="item.mainImage" mode="aspectFill" class="item-img" />
           <view class="item-info">
             <view class="top">
-              <text class="name">{{ item.name }}</text>
-              <text class="specs">规格：500g/份</text>
+              <text class="name">{{ item.productName }}</text>
+              <text class="specs">{{ item.specName }}</text>
             </view>
             <view class="bottom">
               <text class="price">¥{{ item.price }}</text>
               <view class="counter">
-                <view class="btn" @tap="cartStore.removeFromCart(item.id)">
+                <view class="btn" @tap="handleDecrease(item)">
                   <svg-icon name="remove" :size="32" color="#757575" />
                 </view>
-                <text class="num">{{ item.count }}</text>
-                <view class="btn primary" @tap="cartStore.addToCart(item)">
+                <text class="num">{{ item.quantity }}</text>
+                <view class="btn primary" @tap="handleIncrease(item)">
                   <svg-icon name="add" :size="32" color="#2E7D32" />
                 </view>
               </view>
@@ -100,31 +97,38 @@
 import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useCartStore } from '@/stores/cart';
+import { useUserStore } from '@/stores/user';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
 
-onShow(() => {
-  uni.hideTabBar();
-});
-
 const cartStore = useCartStore();
+const userStore = useUserStore();
 const isManaging = ref(false);
 
+onShow(async () => {
+  uni.hideTabBar();
+  if (userStore.isLogin) {
+    await cartStore.refreshList();
+  }
+});
+
 const isAllSelected = computed(() => {
-  return cartStore.items.length > 0 && cartStore.items.every(item => item.selected);
+  return cartStore.items.length > 0 && cartStore.items.every(item => item.selected === 1);
 });
 
 function toggleManage() {
   isManaging.value = !isManaging.value;
 }
 
-function toggleSelect(item: any) {
-  item.selected = !item.selected;
+async function toggleSelect(item: any) {
+  const newSelected: 0 | 1 = item.selected === 1 ? 0 : 1;
+  await cartStore.setSelected([item.id], newSelected);
 }
 
-function toggleSelectAll() {
-  const target = !isAllSelected.value;
-  cartStore.items.forEach(item => item.selected = target);
+async function toggleSelectAll() {
+  const target: 0 | 1 = isAllSelected.value ? 0 : 1;
+  const ids = cartStore.items.map(i => i.id);
+  await cartStore.setSelected(ids, target);
 }
 
 function goToHome() {
@@ -139,9 +143,18 @@ function goToMessage() {
   uni.navigateTo({ url: '/pagesC/message/index' });
 }
 
-function handleSubmit() {
+async function handleDecrease(item: any) {
+  if (item.quantity <= 1) return;
+  await cartStore.updateQty(item.id, item.quantity - 1);
+}
+
+async function handleIncrease(item: any) {
+  await cartStore.updateQty(item.id, item.quantity + 1);
+}
+
+async function handleSubmit() {
   if (isManaging.value) {
-    const selected = cartStore.items.filter(i => i.selected);
+    const selected = cartStore.selectedItems;
     if (selected.length === 0) {
       uni.showToast({ title: '请选择要删除的商品', icon: 'none' });
       return;
@@ -149,20 +162,23 @@ function handleSubmit() {
     uni.showModal({
       title: '提示',
       content: `确定要删除选中的 ${selected.length} 件商品？`,
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          selected.forEach(item => cartStore.removeFromCart(item.id));
+          for (const item of selected) {
+            await cartStore.remove(item.id);
+          }
           uni.showToast({ title: '已删除', icon: 'success' });
         }
       }
     });
   } else {
-    const selected = cartStore.items.filter(i => i.selected);
+    const selected = cartStore.selectedItems;
     if (selected.length === 0) {
       uni.showToast({ title: '请选择要结算的商品', icon: 'none' });
       return;
     }
-    uni.navigateTo({ url: '/pagesB/checkout/index' });
+    const ids = selected.map(i => i.id).join(',');
+    uni.navigateTo({ url: `/pagesB/checkout/index?cartItemIds=${ids}` });
   }
 }
 </script>

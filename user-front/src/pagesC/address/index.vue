@@ -68,56 +68,76 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { userApi } from '@/api/modules/user';
 import SvgIcon from '@/components/svg-icon.vue';
+import type { AddressVO } from '@/api/types/user';
 
-const addresses = ref([
-  {
-    id: '1',
-    name: '张伟',
-    phone: '138****5678',
-    isDefault: true,
-    tag: '家',
-    province: '北京市',
-    city: '朝阳区',
-    district: '三里屯街道',
-    detail: '幸福二村40号楼 3单元 502室'
-  },
-  {
-    id: '2',
-    name: '李娜',
-    phone: '135****1234',
-    isDefault: false,
-    tag: '公司',
-    province: '上海市',
-    city: '浦东新区',
-    district: '陆家嘴环路',
-    detail: '1000号 恒生银行大厦 22层'
+const addresses = ref<AddressVO[]>([]);
+
+async function loadAddresses() {
+  try {
+    addresses.value = await userApi.addressList();
+  } catch (e) {
+    console.warn('加载地址列表失败', e);
   }
-]);
+}
+
+onMounted(() => loadAddresses());
 
 const newAddr = ref({
   name: '',
   phone: '',
   region: '',
   detail: '',
-  isDefault: false
+  isDefault: false,
+  tag: '',
 });
 
 function goBack() {
   uni.navigateBack();
 }
 
-function handleSelect(addr: any) {
-  // 选择地址逻辑
+function handleSelect(addr: AddressVO) {
+  const pages = getCurrentPages();
+  const prevPage = pages[pages.length - 2] as any;
+  if (prevPage) {
+    prevPage.$vm.selectedAddress = addr;
+  }
+  uni.navigateBack();
 }
 
-function handleEdit(addr: any) {
-  // 编辑地址逻辑
+function handleEdit(addr: AddressVO) {
+  newAddr.value = {
+    name: addr.name,
+    phone: addr.phone,
+    region: `${addr.province}${addr.city}${addr.district}`,
+    detail: addr.detail,
+    isDefault: addr.isDefault,
+    tag: addr.tag || '',
+  };
 }
 
-function handleSave() {
-  uni.showToast({ title: '地址已保存', icon: 'success' });
+async function handleSave() {
+  if (!newAddr.value.name || !newAddr.value.phone || !newAddr.value.detail) {
+    return uni.showToast({ title: '请填写完整地址信息', icon: 'none' });
+  }
+  try {
+    await userApi.addAddress({
+      name: newAddr.value.name,
+      phone: newAddr.value.phone,
+      province: '',
+      city: '',
+      district: '',
+      detail: newAddr.value.detail,
+      isDefault: newAddr.value.isDefault,
+      tag: newAddr.value.tag,
+    });
+    uni.showToast({ title: '地址已保存', icon: 'success' });
+    loadAddresses();
+  } catch (e) {
+    console.warn('保存地址失败', e);
+  }
 }
 </script>
 

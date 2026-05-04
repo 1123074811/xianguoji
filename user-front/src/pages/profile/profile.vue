@@ -13,7 +13,7 @@
       <!-- Profile Header -->
       <view class="profile-header">
         <view class="user-info">
-          <image :src="userStore.isLogin ? (userStore.userInfo?.avatar || 'https://picsum.photos/160/160?random=100') : '/static/images/default-avatar.png'" mode="aspectFill" class="avatar" />
+          <image :src="userStore.isLogin ? (userStore.userInfo?.avatar || '/static/images/default-avatar.png') : '/static/images/default-avatar.png'" mode="aspectFill" class="avatar" />
           <view class="info">
             <template v-if="userStore.isLogin">
               <text class="nickname">{{ userStore.userInfo?.nickname || '用户' }}</text>
@@ -84,25 +84,51 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/stores/user';
+import { authApi } from '@/api/modules/auth';
+import { promoApi } from '@/api/modules/promo';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
 
-onShow(() => {
+onShow(async () => {
   uni.hideTabBar();
+  if (userStore.isLogin) {
+    await userStore.fetchProfile();
+    loadAssetCounts();
+  }
 });
 
 const userStore = useUserStore();
 
+const couponCount = ref(0);
+const groupBuyCount = ref(0);
+const favoriteCount = ref(0);
+const footprintCount = ref(0);
+
+async function loadAssetCounts() {
+  try {
+    const coupons = await promoApi.myCoupons({ status: 0 });
+    couponCount.value = coupons.length;
+  } catch (e) { /* ignore */ }
+  try {
+    const favorites = await userApi.favoritePage({ page: 1, size: 1 });
+    favoriteCount.value = favorites.total;
+  } catch (e) { /* ignore */ }
+  try {
+    const footprints = await userApi.footprintPage({ page: 1, size: 1 });
+    footprintCount.value = footprints.total;
+  } catch (e) { /* ignore */ }
+}
+
 const assets = computed(() => {
   if (userStore.isLogin) {
     return [
-      { id: 'coupon', label: '优惠券', value: '12' },
-      { id: 'groupbuy', label: '我的拼团', value: '3' },
-      { id: 'favorite', label: '收藏夹', value: '28' },
-      { id: 'footprint', label: '足迹', value: '156' }
+      { id: 'coupon', label: '优惠券', value: String(couponCount.value || '-') },
+      { id: 'groupbuy', label: '我的拼团', value: String(groupBuyCount.value || '-') },
+      { id: 'favorite', label: '收藏夹', value: String(favoriteCount.value || '-') },
+      { id: 'footprint', label: '足迹', value: String(footprintCount.value || '-') }
     ];
   } else {
     return [
@@ -186,12 +212,13 @@ function handleServiceClick(id: string) {
   });
 }
 
-function handleLogout() {
+async function handleLogout() {
   uni.showModal({
     title: '提示',
     content: '确定要退出登录吗？',
-    success: (res) => {
+    success: async (res) => {
       if (res.confirm) {
+        try { await authApi.logout(); } catch (e) { /* ignore */ }
         userStore.logout();
         uni.showToast({ title: '已退出登录', icon: 'success' });
       }

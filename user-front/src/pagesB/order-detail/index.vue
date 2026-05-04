@@ -14,78 +14,40 @@
 
     <scroll-view scroll-y class="main-scroll">
       <!-- Status Card -->
-      <view class="status-card card">
+      <view class="status-card card" v-if="order">
         <view class="top">
           <view class="status-info">
             <text class="label">订单状态</text>
-            <text class="status-text">派送中</text>
+            <text class="status-text">{{ order.statusText }}</text>
           </view>
-          <text class="eta">预计 10:45 送达</text>
-        </view>
-        <!-- Steps -->
-        <view class="steps">
-          <view class="step-item active">
-            <view class="dot"></view>
-            <text class="step-label">已下单</text>
-          </view>
-          <view class="step-item active">
-            <view class="dot"></view>
-            <text class="step-label">待出库</text>
-          </view>
-          <view class="step-item current">
-            <view class="dot"></view>
-            <text class="step-label">派送中</text>
-          </view>
-          <view class="step-item">
-            <view class="dot"></view>
-            <text class="step-label">待签收</text>
-          </view>
-          <view class="line-bg"></view>
-          <view class="line-active" style="width: 66%"></view>
         </view>
       </view>
 
-      <!-- Tracking Map -->
-      <view class="tracking-card card no-padding overflow-hidden">
-        <view class="map-placeholder">
-          <image src="https://picsum.photos/750/360?random=40" mode="aspectFill" class="map-img" />
-          <view class="rider-tag">
-            <view class="dot"></view>
-            <text class="text">骑手距离您 1.2km</text>
-          </view>
-        </view>
+      <!-- Tracking (配送单时显示) -->
+      <view class="tracking-card card no-padding overflow-hidden" v-if="order && order.deliveryType === 1 && order.status >= 30">
+        <!-- TODO: 联调-接入骑手位置API -->
         <view class="rider-info">
           <view class="left">
-            <image src="https://picsum.photos/96/96?random=41" mode="aspectFill" class="avatar" />
             <view class="info">
-              <text class="name">王师傅</text>
-              <view class="rating">
-                <svg-icon name="star" :size="24" color="#2E7D32" />
-                <text class="text">4.9 · 顺丰同城专送</text>
-              </view>
-            </view>
-          </view>
-          <view class="btns">
-            <view class="btn-circle">
-              <svg-icon name="chat" :size="32" color="#2E7D32" />
+              <text class="name">配送中</text>
             </view>
           </view>
         </view>
       </view>
 
       <!-- Goods List -->
-      <view class="goods-card card">
+      <view class="goods-card card" v-if="order">
         <view class="goods-list">
-          <view v-for="i in 2" :key="i" class="goods-item">
-            <image src="https://picsum.photos/160/160?random=42" mode="aspectFill" class="goods-img" />
+          <view v-for="item in order.items" :key="item.skuId" class="goods-item">
+            <image :src="item.mainImage" mode="aspectFill" class="goods-img" />
             <view class="info">
               <view class="top">
-                <text class="name">阳山水蜜桃</text>
-                <text class="specs">约 250g-300g / 个</text>
+                <text class="name">{{ item.productName }}</text>
+                <text class="specs">{{ item.specName }}</text>
               </view>
               <view class="bottom">
-                <text class="price">¥18.9</text>
-                <text class="count">x 2</text>
+                <text class="price">¥{{ item.price }}</text>
+                <text class="count">x {{ item.quantity }}</text>
               </view>
             </view>
           </view>
@@ -93,48 +55,94 @@
         <view class="summary">
           <view class="row">
             <text class="label">商品总额</text>
-            <text class="value">¥37.8</text>
+            <text class="value">¥{{ order.totalAmount }}</text>
           </view>
           <view class="row">
             <text class="label">运费</text>
-            <text class="value">¥0.00</text>
+            <text class="value">¥{{ order.deliveryFee }}</text>
+          </view>
+          <view class="row" v-if="order.discountAmount !== '0.00'">
+            <text class="label">优惠</text>
+            <text class="value discount">-¥{{ order.discountAmount }}</text>
           </view>
           <view class="row total">
             <text class="label">实付款</text>
-            <text class="value">¥37.8</text>
+            <text class="value">¥{{ order.payAmount }}</text>
           </view>
         </view>
       </view>
 
       <!-- Order Info -->
-      <view class="info-card card">
+      <view class="info-card card" v-if="order">
         <view class="row">
           <text class="label">订单编号</text>
-          <text class="value">202310248812</text>
+          <text class="value">{{ order.orderNo }}</text>
         </view>
         <view class="row">
           <text class="label">下单时间</text>
-          <text class="value">2023-10-24 14:00:25</text>
+          <text class="value">{{ order.createTime }}</text>
         </view>
-        <view class="row">
-          <text class="label">支付方式</text>
-          <text class="value">微信支付</text>
+        <view class="row" v-if="order.payTime">
+          <text class="label">支付时间</text>
+          <text class="value">{{ order.payTime }}</text>
         </view>
       </view>
     </scroll-view>
 
     <!-- Bottom Actions -->
-    <view class="bottom-bar">
-      <button class="action-btn outline">申请售后</button>
-      <button class="action-btn primary">确认收货</button>
+    <view class="bottom-bar" v-if="order">
+      <button v-if="order.status >= 30" class="action-btn outline" @tap="handleRefund">申请售后</button>
+      <button v-if="order.status === 30" class="action-btn primary" @tap="handleConfirm">确认收货</button>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { orderApi } from '@/api/modules/order';
 import SvgIcon from '@/components/svg-icon.vue';
+import type { OrderVO } from '@/api/types/order';
+
+const order = ref<OrderVO | null>(null);
+const orderNo = ref('');
+
+onMounted(async () => {
+  const pages = getCurrentPages();
+  const page = pages[pages.length - 1] as any;
+  orderNo.value = page?.options?.orderNo || '';
+  if (orderNo.value) {
+    try {
+      order.value = await orderApi.detail(orderNo.value);
+    } catch (e) {
+      console.warn('加载订单详情失败', e);
+    }
+  }
+});
+
 function goBack() {
   uni.navigateBack();
+}
+
+async function handleConfirm() {
+  if (!order.value) return;
+  uni.showModal({
+    title: '确认收货',
+    content: '确认已收到该订单的所有商品？',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await orderApi.confirm(order.value!.orderNo);
+          uni.showToast({ title: '已确认收货', icon: 'success' });
+          order.value = await orderApi.detail(order.value!.orderNo);
+        } catch (e) { console.warn(e); }
+      }
+    }
+  });
+}
+
+async function handleRefund() {
+  if (!order.value) return;
+  uni.navigateTo({ url: `/pagesC/refund/index?orderNo=${order.value.orderNo}` });
 }
 </script>
 

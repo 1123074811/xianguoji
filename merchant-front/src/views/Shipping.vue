@@ -224,9 +224,9 @@
 
 <script setup lang="ts">
 const pickupPoints = [
-  { name: '中心果园配送站', address: '加利福尼亚州 90210 有机区绿巷 45 号', icon: 'location_on', iconBg: 'bg-green-50 text-green-700', status: '运营中', statusClass: 'bg-green-100 text-green-700', stock: '1,240', stockColor: 'text-primary' },
-  { name: '北区浆果仓库', address: '加利福尼亚州 90552 高地高地磨砂路 88 号', icon: 'warehouse', iconBg: 'bg-amber-50 text-amber-600', status: '容量预警', statusClass: 'bg-amber-100 text-amber-700', stock: '3,890', stockColor: 'text-amber-600' },
-  { name: '东区丰收商店', address: '加利福尼亚州 90001 市中心日出大道 12 号', icon: 'shopping_basket', iconBg: 'bg-green-50 text-green-700', status: '运营中', statusClass: 'bg-green-100 text-green-700', stock: '856', stockColor: 'text-primary' }
+  { name: '中心果园配送站', address: '加利福尼亚州 90210 有机区绿巷 45 号', icon: 'location_on', iconBg: 'bg-green-50', iconColor: 'text-green-700', status: '运营中', statusClass: 'bg-green-100 text-green-700', stock: '1,240', stockColor: 'text-primary' },
+  { name: '北区浆果仓库', address: '加利福尼亚州 90552 高地高地磨砂路 88 号', icon: 'warehouse', iconBg: 'bg-amber-50', iconColor: 'text-amber-600', status: '容量预警', statusClass: 'bg-amber-100 text-amber-700', stock: '3,890', stockColor: 'text-amber-600' },
+  { name: '东区丰收商店', address: '加利福尼亚州 90001 市中心日出大道 12 号', icon: 'shopping_basket', iconBg: 'bg-green-50', iconColor: 'text-green-700', status: '运营中', statusClass: 'bg-green-100 text-green-700', stock: '856', stockColor: 'text-primary' }
 ]
 
 const timeSlots = [

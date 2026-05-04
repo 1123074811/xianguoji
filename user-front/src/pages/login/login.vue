@@ -82,6 +82,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
+import { useCartStore } from '@/stores/cart';
+import { authApi } from '@/api/modules/auth';
 import SvgIcon from '@/components/svg-icon.vue';
 
 const phone = ref('');
@@ -89,43 +91,81 @@ const code = ref('');
 const agreed = ref(false);
 const counting = ref(false);
 const count = ref(60);
+const loginLoading = ref(false);
 
 const userStore = useUserStore();
 
-function getCode() {
+async function getCode() {
   if (!phone.value) {
     return uni.showToast({ title: '请输入手机号', icon: 'none' });
   }
-  counting.value = true;
-  const timer = setInterval(() => {
-    if (count.value <= 1) {
-      clearInterval(timer);
-      counting.value = false;
-      count.value = 60;
-    } else {
-      count.value--;
-    }
-  }, 1000);
+  if (!/^1\d{10}$/.test(phone.value)) {
+    return uni.showToast({ title: '手机号格式不正确', icon: 'none' });
+  }
+  try {
+    await authApi.sendSms({ phone: phone.value });
+    counting.value = true;
+    const timer = setInterval(() => {
+      if (count.value <= 1) {
+        clearInterval(timer);
+        counting.value = false;
+        count.value = 60;
+      } else {
+        count.value--;
+      }
+    }, 1000);
+  } catch (e) {
+    console.warn('发送验证码失败', e);
+  }
 }
 
-function handleLogin() {
+async function handleLogin() {
   if (!agreed.value) {
     return uni.showToast({ title: '请先同意协议', icon: 'none' });
   }
-  // 模拟登录
-  userStore.setToken('mock-token');
-  userStore.setUserInfo({ nickname: '鲜果记新用户', avatar: 'https://picsum.photos/160/160?random=100' });
-  uni.switchTab({
-    url: '/pages/index/index'
-  });
+  if (!phone.value || !code.value) {
+    return uni.showToast({ title: '请输入手机号和验证码', icon: 'none' });
+  }
+  if (loginLoading.value) return;
+  loginLoading.value = true;
+  try {
+    await userStore.smsLogin(phone.value, code.value);
+    // 登录成功后预加载购物车角标
+    await useCartStore().refreshCount();
+    uni.switchTab({ url: '/pages/index/index' });
+  } catch (e) {
+    console.warn('登录失败', e);
+  } finally {
+    loginLoading.value = false;
+  }
 }
 
 function wechatLogin() {
   if (!agreed.value) {
     return uni.showToast({ title: '请先同意协议', icon: 'none' });
   }
-  // 模拟微信登录
-  handleLogin();
+  // #ifdef MP-WEIXIN
+  uni.login({
+    provider: 'weixin',
+    success: async (res) => {
+      if (res.code) {
+        try {
+          await userStore.wechatLogin(res.code);
+          await useCartStore().refreshCount();
+          uni.switchTab({ url: '/pages/index/index' });
+        } catch (e) {
+          console.warn('微信登录失败', e);
+        }
+      }
+    },
+    fail: () => {
+      uni.showToast({ title: '微信登录失败', icon: 'none' });
+    },
+  });
+  // #endif
+  // #ifndef MP-WEIXIN
+  uni.showToast({ title: '请在微信小程序中使用微信登录', icon: 'none' });
+  // #endif
 }
 </script>
 

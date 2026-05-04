@@ -56,37 +56,55 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useUserStore } from '@/stores/user';
+import { catalogApi } from '@/api/modules/catalog';
 import SvgIcon from '@/components/svg-icon.vue';
 
+const userStore = useUserStore();
 const keyword = ref('');
 const historyList = ref<string[]>([]);
-const hotList = ref(['智利车厘子', '红颜草莓', '海南千禧', '阳光玫瑰', '突尼斯软籽石榴', '爱媛38号果冻橙']);
+const hotList = ref<string[]>([]);
 
-onMounted(() => {
-  const history = uni.getStorageSync('searchHistory');
-  if (history) {
-    historyList.value = JSON.parse(history);
+onMounted(async () => {
+  // 加载热门搜索
+  try {
+    hotList.value = await catalogApi.hotSearch();
+  } catch (e) {
+    console.warn('加载热门搜索失败', e);
+  }
+  // 加载历史搜索（需登录）
+  if (userStore.isLogin) {
+    try {
+      historyList.value = await catalogApi.searchHistory();
+    } catch (e) {
+      // 未登录时从本地缓存读取
+      const history = uni.getStorageSync('searchHistory');
+      if (history) historyList.value = JSON.parse(history);
+    }
+  } else {
+    const history = uni.getStorageSync('searchHistory');
+    if (history) historyList.value = JSON.parse(history);
   }
 });
 
-function handleSearch() {
+async function handleSearch() {
   const query = keyword.value.trim();
   if (!query) {
     return uni.showToast({ title: '请输入搜索内容', icon: 'none' });
   }
 
-  // 保存历史记录
+  // 记录搜索
+  if (userStore.isLogin) {
+    catalogApi.recordSearch(query).catch(() => {});
+  }
+
+  // 本地缓存
   const index = historyList.value.indexOf(query);
-  if (index > -1) {
-    historyList.value.splice(index, 1);
-  }
+  if (index > -1) historyList.value.splice(index, 1);
   historyList.value.unshift(query);
-  if (historyList.value.length > 10) {
-    historyList.value.pop();
-  }
+  if (historyList.value.length > 10) historyList.value.pop();
   uni.setStorageSync('searchHistory', JSON.stringify(historyList.value));
 
-  // 跳转到结果页
   uni.navigateTo({
     url: `/pagesA/search-result/index?keyword=${encodeURIComponent(query)}`
   });
@@ -97,12 +115,15 @@ function tapTag(tag: string) {
   handleSearch();
 }
 
-function clearHistory() {
+async function clearHistory() {
   uni.showModal({
     title: '提示',
     content: '确认清空历史记录吗？',
-    success: (res) => {
+    success: async (res) => {
       if (res.confirm) {
+        if (userStore.isLogin) {
+          try { await catalogApi.clearSearchHistory(); } catch (e) { /* ignore */ }
+        }
         historyList.value = [];
         uni.removeStorageSync('searchHistory');
       }

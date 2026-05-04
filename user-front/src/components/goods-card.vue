@@ -3,14 +3,14 @@
     <view class="image-wrapper">
       <image :src="imageSrc" mode="aspectFill" class="goods-image" @error="handleImageError" />
       <view v-if="goods.isGroupBuy" class="tag group-buy-tag">拼团</view>
-      <view v-if="goods.stock <= 0" class="out-of-stock-mask">已售罄</view>
+      <view v-if="stock <= 0" class="out-of-stock-mask">已售罄</view>
     </view>
     <view class="info-wrapper">
       <text class="goods-name">{{ goods.name }}</text>
       <view class="price-row">
         <view class="price-box">
           <text class="currency">¥</text>
-          <text class="price">{{ goods.isGroupBuy ? goods.groupBuyPrice : goods.price }}</text>
+          <text class="price">{{ price }}</text>
           <text v-if="goods.originalPrice" class="original-price">¥{{ goods.originalPrice }}</text>
         </view>
         <view class="add-btn" @tap.stop="handleAddToCart">
@@ -33,7 +33,9 @@ const props = defineProps<{
 const cartStore = useCartStore();
 const imageLoadFailed = ref(false);
 const fallbackImage = '/static/images/goods/apple.png';
-const imageSrc = computed(() => imageLoadFailed.value ? fallbackImage : (props.goods.image || fallbackImage));
+const imageSrc = computed(() => imageLoadFailed.value ? fallbackImage : (props.goods.mainImage || props.goods.image || fallbackImage));
+const price = computed(() => props.goods.isGroupBuy ? props.goods.groupBuyPrice : (props.goods.minPrice || props.goods.price || '0.00'));
+const stock = computed(() => props.goods.totalStock ?? props.goods.stock ?? 0);
 
 function handleTap() {
   uni.navigateTo({
@@ -41,13 +43,21 @@ function handleTap() {
   });
 }
 
-function handleAddToCart() {
-  cartStore.addToCart(props.goods);
-  uni.showToast({
-    title: '已加入购物车',
-    icon: 'success',
-    duration: 1000
-  });
+async function handleAddToCart() {
+  if (!props.goods.defaultSkuId) {
+    uni.navigateTo({ url: `/pagesA/goods-detail/index?id=${props.goods.id}` });
+    return;
+  }
+  try {
+    await cartStore.addToCart(props.goods.defaultSkuId, 1);
+    uni.showToast({
+      title: '已加入购物车',
+      icon: 'success',
+      duration: 1000
+    });
+  } catch (e) {
+    console.warn('加车失败', e);
+  }
 }
 
 function handleImageError() {

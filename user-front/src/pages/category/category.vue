@@ -66,55 +66,88 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import GoodsCard from '@/components/goods-card.vue';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
-import { getMockData } from '@/mock/index';
+import { catalogApi } from '@/api/modules/catalog';
+import type { CategoryTreeVO, ProductVO } from '@/api/types/catalog';
 
 onShow(() => {
   uni.hideTabBar();
 });
 
-const categories = ref<any[]>([]);
-const activeCatId = ref('');
-const activeSubId = ref('all');
+const categories = ref<CategoryTreeVO[]>([]);
+const activeCatId = ref(0);
+const activeSubId = ref(0);
 
-const goods = ref<any[]>([]);
+const goods = ref<ProductVO[]>([]);
 const loading = ref(false);
 const noMore = ref(false);
+const currentPage = ref(1);
+const pageSize = 20;
 
 const subCategories = computed(() => {
   const currentCat = categories.value.find(c => c.id === activeCatId.value);
-  if (!currentCat) return [{ id: 'all', name: '全部商品' }];
-  return [{ id: 'all', name: '全部商品' }, ...(currentCat.children || [])];
+  if (!currentCat) return [{ id: 0, name: '全部商品' }];
+  return [{ id: 0, name: '全部商品' }, ...(currentCat.children || [])];
 });
 
 const filteredGoods = computed(() => {
-  // 简单模拟过滤
-  return goods.value;
+  if (activeSubId.value === 0) return goods.value;
+  return goods.value.filter(g => g.categoryId === activeSubId.value);
 });
 
-async function fetchData() {
+async function fetchCategories() {
   try {
-    const catData = await getMockData<any[]>('categories.json');
+    const catData = await catalogApi.categoryTree();
     categories.value = catData;
     if (catData.length > 0) activeCatId.value = catData[0].id;
-
-    const goodsData = await getMockData<any[]>('goods.json');
-    goods.value = goodsData;
   } catch (e) {
     console.error(e);
   }
 }
 
+async function fetchGoods(reset = false) {
+  if (loading.value) return;
+  if (reset) {
+    currentPage.value = 1;
+    goods.value = [];
+    noMore.value = false;
+  }
+  if (noMore.value) return;
+  loading.value = true;
+  try {
+    const data = await catalogApi.productPage({
+      page: currentPage.value,
+      size: pageSize,
+      categoryId: activeCatId.value || undefined,
+    });
+    if (reset) {
+      goods.value = data.list;
+    } else {
+      goods.value = [...goods.value, ...data.list];
+    }
+    if (data.list.length < pageSize) noMore.value = true;
+    currentPage.value++;
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+}
+
+watch(activeCatId, () => {
+  fetchGoods(true);
+});
+
 onMounted(() => {
-  fetchData();
+  fetchCategories();
 });
 
 function loadMore() {
-  // 模拟加载更多
+  fetchGoods();
 }
 
 function goToSearch() {

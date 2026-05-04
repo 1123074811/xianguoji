@@ -40,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
 
     private static final String SMS_CODE_PREFIX = "sms:code:";
     private static final String SMS_LIMIT_PREFIX = "sms:limit:";
+    private static final String CAPTCHA_PREFIX = "captcha:";
     private static final long CODE_TTL_MINUTES = 5;
     private static final int DAILY_LIMIT = 10;
 
@@ -135,6 +136,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginVO adminLogin(AdminLoginDto dto) {
+        // 校验图形验证码
+        String redisCode = stringRedisTemplate.opsForValue().get(CAPTCHA_PREFIX + dto.getCaptchaKey());
+        if (redisCode == null || !redisCode.equals(dto.getCaptchaCode().toLowerCase())) {
+            throw new BizException(ResultCode.BIZ_ERROR, "验证码错误或已过期");
+        }
+        stringRedisTemplate.delete(CAPTCHA_PREFIX + dto.getCaptchaKey());
+
         Staff staff = staffMapper.selectOne(new LambdaQueryWrapper<Staff>().eq(Staff::getUsername, dto.getUsername()));
         if (staff == null) {
             throw new BizException(ResultCode.BIZ_ERROR, "账号或密码错误");

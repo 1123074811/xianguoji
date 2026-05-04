@@ -56,10 +56,11 @@ import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import GoodsCard from '@/components/goods-card.vue';
 import SvgIcon from '@/components/svg-icon.vue';
-import { getMockData } from '@/mock/index';
+import { catalogApi } from '@/api/modules/catalog';
+import type { ProductVO } from '@/api/types/catalog';
 
 const status = ref('success');
-const recommendations = ref<any[]>([]);
+const recommendations = ref<ProductVO[]>([]);
 
 onLoad((options) => {
   if (options && options.status) {
@@ -68,8 +69,11 @@ onLoad((options) => {
 });
 
 onMounted(async () => {
-  const data = await getMockData<any[]>('goods.json');
-  recommendations.value = data;
+  try {
+    recommendations.value = await catalogApi.recommend();
+  } catch (e) {
+    console.warn('加载推荐商品失败', e);
+  }
 });
 
 function goToHome() {

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAdminStore } from '@/stores/admin'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -91,6 +92,21 @@ const router = createRouter({
       ]
     }
   ]
+})
+
+router.beforeEach((to, _from, next) => {
+  const adminStore = useAdminStore()
+  const publicPages = ['/login', '/forgot-password']
+  if (publicPages.includes(to.path)) {
+    if (adminStore.isLogin && to.path === '/login') {
+      return next('/dashboard')
+    }
+    return next()
+  }
+  if (!adminStore.isLogin) {
+    return next('/login')
+  }
+  next()
 })
 
 export default router

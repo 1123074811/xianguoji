@@ -12,7 +12,6 @@
     <scroll-view scroll-y class="main-scroll">
       <!-- Hero Banner -->
       <view class="hero-section card no-padding overflow-hidden">
-        <image src="https://picsum.photos/750/352?random=60" mode="aspectFill" class="hero-img" />
         <view class="hero-content">
           <text class="title">果园拼购更优惠</text>
           <text class="desc">邀好友参团，低至五折起</text>
@@ -44,13 +43,13 @@
 
         <view class="group-list">
           <view v-for="item in groupGoods" :key="item.id" class="group-card card">
-            <image :src="item.image" mode="aspectFill" class="goods-img" />
+            <image :src="item.mainImage" mode="aspectFill" class="goods-img" />
             <view class="info">
               <view class="top">
-                <text class="name">{{ item.name }}</text>
+                <text class="name">{{ item.productName }}</text>
                 <view class="tags">
                   <text class="tag">{{ item.groupSize }}人团</text>
-                  <text class="sales">已拼 {{ item.sales }} 件</text>
+                  <text class="sales">已拼 {{ item.currentCount }} 件</text>
                 </view>
               </view>
               <view class="bottom">
@@ -58,7 +57,7 @@
                   <text class="price">¥{{ item.groupPrice }}</text>
                   <text class="original">¥{{ item.originalPrice }}</text>
                 </view>
-                <button class="join-btn">去参团</button>
+                <button class="join-btn" @tap="goGroupCheckout(item)">去参团</button>
               </view>
             </view>
           </view>
@@ -69,32 +68,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { promoApi } from '@/api/modules/promo';
 import SvgIcon from '@/components/svg-icon.vue';
+import type { GroupBuyActivityVO } from '@/api/types/promo';
 
-const groupGoods = ref([
-  {
-    id: 'g1',
-    name: '南丰贡桔 3kg 产地直采',
-    groupSize: 3,
-    sales: 128,
-    groupPrice: 19.9,
-    originalPrice: 32.0,
-    image: 'https://picsum.photos/224/224?random=61'
-  },
-  {
-    id: 'g2',
-    name: '秘鲁牛油果 6枚装 中果',
-    groupSize: 2,
-    sales: 56,
-    groupPrice: 29.9,
-    originalPrice: 48.0,
-    image: 'https://picsum.photos/224/224?random=62'
+const groupGoods = ref<GroupBuyActivityVO[]>([]);
+
+onMounted(async () => {
+  try {
+    const data = await promoApi.groupBuyPage({ page: 1, size: 20 });
+    groupGoods.value = data.list;
+  } catch (e) {
+    console.warn('加载拼团活动失败', e);
   }
-]);
+});
 
 function goBack() {
   uni.navigateBack();
+}
+
+function goGroupCheckout(item: GroupBuyActivityVO) {
+  uni.navigateTo({ url: `/pagesB/checkout/index?groupBuyActivityId=${item.id}` });
 }
 </script>
 

@@ -30,18 +30,18 @@
 
     <scroll-view scroll-y class="main-scroll" @scrolltolower="loadMore">
       <view class="order-list">
-        <view v-for="order in filteredOrders" :key="order.id" class="order-card card">
+        <view v-for="order in filteredOrders" :key="order.orderNo" class="order-card card">
           <view class="card-header">
-            <text class="order-no">订单号: {{ order.order_no }}</text>
-            <text class="status" :class="order.status">{{ order.statusText }}</text>
+            <text class="order-no">订单号: {{ order.orderNo }}</text>
+            <text class="status">{{ order.statusText }}</text>
           </view>
           
           <view class="goods-scroll">
             <scroll-view scroll-x class="goods-imgs" show-scrollbar="false">
               <image 
-                v-for="(img, index) in order.images" 
+                v-for="(item, index) in order.items" 
                 :key="index" 
-                :src="img" 
+                :src="item.mainImage" 
                 mode="aspectFill" 
                 class="goods-img" 
               />
@@ -50,12 +50,12 @@
 
           <view class="card-footer">
             <view class="total-info">
-              <text class="count">共 {{ order.itemCount }} 件商品 实付</text>
-              <text class="price">¥{{ order.total_price }}</text>
+              <text class="count">共 {{ order.items.length }} 件商品 实付</text>
+              <text class="price">¥{{ order.payAmount }}</text>
             </view>
             <view class="actions">
               <button 
-                v-for="btn in order.buttons" 
+                v-for="btn in getOrderButtons(order)" 
                 :key="btn.text" 
                 class="action-btn"
                 :class="{ primary: btn.primary }"
@@ -80,13 +80,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
+import { orderApi } from '@/api/modules/order';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
+import type { OrderVO } from '@/api/types/order';
 
-onShow(() => {
+onShow(async () => {
   uni.hideTabBar();
+  await fetchOrders(true);
 });
 
 // 接受来自 profile 的 tab 切换事件
@@ -105,57 +108,60 @@ const tabs = [
   { id: 'aftersale', name: '退款/售后' }
 ];
 
+const statusMap: Record<string, number | undefined> = {
+  all: undefined,
+  unpaid: 10,
+  toship: 20,
+  toreceive: 30,
+  completed: 40,
+  aftersale: 50,
+};
+
 const activeTabId = ref('all');
-const orders = ref<any[]>([]);
+const orders = ref<OrderVO[]>([]);
 const loading = ref(false);
 const noMore = ref(false);
+const currentPage = ref(1);
+const pageSize = 10;
 
 const filteredOrders = computed(() => {
-  if (activeTabId.value === 'all') return orders.value;
-  return orders.value.filter(o => o.status === activeTabId.value);
+  return orders.value;
 });
 
-async function fetchOrders() {
-  if (loading.value || noMore.value) return;
+async function fetchOrders(reset = false) {
+  if (loading.value) return;
+  if (reset) {
+    currentPage.value = 1;
+    orders.value = [];
+    noMore.value = false;
+  }
+  if (noMore.value) return;
   loading.value = true;
-  // 模拟数据
-  setTimeout(() => {
-    const mockOrders = [
-      {
-        id: '1',
-        order_no: '202310248812',
-        status: 'toreceive',
-        statusText: '运输中',
-        images: ['https://picsum.photos/160/160?random=20', 'https://picsum.photos/160/160?random=21', 'https://picsum.photos/160/160?random=22'],
-        itemCount: 4,
-        total_price: '128.50',
-        buttons: [
-          { text: '查看物流', primary: false },
-          { text: '确认收货', primary: true }
-        ]
-      },
-      {
-        id: '2',
-        order_no: '202310249905',
-        status: 'unpaid',
-        statusText: '待付款 23:59',
-        images: ['https://picsum.photos/160/160?random=23'],
-        itemCount: 1,
-        total_price: '39.90',
-        buttons: [
-          { text: '取消订单', primary: false },
-          { text: '立即支付', primary: true }
-        ]
-      }
-    ];
-    orders.value = [...orders.value, ...mockOrders];
-    noMore.value = true;
+  try {
+    const status = statusMap[activeTabId.value];
+    const data = await orderApi.page({
+      page: currentPage.value,
+      size: pageSize,
+      status,
+    });
+    if (reset) {
+      orders.value = data.list;
+    } else {
+      orders.value = [...orders.value, ...data.list];
+    }
+    if (data.list.length < pageSize) noMore.value = true;
+    currentPage.value++;
+  } catch (e) {
+    console.error(e);
+  } finally {
     loading.value = false;
-  }, 500);
+  }
 }
 
+watch(activeTabId, () => fetchOrders(true));
+
 onMounted(() => {
-  fetchOrders();
+  fetchOrders(true);
 });
 
 function loadMore() {
@@ -174,53 +180,74 @@ function goToSearch() {
   uni.navigateTo({ url: '/pagesA/search/index' });
 }
 
-function handleAction(order: any, btn: any) {
+function getOrderButtons(order: OrderVO) {
+  const btns: { text: string; primary: boolean }[] = [];
+  switch (order.status) {
+    case 10: btns.push({ text: '取消订单', primary: false }, { text: '立即支付', primary: true }); break;
+    case 20: btns.push({ text: '提醒发货', primary: true }); break;
+    case 30: btns.push({ text: '查看物流', primary: false }, { text: '确认收货', primary: true }); break;
+    case 40: btns.push({ text: '查看详情', primary: false }, { text: '去评价', primary: true }, { text: '再次购买', primary: false }); break;
+    default: btns.push({ text: '查看详情', primary: false });
+  }
+  return btns;
+}
+
+async function handleAction(order: OrderVO, btn: any) {
   switch (btn.text) {
     case '查看物流':
     case '查看详情':
-      uni.navigateTo({ url: `/pagesB/order-detail/index?orderNo=${order.order_no}` });
+      uni.navigateTo({ url: `/pagesB/order-detail/index?orderNo=${order.orderNo}` });
       break;
     case '确认收货':
       uni.showModal({
         title: '确认收货',
         content: '确认已收到该订单的所有商品？',
-        success: (res) => {
+        success: async (res) => {
           if (res.confirm) {
-            order.status = 'completed';
-            order.statusText = '已完成';
-            order.buttons = [
-              { text: '查看详情', primary: false },
-              { text: '去评价', primary: true }
-            ];
-            uni.showToast({ title: '已确认收货', icon: 'success' });
+            try {
+              await orderApi.confirm(order.orderNo);
+              uni.showToast({ title: '已确认收货', icon: 'success' });
+              fetchOrders(true);
+            } catch (e) { console.warn(e); }
           }
         }
       });
       break;
     case '立即支付':
-      uni.navigateTo({ url: `/pagesB/checkout/index?orderNo=${order.order_no}` });
+      uni.navigateTo({ url: `/pagesB/payment-result/index?orderNo=${order.orderNo}` });
       break;
     case '取消订单':
       uni.showModal({
         title: '取消订单',
         content: '确定要取消该订单？',
-        success: (res) => {
+        success: async (res) => {
           if (res.confirm) {
-            const idx = orders.value.findIndex(o => o.id === order.id);
-            if (idx >= 0) orders.value.splice(idx, 1);
-            uni.showToast({ title: '订单已取消', icon: 'success' });
+            try {
+              await orderApi.cancel(order.orderNo);
+              uni.showToast({ title: '订单已取消', icon: 'success' });
+              fetchOrders(true);
+            } catch (e) { console.warn(e); }
           }
         }
       });
       break;
+    case '提醒发货':
+      try {
+        await orderApi.remind(order.orderNo);
+        uni.showToast({ title: '已提醒商家发货', icon: 'success' });
+      } catch (e) { console.warn(e); }
+      break;
     case '去评价':
-      uni.navigateTo({ url: '/pagesC/evaluation/index' });
+      uni.navigateTo({ url: `/pagesB/evaluation/index?orderNo=${order.orderNo}` });
       break;
     case '再次购买':
-      uni.switchTab({ url: '/pages/index/index' });
+      try {
+        await orderApi.repurchase(order.orderNo);
+        uni.switchTab({ url: '/pages/cart/cart' });
+      } catch (e) { console.warn(e); }
       break;
     default:
-      uni.navigateTo({ url: `/pagesB/order-detail/index?orderNo=${order.order_no}` });
+      uni.navigateTo({ url: `/pagesB/order-detail/index?orderNo=${order.orderNo}` });
   }
 }
 </script>

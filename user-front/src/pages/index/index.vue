@@ -15,45 +15,46 @@
       <!-- Category Shortcuts -->
       <view class="category-shortcuts">
         <view 
-          v-for="cat in shortcuts" 
-          :key="cat.name" 
+          v-for="(cat, idx) in shortcuts" 
+          :key="cat.id" 
           class="shortcut-item"
           @tap="goToCategory(cat)"
         >
-          <view class="icon-box" :style="{ backgroundColor: cat.bgColor }">
-            <svg-icon :name="cat.icon" :size="48" :color="cat.iconColor" />
+          <view class="icon-box" :style="{ backgroundColor: shortcutColors[idx % shortcutColors.length] }">
+            <svg-icon :name="cat.icon || 'fruit_cherries'" :size="48" :color="shortcutIconColors[idx % shortcutIconColors.length]" />
           </view>
           <text class="shortcut-name">{{ cat.name }}</text>
         </view>
       </view>
 
       <!-- Banner -->
-      <view class="banner-section">
-        <image class="banner-img" src="https://picsum.photos/750/300?random=10" mode="aspectFill" />
-        <view class="banner-content">
-          <text class="banner-title">夏日西瓜季</text>
-          <text class="banner-desc">清凉一夏，甜彻心扉</text>
-          <view class="banner-btn">立即抢购</view>
-        </view>
-      </view>
+      <swiper v-if="banners.length" class="banner-section" autoplay circular :interval="4000">
+        <swiper-item v-for="banner in banners" :key="banner.id">
+          <image class="banner-img" :src="banner.image" mode="aspectFill" />
+          <view class="banner-content">
+            <text class="banner-title">{{ banner.title }}</text>
+            <view class="banner-btn" @tap="handleBannerClick(banner)">立即抢购</view>
+          </view>
+        </swiper-item>
+      </swiper>
 
       <!-- Coupon Area -->
       <scroll-view scroll-x class="coupon-scroll">
         <view class="coupon-list">
           <view
-            v-for="coupon in coupons"
+            v-for="(coupon, idx) in coupons"
             :key="coupon.id"
             class="coupon-card"
-            :style="{ backgroundColor: coupon.bgColor }"
+            :style="{ backgroundColor: couponBgColors[idx % couponBgColors.length] }"
           >
             <view class="coupon-info">
-              <text class="coupon-amount" :style="{ color: coupon.textColor }">¥{{ coupon.amount }}</text>
-              <text class="coupon-condition" :style="{ color: coupon.textColor }">满{{ coupon.threshold }}可用</text>
+              <text class="coupon-amount" :style="{ color: couponTextColors[idx % couponTextColors.length] }">¥{{ coupon.amount }}</text>
+              <text class="coupon-condition" :style="{ color: couponTextColors[idx % couponTextColors.length] }">满{{ coupon.threshold }}可用</text>
             </view>
             <view class="coupon-action">
-              <text class="coupon-btn" :style="{ backgroundColor: coupon.textColor, color: '#ffffff' }" @tap="claimCoupon(coupon)">领取</text>
+              <text class="coupon-btn" :style="{ backgroundColor: couponTextColors[idx % couponTextColors.length], color: '#ffffff' }" @tap="claimCoupon(coupon)">领取</text>
             </view>
-            <view class="coupon-notch" :style="{ borderLeftColor: coupon.bgColor }"></view>
+            <view class="coupon-notch" :style="{ borderLeftColor: couponBgColors[idx % couponBgColors.length] }"></view>
           </view>
         </view>
       </scroll-view>
@@ -96,48 +97,65 @@ import { onShow } from '@dcloudio/uni-app';
 import GoodsCard from '@/components/goods-card.vue';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
-import { getMockData } from '@/mock/index';
+import { catalogApi } from '@/api/modules/catalog';
+import { promoApi } from '@/api/modules/promo';
+import type { BannerVO, CategoryTreeVO, ProductVO } from '@/api/types/catalog';
+import type { CouponVO } from '@/api/types/promo';
 
 onShow(() => {
   uni.hideTabBar();
 });
 
-const shortcuts = [
-  { name: '叶菜', icon: 'leafy_greens', bgColor: '#E8F5E9', iconColor: '#2E7D32' },
-  { name: '水果', icon: 'fruit_cherries', bgColor: '#FFF3E0', iconColor: '#EF6C00' },
-  { name: '根茎', icon: 'root_vegetable', bgColor: '#FFF8E1', iconColor: '#F9A825' },
-  { name: '菌菇', icon: 'mushroom', bgColor: '#F5F5F5', iconColor: '#616161' },
-  { name: '肉蛋', icon: 'meat_egg', bgColor: '#FFEBEE', iconColor: '#C62828' },
-  { name: '水产', icon: 'water_drop', bgColor: '#E3F2FD', iconColor: '#1565C0' },
-  { name: '豆制', icon: 'tofu', bgColor: '#FFFDE7', iconColor: '#FBC02D' },
-  { name: '烘焙', icon: 'bakery_dining', bgColor: '#FFF9C4', iconColor: '#F57F17' }
-];
-
-const coupons = [
-  { id: 1, amount: 5, threshold: 39, bgColor: '#FFDAD6', textColor: '#BA1A1A' },
-  { id: 2, amount: 10, threshold: 79, bgColor: '#B9F474', textColor: '#3E6A00' },
-  { id: 3, amount: 20, threshold: 129, bgColor: '#A3F69C', textColor: '#0D631B' }
-];
-
-function claimCoupon(coupon: any) {
-  uni.showToast({ title: `已领取 ¥${coupon.amount} 优惠券`, icon: 'success' });
-}
-
-const recommendedGoods = ref<any[]>([]);
+const shortcuts = ref<CategoryTreeVO[]>([]);
+const banners = ref<BannerVO[]>([]);
+const coupons = ref<CouponVO[]>([]);
+const recommendedGoods = ref<ProductVO[]>([]);
 const loading = ref(false);
 const noMore = ref(false);
+
+const shortcutColors = [
+  '#E8F5E9', '#FFF3E0', '#FFF8E1', '#F5F5F5',
+  '#FFEBEE', '#E3F2FD', '#FFFDE7', '#FFF9C4',
+];
+const shortcutIconColors = [
+  '#2E7D32', '#EF6C00', '#F9A825', '#616161',
+  '#C62828', '#1565C0', '#FBC02D', '#F57F17',
+];
+const couponBgColors = ['#FFDAD6', '#B9F474', '#A3F69C', '#FFDAD6'];
+const couponTextColors = ['#BA1A1A', '#3E6A00', '#0D631B', '#BA1A1A'];
+
+async function loadHomeData() {
+  try {
+    const [tree, bannerList, couponList, recList] = await Promise.all([
+      catalogApi.categoryTree(),
+      catalogApi.bannerList(),
+      promoApi.couponList(),
+      catalogApi.recommend(),
+    ]);
+    shortcuts.value = tree.slice(0, 8);
+    banners.value = bannerList;
+    coupons.value = couponList;
+    recommendedGoods.value = recList;
+  } catch (e) {
+    console.warn('首页数据加载失败', e);
+  }
+}
+
+async function claimCoupon(coupon: CouponVO) {
+  try {
+    await promoApi.claimCoupon(coupon.id);
+    uni.showToast({ title: `已领取 ¥${coupon.amount} 优惠券`, icon: 'success' });
+  } catch (e) {
+    console.warn('领券失败', e);
+  }
+}
 
 async function fetchGoods() {
   if (loading.value || noMore.value) return;
   loading.value = true;
   try {
-    const data = await getMockData<any[]>('goods.json');
-    // 确保 ID 唯一，避免 wx:key 报错
-    const newData = data.map(item => ({
-      ...item,
-      id: item.id + '_' + Date.now() + '_' + Math.random()
-    }));
-    recommendedGoods.value = [...recommendedGoods.value, ...newData];
+    const data = await catalogApi.recommend();
+    recommendedGoods.value = [...recommendedGoods.value, ...data];
     if (recommendedGoods.value.length > 20) noMore.value = true;
   } catch (e) {
     console.error(e);
@@ -147,7 +165,7 @@ async function fetchGoods() {
 }
 
 onMounted(() => {
-  fetchGoods();
+  loadHomeData();
 });
 
 function loadMore() {
@@ -163,7 +181,15 @@ function goToMessage() {
 }
 
 function goToCategory(cat: any) {
-  uni.switchTab({ url: '/pages/category/category' });
+  uni.switchTab({ url: `/pages/category/category?catId=${cat.id}` });
+}
+
+function handleBannerClick(banner: BannerVO) {
+  if (banner.linkType === 1 && banner.linkValue) {
+    uni.navigateTo({ url: `/pagesA/goods-detail/index?id=${banner.linkValue}` });
+  } else if (banner.linkType === 2 && banner.linkValue) {
+    uni.navigateTo({ url: `/pagesC/group-buy/index?id=${banner.linkValue}` });
+  }
 }
 
 function goToGroupBuy() {

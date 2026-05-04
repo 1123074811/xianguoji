@@ -2,7 +2,7 @@
   <div>
     <!-- Welcome Header -->
     <header class="mb-stack-lg">
-      <h2 class="font-h1 text-h1 text-on-surface">早上好，张老板 ☀️</h2>
+      <h2 class="font-h1 text-h1 text-on-surface">{{ greeting }}，{{ adminStore.staffInfo?.nickname || '管理员' }} ☀️</h2>
       <p class="font-body-md text-body-md text-slate-500 mt-1">这是您今天的水果生意经营概况。</p>
     </header>
 
@@ -15,10 +15,9 @@
           <span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">receipt_long</span>
         </div>
         <div class="flex items-baseline gap-2">
-          <span class="font-h2 text-h2">142</span>
-          <span class="text-green-600 text-xs font-bold">+12%</span>
+          <span class="font-h2 text-h2">{{ dashboard.todayOrders ?? '--' }}</span>
         </div>
-        <p class="text-xs text-slate-400 mt-2">较昨日 (126)</p>
+        <p class="text-xs text-slate-400 mt-2">实时统计</p>
       </div>
 
       <!-- Today's Turnover -->
@@ -28,10 +27,9 @@
           <span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">payments</span>
         </div>
         <div class="flex items-baseline gap-2">
-          <span class="font-h2 text-h2">¥12,840</span>
-          <span class="text-green-600 text-xs font-bold">+8.4%</span>
+          <span class="font-h2 text-h2">¥{{ dashboard.todayRevenue ?? '0.00' }}</span>
         </div>
-        <p class="text-xs text-slate-400 mt-2">平均客单价: ¥90.42</p>
+        <p class="text-xs text-slate-400 mt-2">仅含已支付订单</p>
       </div>
 
       <!-- Pending Orders -->
@@ -42,10 +40,10 @@
           <span class="material-symbols-outlined text-error bg-error/10 p-2 rounded-lg">pending_actions</span>
         </div>
         <div class="flex items-center gap-3">
-          <span class="font-h2 text-h2">28</span>
-          <span class="px-2 py-0.5 bg-error text-white text-[10px] font-black rounded-full uppercase">加急</span>
+          <span class="font-h2 text-h2">{{ dashboard.pendingOrders ?? '--' }}</span>
+          <span v-if="(dashboard.pendingOrders ?? 0) > 0" class="px-2 py-0.5 bg-error text-white text-[10px] font-black rounded-full uppercase">加急</span>
         </div>
-        <p class="text-xs text-slate-400 mt-2">需在2小时内处理完毕</p>
+        <p class="text-xs text-slate-400 mt-2">待商家接单</p>
       </div>
 
       <!-- New Customers -->
@@ -55,14 +53,10 @@
           <span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">person_add</span>
         </div>
         <div class="flex items-baseline gap-2">
-          <span class="font-h2 text-h2">15</span>
+          <span class="font-h2 text-h2">{{ dashboard.todayNewUsers ?? '--' }}</span>
           <span class="text-slate-400 text-xs font-bold">今日</span>
         </div>
-        <div class="flex -space-x-2 mt-2">
-          <div class="w-6 h-6 rounded-full border-2 border-white bg-primary/20 flex items-center justify-center text-[8px] text-primary font-bold">A</div>
-          <div class="w-6 h-6 rounded-full border-2 border-white bg-blue-200 flex items-center justify-center text-[8px] text-blue-700 font-bold">B</div>
-          <div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200 text-[10px] flex items-center justify-center text-slate-600 font-bold">+12</div>
-        </div>
+        <p class="text-xs text-slate-400 mt-2">今日注册用户数</p>
       </div>
     </section>
 
@@ -77,14 +71,19 @@
             <button class="px-3 py-1 text-xs font-label-bold text-slate-400 hover:text-slate-600">过去30天</button>
           </div>
         </div>
-        <!-- Simulated Bar Chart -->
+        <!-- Simulated Bar Chart (按真实 7 天订单数渲染) -->
         <div class="h-64 flex items-end justify-between gap-2 px-2 pb-6 border-b border-slate-100">
-          <div v-for="(day, i) in chartData" :key="i" class="flex-1 rounded-t relative group" :class="day.color" :style="{ height: day.height }">
-            <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">{{ day.value }}</div>
+          <div
+            v-for="(day, i) in trendChart"
+            :key="i"
+            class="flex-1 rounded-t relative group bg-primary/60"
+            :style="{ height: day.height }"
+          >
+            <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">{{ day.count }}</div>
           </div>
         </div>
         <div class="flex justify-between mt-2 px-2">
-          <span v-for="d in ['周一','周二','周三','周四','周五','周六','周日']" :key="d" class="text-[10px] text-slate-400 font-bold">{{ d }}</span>
+          <span v-for="(d, i) in trendChart" :key="i" class="text-[10px] text-slate-400 font-bold">{{ d.label }}</span>
         </div>
       </div>
 
@@ -92,7 +91,7 @@
       <div class="bg-white border border-outline-variant rounded-xl p-stack-md flex flex-col">
         <div class="flex items-center justify-between mb-stack-md">
           <h3 class="font-h3 text-h3">待办事项</h3>
-          <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded">4 个任务</span>
+          <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded">{{ todoItems.length }} 个任务</span>
         </div>
         <div class="space-y-3 flex-1 overflow-y-auto">
           <router-link v-for="task in todoItems" :key="task.title" :to="task.link" class="group flex items-start gap-3 p-3 bg-slate-50 hover:bg-green-50 rounded-lg border border-transparent hover:border-green-100 transition-all cursor-pointer">
@@ -114,7 +113,7 @@
       <!-- Best Selling Products Table -->
       <div class="lg:col-span-2 bg-white border border-outline-variant rounded-xl overflow-hidden">
         <div class="p-stack-md border-b border-slate-100 flex items-center justify-between">
-          <h3 class="font-h3 text-h3">热销商品排行榜 Top 10</h3>
+          <h3 class="font-h3 text-h3">热销商品排行榜 Top {{ topProducts.length }}</h3>
           <button class="text-xs font-label-bold text-primary flex items-center gap-1">
             查看全部 <span class="material-symbols-outlined text-sm">arrow_forward</span>
           </button>
@@ -131,21 +130,21 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-              <tr v-for="(item, i) in topProducts" :key="i" class="h-[48px] hover:bg-slate-50 transition-colors">
-                <td class="px-6 text-sm font-black text-slate-400">#0{{ i + 1 }}</td>
+              <tr v-if="!topProducts.length">
+                <td colspan="5" class="text-center text-sm text-slate-400 py-6">暂无销售数据</td>
+              </tr>
+              <tr v-for="(item, i) in topProducts" :key="item.id" class="h-[48px] hover:bg-slate-50 transition-colors">
+                <td class="px-6 text-sm font-black text-slate-400">#{{ String(i + 1).padStart(2, '0') }}</td>
                 <td class="px-6 flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                  <img v-if="item.mainImage" :src="item.mainImage" class="w-8 h-8 rounded-lg object-cover shrink-0" alt="" />
+                  <div v-else class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
                     <span class="material-symbols-outlined text-slate-400 text-sm">nutrition</span>
                   </div>
                   <span class="font-label-bold text-slate-800">{{ item.name }}</span>
                 </td>
                 <td class="px-6 text-sm text-right font-medium text-slate-700">{{ item.sales }}</td>
-                <td class="px-6 text-sm text-right font-medium text-slate-700">{{ item.revenue }}</td>
-                <td class="px-6 text-right">
-                  <span class="text-xs flex items-center justify-end gap-1 font-bold" :class="item.trend > 0 ? 'text-green-600' : 'text-error'">
-                    <span class="material-symbols-outlined text-sm">{{ item.trend > 0 ? 'trending_up' : 'trending_down' }}</span> {{ Math.abs(item.trend) }}%
-                  </span>
-                </td>
+                <td class="px-6 text-sm text-right font-medium text-slate-700">¥{{ item.minPrice }}</td>
+                <td class="px-6 text-right text-xs text-slate-400">库存 {{ item.totalStock }}</td>
               </tr>
             </tbody>
           </table>
@@ -158,41 +157,15 @@
           <h3 class="font-h3 text-h3">订单分布</h3>
           <p class="text-xs text-slate-500">实时订单状态追踪</p>
         </div>
-        <!-- Simulated Pie Chart -->
-        <div class="relative w-48 h-48 mx-auto mb-stack-lg">
-          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#f1f5f9" stroke-width="3"></circle>
-            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#2e7d32" stroke-dasharray="60 40" stroke-dashoffset="0" stroke-width="3"></circle>
-            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#ffb68d" stroke-dasharray="20 80" stroke-dashoffset="-60" stroke-width="3"></circle>
-            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#ba1a1a" stroke-dasharray="20 80" stroke-dashoffset="-80" stroke-width="3"></circle>
-          </svg>
-          <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-2xl font-bold">142</span>
-            <span class="text-[10px] text-slate-400 font-bold uppercase">总量</span>
-          </div>
-        </div>
-        <!-- Legend -->
+        <!-- 真实订单状态分布 -->
         <div class="space-y-2">
-          <div class="flex items-center justify-between">
+          <div v-if="orderStatusList.length === 0" class="text-center text-sm text-slate-400 py-8">今日暂无订单</div>
+          <div v-for="row in orderStatusList" :key="row.status" class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
-              <span class="text-xs font-label-bold">已完成</span>
+              <span class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: row.color }"></span>
+              <span class="text-xs font-label-bold">{{ row.label }}</span>
             </div>
-            <span class="text-xs font-bold text-slate-600">60%</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim"></span>
-              <span class="text-xs font-label-bold">处理中</span>
-            </div>
-            <span class="text-xs font-bold text-slate-600">20%</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-error"></span>
-              <span class="text-xs font-label-bold">待处理</span>
-            </div>
-            <span class="text-xs font-bold text-slate-600">20%</span>
+            <span class="text-xs font-bold text-slate-600">{{ row.count }} 单</span>
           </div>
         </div>
       </div>
@@ -201,26 +174,111 @@
 </template>
 
 <script setup lang="ts">
-const chartData = [
-  { value: 98, height: '40%', color: 'bg-primary/20' },
-  { value: 112, height: '55%', color: 'bg-primary/30' },
-  { value: 105, height: '45%', color: 'bg-primary/40' },
-  { value: 138, height: '70%', color: 'bg-primary/50' },
-  { value: 126, height: '65%', color: 'bg-primary/60' },
-  { value: 152, height: '85%', color: 'bg-primary/80' },
-  { value: 142, height: '75%', color: 'bg-primary' }
-]
+import { ref, computed, onMounted } from 'vue';
+import { useAdminStore } from '@/stores/admin';
+import { statApi } from '@/api/modules/stat';
+import type { DashboardVO, OrderTrendItem, TopProductVO, TodoVO } from '@/api/types/stat';
 
-const todoItems = [
-  { icon: 'schedule', iconBg: 'bg-error/10 text-error', title: '28 个待处理订单', desc: '等待时长已超过1小时', link: '/orders' },
-  { icon: 'inventory', iconBg: 'bg-orange-100 text-orange-600', title: '库存预警', desc: '泰国金枕榴莲库存不足 (仅剩3件)', link: '/goods' },
-  { icon: 'star', iconBg: 'bg-blue-100 text-blue-600', title: '新评价提醒', desc: '有5条未读客户评价', link: '/reviews' },
-  { icon: 'undo', iconBg: 'bg-purple-100 text-purple-600', title: '退款申请', desc: '2个退款请求待审核', link: '/orders' }
-]
+const adminStore = useAdminStore();
 
-const topProducts = [
-  { name: '猫山王榴莲', sales: '428 kg', revenue: '¥42,800', trend: 14 },
-  { name: '阳光玫瑰葡萄', sales: '356 kg', revenue: '¥18,500', trend: 8 },
-  { name: '台南金钻凤梨', sales: '210 kg', revenue: '¥7,400', trend: -2 }
-]
+const greeting = computed(() => {
+  const h = new Date().getHours();
+  if (h < 6) return '凌晨好';
+  if (h < 12) return '早上好';
+  if (h < 14) return '中午好';
+  if (h < 18) return '下午好';
+  return '晚上好';
+});
+
+const dashboard = ref<Partial<DashboardVO>>({});
+const trend = ref<OrderTrendItem[]>([]);
+const topProducts = ref<TopProductVO[]>([]);
+const todo = ref<Partial<TodoVO>>({});
+const statusMap = ref<Record<number, number>>({});
+
+const ORDER_STATUS_LABELS: Record<number, { label: string; color: string }> = {
+  0: { label: '已取消', color: '#94a3b8' },
+  1: { label: '待接单', color: '#ba1a1a' },
+  2: { label: '已接单', color: '#ffb68d' },
+  3: { label: '配送中', color: '#fbbf24' },
+  4: { label: '已送达', color: '#60a5fa' },
+  5: { label: '已完成', color: '#2e7d32' },
+  6: { label: '退款中', color: '#a78bfa' },
+  7: { label: '已退款', color: '#7c3aed' },
+  8: { label: '已拒单', color: '#64748b' },
+};
+
+const orderStatusList = computed(() =>
+  Object.entries(statusMap.value).map(([s, c]) => ({
+    status: Number(s),
+    count: c,
+    label: ORDER_STATUS_LABELS[Number(s)]?.label || `状态${s}`,
+    color: ORDER_STATUS_LABELS[Number(s)]?.color || '#cbd5e1',
+  })),
+);
+
+const trendChart = computed(() => {
+  const max = Math.max(1, ...trend.value.map((t) => t.count));
+  return trend.value.map((t) => ({
+    label: t.date.slice(5),
+    count: t.count,
+    height: `${Math.max(4, Math.round((t.count / max) * 100))}%`,
+  }));
+});
+
+const todoItems = computed(() => {
+  const items: { icon: string; iconBg: string; iconColor: string; title: string; desc: string; link: string }[] = [];
+  if ((todo.value.pendingAccept ?? 0) > 0) {
+    items.push({
+      icon: 'schedule', iconBg: 'bg-error/10', iconColor: 'text-error',
+      title: `${todo.value.pendingAccept} 个订单待接单`, desc: '尽快处理，避免超时', link: '/orders',
+    });
+  }
+  if ((todo.value.stockWarn ?? 0) > 0) {
+    items.push({
+      icon: 'inventory', iconBg: 'bg-orange-100', iconColor: 'text-orange-600',
+      title: `${todo.value.stockWarn} 个商品库存预警`, desc: '低于阈值，请及时补货', link: '/goods',
+    });
+  }
+  if ((todo.value.pendingRefund ?? 0) > 0) {
+    items.push({
+      icon: 'undo', iconBg: 'bg-purple-100', iconColor: 'text-purple-600',
+      title: `${todo.value.pendingRefund} 个退款待审核`, desc: '请尽快处理客户退款', link: '/orders',
+    });
+  }
+  if ((todo.value.pendingReview ?? 0) > 0) {
+    items.push({
+      icon: 'star', iconBg: 'bg-blue-100', iconColor: 'text-blue-600',
+      title: `${todo.value.pendingReview} 条评价待回复`, desc: '及时回应可提升口碑', link: '/reviews',
+    });
+  }
+  if (items.length === 0) {
+    items.push({
+      icon: 'check_circle', iconBg: 'bg-green-100', iconColor: 'text-green-600',
+      title: '今日没有待办事项', desc: '一切正常 ✓', link: '/dashboard',
+    });
+  }
+  return items;
+});
+
+async function loadDashboard() {
+  try {
+    const [d, t, sMap, tp, td] = await Promise.all([
+      statApi.dashboard(),
+      statApi.orderTrend(7),
+      statApi.orderStatus(),
+      statApi.topProducts(10),
+      statApi.todo(),
+    ]);
+    dashboard.value = d;
+    trend.value = t;
+    statusMap.value = sMap;
+    topProducts.value = tp;
+    todo.value = td;
+  } catch (e) {
+    console.warn('加载工作台数据失败', e);
+  }
+}
+
+onMounted(loadDashboard);
 </script>

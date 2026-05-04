@@ -85,8 +85,8 @@
             <text class="label">平台优惠券</text>
           </view>
           <view class="right">
-            <text class="coupon-avail">2 张可用</text>
-            <text class="coupon-discount">-¥5.00</text>
+            <text class="coupon-avail">{{ preview?.availableCoupons?.length || 0 }} 张可用</text>
+            <text v-if="selectedCoupon" class="coupon-discount">-¥{{ selectedCoupon.amount }}</text>
             <svg-icon name="chevron-right" :size="28" color="#BDBDBD" />
           </view>
         </view>
@@ -104,15 +104,15 @@
       <view class="price-detail-card card">
         <view class="row">
           <text class="label">商品小计</text>
-          <text class="value">¥{{ cartStore.totalPrice.toFixed(2) }}</text>
+          <text class="value">¥{{ preview?.items?.reduce((sum, item) => sum + Number(item.subtotal), 0).toFixed(2) || cartStore.totalPrice }}</text>
         </view>
         <view class="row">
-          <text class="label">满减优惠</text>
-          <text class="value discount">-¥5.0</text>
+          <text class="label">优惠金额</text>
+          <text class="value discount">-¥{{ preview?.discountAmount || '0.00' }}</text>
         </view>
         <view class="row">
           <text class="label">优惠券抵扣</text>
-          <text class="value discount">-¥5.0</text>
+          <text class="value discount">-¥{{ selectedCoupon?.amount || '0.00' }}</text>
         </view>
         <view class="row">
           <view class="label-with-tag">
@@ -120,13 +120,13 @@
             <text class="free-tag">满39免运费</text>
           </view>
           <view class="value-group">
-            <text class="value line-through">¥6.0</text>
-            <text class="value">¥0.0</text>
+            <text v-if="preview?.originalDeliveryFee !== preview?.deliveryFee" class="value line-through">¥{{ preview?.originalDeliveryFee }}</text>
+            <text class="value">¥{{ preview?.deliveryFee || '0.00' }}</text>
           </view>
         </view>
         <view class="total-divider"></view>
         <view class="total-row">
-          <text class="total-label">共 {{ cartStore.totalCount }} 件, 实付合计</text>
+          <text class="total-label">共 {{ preview?.items?.reduce((sum, item) => sum + item.quantity, 0) || cartStore.totalCount }} 件, 实付合计</text>
           <text class="total-price">¥{{ finalPrice }}</text>
         </view>
       </view>
@@ -139,7 +139,7 @@
           <text class="label">合计:</text>
           <text class="price">¥{{ finalPrice }}</text>
         </view>
-        <text class="discount-text">已优惠 ¥10.0</text>
+        <text class="discount-text">已优惠 ¥{{ preview?.discountAmount || '0.00' }}</text>
       </view>
       <button class="submit-btn" @tap="submitOrder">提交订单</button>
     </view>
@@ -147,22 +147,62 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useCartStore } from '@/stores/cart';
+import { orderApi } from '@/api/modules/order';
 import SvgIcon from '@/components/svg-icon.vue';
+import type { OrderPreviewVO } from '@/api/types/order';
 
 const cartStore = useCartStore();
-const deliveryType = ref('express');
+const deliveryType = ref<1 | 2>(1);
 const remark = ref('');
+const preview = ref<OrderPreviewVO | null>(null);
+const selectedCouponId = ref<number | undefined>();
+const submitLoading = ref(false);
+const routeOptions = ref<Record<string, string>>({});
 
 const finalPrice = computed(() => {
-  // 商品总价 - 满减优惠(5) - 优惠券抵扣(5)
-  const total = cartStore.totalPrice - 10;
-  return total > 0 ? total.toFixed(2) : '0.00';
+  if (preview.value) return preview.value.totalAmount;
+  return '0.00';
 });
 
-function showCouponPicker() {
-  uni.showToast({ title: '优惠券选择功能开发中', icon: 'none' });
+const selectedCoupon = computed(() => {
+  return preview.value?.availableCoupons?.find(c => c.id === selectedCouponId.value);
+});
+
+async function loadPreview() {
+  try {
+    const pages = getCurrentPages();
+    const page = pages[pages.length - 1] as any;
+    routeOptions.value = page?.options || {};
+    const cartItemIds = routeOptions.value.cartItemIds?.split(',').map(Number).filter(Boolean) || [];
+    const data = await orderApi.preview({
+      deliveryType: deliveryType.value,
+      cartItemIds: cartItemIds.length ? cartItemIds : undefined,
+      userCouponId: selectedCouponId.value,
+      groupBuyActivityId: routeOptions.value.groupBuyActivityId ? Number(routeOptions.value.groupBuyActivityId) : undefined,
+    });
+    preview.value = data;
+  } catch (e) {
+    console.warn('加载订单预览失败', e);
+  }
+}
+
+onMounted(() => {
+  loadPreview();
+});
+
+async function showCouponPicker() {
+  if (!preview.value?.availableCoupons?.length) {
+    return uni.showToast({ title: '暂无可用优惠券', icon: 'none' });
+  }
+  uni.showActionSheet({
+    itemList: preview.value.availableCoupons.map(c => `${c.name} - ¥${c.amount}`),
+    success: async (res) => {
+      selectedCouponId.value = preview.value?.availableCoupons[res.tapIndex]?.id;
+      await loadPreview();
+    }
+  });
 }
 
 function goBack() {
@@ -173,14 +213,32 @@ function goToAddress() {
   uni.navigateTo({ url: '/pagesC/address/index' });
 }
 
-function submitOrder() {
+async function submitOrder() {
+  if (submitLoading.value) return;
+  submitLoading.value = true;
   uni.showLoading({ title: '提交中' });
-  setTimeout(() => {
+  try {
+    const pages = getCurrentPages();
+    const page = pages[pages.length - 1] as any;
+    const cartItemIds = page?.options?.cartItemIds?.split(',').map(Number).filter(Boolean) || [];
+    const result = await orderApi.submit({
+      addressId: preview.value?.address?.id,
+      pickupPointId: deliveryType.value === 2 ? preview.value?.pickupPoint?.id : undefined,
+      deliveryType: deliveryType.value,
+      cartItemIds: cartItemIds.length ? cartItemIds : undefined,
+      userCouponId: selectedCouponId.value,
+      userRemark: remark.value || undefined,
+      payMethod: 'wechat',
+      groupBuyActivityId: routeOptions.value.groupBuyActivityId ? Number(routeOptions.value.groupBuyActivityId) : undefined,
+    });
     uni.hideLoading();
-    // 清空选中的购物车商品
-    cartStore.clearCart();
-    uni.redirectTo({ url: '/pagesB/payment-result/index' });
-  }, 1000);
+    uni.redirectTo({ url: `/pagesB/payment-result/index?orderNo=${result.orderNo}` });
+  } catch (e) {
+    uni.hideLoading();
+    console.warn('提交订单失败', e);
+  } finally {
+    submitLoading.value = false;
+  }
 }
 </script>
 
