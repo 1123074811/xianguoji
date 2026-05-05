@@ -14,7 +14,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Date;
 
 @Slf4j
 @Component
@@ -22,6 +22,7 @@ import java.util.List;
 public class LoginInterceptor implements HandlerInterceptor {
 
     private final JwtUtil jwtUtil;
+    private final JwtBlacklistManager jwtBlacklistManager;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -47,8 +48,31 @@ public class LoginInterceptor implements HandlerInterceptor {
             throw new BizException(ResultCode.TOKEN_INVALID);
         }
 
+        // P2-8: 检查 JWT 黑名单
+        if (jwtBlacklistManager.isBlacklisted(token)) {
+            throw new BizException(ResultCode.TOKEN_INVALID, "token 已失效");
+        }
+
         Claims claims = jwtUtil.parse(token);
         String role = claims.get("role", String.class);
+
+        // Token 续期：剩余 < 1h 时签发新 token，通过 response header 下发
+        try {
+            Date expiry = claims.getExpiration();
+            long remainMs = expiry.getTime() - System.currentTimeMillis();
+            if (remainMs > 0 && remainMs < 3600_000L) {
+                String newToken;
+                if ("staff".equals(role)) {
+                    Long sid = claims.get("sid", Long.class);
+                    String staffRole = claims.get("staffRole", String.class);
+                    newToken = jwtUtil.issueAdminToken(sid, staffRole);
+                } else {
+                    Long uid = claims.get("uid", Long.class);
+                    newToken = jwtUtil.issueUserToken(uid);
+                }
+                response.setHeader("X-Token-Renewal", newToken);
+            }
+        } catch (Exception ignored) {}
 
         if (adminRequired != null) {
             if (!"staff".equals(role)) {

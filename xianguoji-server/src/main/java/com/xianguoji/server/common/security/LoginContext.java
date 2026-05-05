@@ -1,8 +1,10 @@
 package com.xianguoji.server.common.security;
 
+import com.alibaba.ttl.TransmittableThreadLocal;
+
 public class LoginContext {
 
-    private static final ThreadLocal<LoginUser> CTX = new ThreadLocal<>();
+    private static final TransmittableThreadLocal<LoginUser> CTX = new TransmittableThreadLocal<>();
 
     public static void set(LoginUser u) {
         CTX.set(u);
