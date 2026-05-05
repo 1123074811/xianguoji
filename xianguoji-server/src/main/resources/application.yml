@@ -46,6 +46,8 @@ mybatis-plus:
     map-underscore-to-camel-case: true
 
 xianguoji:
+  cache:
+    enabled: true
   jwt:
     secret: ${JWT_SECRET:CHANGE_ME_TO_32_BYTES_MIN}
     user-ttl-hours: 168
@@ -72,6 +74,8 @@ xianguoji:
 logging:
   level:
     com.xianguoji: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-}] %-5level %logger{36} - %msg%n"
 
 springdoc:
   swagger-ui:
