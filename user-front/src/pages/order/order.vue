@@ -28,7 +28,7 @@
       </scroll-view>
     </view>
 
-    <scroll-view scroll-y class="main-scroll" @scrolltolower="loadMore">
+    <scroll-view scroll-y class="main-scroll" show-scrollbar="false" @scrolltolower="loadMore">
       <view class="order-list">
         <view v-for="order in filteredOrders" :key="order.orderNo" class="order-card card">
           <view class="card-header">
@@ -89,7 +89,7 @@ import CustomTabBar from '@/components/custom-tab-bar.vue';
 import type { OrderVO } from '@/api/types/order';
 
 const STATUS_MAP: Record<number, string> = {
-  0: '待付款', 10: '待发货', 20: '待发货', 30: '配送中', 31: '待自提', 40: '已完成', 50: '已取消', 60: '售后中',
+  0: '待付款', 1: '待接单', 2: '备货中', 3: '配送中', 4: '待自提', 5: '已完成', 6: '已取消', 7: '退款中', 8: '已退款',
 };
 function statusText(s: number) { return STATUS_MAP[s] || '未知'; }
 
@@ -185,10 +185,10 @@ function goToSearch() {
 function getOrderButtons(order: OrderVO) {
   const btns: { text: string; primary: boolean }[] = [];
   switch (order.status) {
-    case 10: btns.push({ text: '取消订单', primary: false }, { text: '立即支付', primary: true }); break;
-    case 20: btns.push({ text: '提醒发货', primary: true }); break;
-    case 30: btns.push({ text: '查看物流', primary: false }, { text: '确认收货', primary: true }); break;
-    case 40: btns.push({ text: '查看详情', primary: false }, { text: '去评价', primary: true }, { text: '再次购买', primary: false }); break;
+    case 0: btns.push({ text: '取消订单', primary: false }, { text: '立即支付', primary: true }); break;
+    case 1: case 2: btns.push({ text: '提醒发货', primary: true }); break;
+    case 3: btns.push({ text: '查看物流', primary: false }, { text: '确认收货', primary: true }); break;
+    case 5: btns.push({ text: '查看详情', primary: false }, { text: '去评价', primary: true }, { text: '再次购买', primary: false }); break;
     default: btns.push({ text: '查看详情', primary: false });
   }
   return btns;
@@ -331,7 +331,18 @@ async function handleAction(order: OrderVO, btn: any) {
   gap: $space-3;
 }
 
+/* Hide horizontal scrollbar on H5 for inner scroll-views */
+:deep(.goods-imgs ::-webkit-scrollbar),
+:deep(.tabs-scroll ::-webkit-scrollbar),
+:deep(.main-scroll ::-webkit-scrollbar) {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .order-card {
+  overflow: hidden;
+
   .card-header {
     display: flex;
     justify-content: space-between;
@@ -381,40 +392,52 @@ async function handleAction(order: OrderVO, btn: any) {
 
   .card-footer {
     display: flex;
-    flex-direction: column;
-    gap: $space-4;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: $space-3;
 
     .total-info {
       display: flex;
-      justify-content: flex-end;
       align-items: baseline;
+      flex: 1;
+      min-width: 0;
       gap: $space-1;
+      overflow: hidden;
 
       .count {
         font-size: $font-xs;
         color: $color-text-secondary;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .price {
         font-size: $font-md;
         font-weight: bold;
         color: $color-text-primary;
+        white-space: nowrap;
       }
     }
 
     .actions {
       display: flex;
       justify-content: flex-end;
-      gap: $space-2;
+      flex-shrink: 0;
+      gap: $space-1;
+      overflow: hidden;
 
       .action-btn {
-        height: 64rpx;
-        padding: 0 $space-4;
+        height: 48rpx;
+        min-height: 48rpx;
+        padding: 0 $space-2;
         border-radius: $radius-pill;
-        font-size: $font-sm;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        font-size: $font-xs;
+        line-height: 44rpx;
+        text-align: center;
+        white-space: nowrap;
+        flex-shrink: 0;
         border: 2rpx solid $color-divider;
         background-color: transparent;
         color: $color-text-primary;
@@ -423,6 +446,7 @@ async function handleAction(order: OrderVO, btn: any) {
           background-color: $color-primary;
           color: #ffffff;
           border: none;
+          line-height: 48rpx;
         }
 
         &::after { border: none; }
