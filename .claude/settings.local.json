@@ -30,7 +30,20 @@
       "Bash(git push *)",
       "Read(//tmp/**)",
       "Bash(grep -rh \"url: ['\\\\\\\\\\\\\"]/api/\" \"E:/code/鲜果记/user-front/src/api/modules/\")",
-      "Bash(grep -rh \"url: ['\\\\\\\\\\\\\"]/api/\" \"E:/code/鲜果记/merchant-front/src/api/modules/\")"
+      "Bash(grep -rh \"url: ['\\\\\\\\\\\\\"]/api/\" \"E:/code/鲜果记/merchant-front/src/api/modules/\")",
+      "Bash(git rm *)",
+      "Bash(git check-ignore *)",
+      "Bash(mysql -uroot -p'ojc132598.' --default-character-set=utf8mb4 xianguoji)",
+      "Bash(mysql -uroot -p'ojc132598.' --default-character-set=utf8mb4 xianguoji -e \"SHOW TABLES LIKE 'help_%'; SHOW TABLES LIKE 'report_%'; SELECT COUNT\\(*\\) AS faq_count FROM help_faq; SELECT COUNT\\(*\\) AS guide_count FROM help_guide; SELECT id,section,question FROM help_faq LIMIT 3;\")",
+      "Bash(mysql -uroot -p'ojc132598.' --default-character-set=utf8mb4 xianguoji -e \"SELECT id, name, main_image FROM product LIMIT 5;\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://127.0.0.1:8080/static/seed/product/grape.jpg\")",
+      "Bash(curl -s \"http://127.0.0.1:8080/api/pub/product/recommend\")",
+      "Bash(mysql -uroot -p'ojc132598.' --default-character-set=utf8mb4 xianguoji -e \"SELECT id, main_image FROM product WHERE main_image NOT LIKE '/static/%' AND main_image NOT LIKE 'http%' AND main_image IS NOT NULL LIMIT 10; SELECT COUNT\\(*\\) AS bad FROM product WHERE main_image NOT LIKE '/static/%' AND main_image NOT LIKE 'http%';\")",
+      "Bash(mysql -uroot -p'ojc132598.' --default-character-set=utf8mb4 xianguoji -e \"SELECT id, image FROM banner LIMIT 3; SELECT id, name, main_image FROM product WHERE main_image LIKE '%null%' OR main_image LIKE '%undefined%' LIMIT 5;\")",
+      "Bash(npx vue-tsc *)",
+      "Bash(curl -sI \"http://127.0.0.1:8080/static/seed/product/grape.jpg\")",
+      "Bash(npm run *)",
+      "Bash(curl -sI http://127.0.0.1:8080/static/seed/product/grape.jpg)"
     ]
   }
 }
