@@ -34,4 +34,6 @@ export interface AddressDto {
   detail: string;
   tag?: string;
   isDefault?: 0 | 1;
+  longitude?: number;
+  latitude?: number;
 }

@@ -12,7 +12,7 @@ export const promoApi = {
   myCoupons: (params?: { status?: number }) =>
     request<UserCouponVO[]>({ url: '/api/u/coupon/list', params }),
 
-  usableCoupons: (data: { skuList: { skuId: number; quantity: number }[]; goodsAmount: string }) =>
+  usableCoupons: (data: { totalAmount: string; productIds?: number[] }) =>
     request<UserCouponVO[]>({ url: '/api/u/coupon/usable', method: 'POST', data }),
 
   groupBuyPage: (params?: { page?: number; size?: number }) =>

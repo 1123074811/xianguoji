@@ -228,8 +228,8 @@ async function loadPreview() {
     if (data.items?.length) {
       try {
         usableCoupons.value = await promoApi.usableCoupons({
-          skuList: data.items.map(i => ({ skuId: i.skuId, quantity: i.quantity })),
-          goodsAmount: data.goodsAmount,
+          totalAmount: data.goodsAmount,
+          productIds: data.items.map(i => i.skuId),
         });
       } catch {
         usableCoupons.value = [];
