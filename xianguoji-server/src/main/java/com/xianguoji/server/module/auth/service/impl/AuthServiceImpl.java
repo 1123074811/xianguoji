@@ -13,6 +13,7 @@ import com.xianguoji.server.module.auth.dto.AdminResetPasswordDto;
 import com.xianguoji.server.module.auth.dto.SmsLoginDto;
 import com.xianguoji.server.module.auth.dto.SmsSendDto;
 import com.xianguoji.server.module.auth.dto.WechatLoginDto;
+import com.xianguoji.server.module.auth.dto.WechatQuickLoginDto;
 import com.xianguoji.server.module.auth.service.AuthService;
 import com.xianguoji.server.module.auth.vo.LoginVO;
 import com.xianguoji.server.module.staff.entity.Staff;
@@ -129,6 +130,45 @@ public class AuthServiceImpl implements AuthService {
                         .phone(maskPhone(phone))
                         .role("user")
                         .isNew(isNew)
+                        .build())
+                .build();
+    }
+
+    @Override
+    public LoginVO quickWechatLogin(WechatQuickLoginDto dto) {
+        cn.hutool.json.JSONObject session = wechatUtil.code2Session(dto.getJsCode());
+        String openid = session.getStr("openid");
+        if (openid == null || openid.isEmpty()) {
+            throw new BizException(ResultCode.BIZ_ERROR, "微信登录失败：未获取到openid");
+        }
+        User user = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getWxOpenid, openid));
+        // 用户不存在 或 资料未补全 → 通知前端弹授权框
+        if (user == null || user.getNickname() == null || user.getNickname().isBlank()) {
+            throw new BizException(ResultCode.WX_PROFILE_REQUIRED, "请补全微信资料");
+        }
+        if (user.getStatus() == 0) {
+            throw new BizException(ResultCode.ACCESS_DENIED, "账号已被禁用");
+        }
+        String unionid = session.getStr("unionid");
+        user.setLastLoginTime(LocalDateTime.now());
+        if (unionid != null && !unionid.equals(user.getWxUnionid())) {
+            user.setWxUnionid(unionid);
+        }
+        userMapper.updateById(user);
+
+        String token = jwtUtil.issueUserToken(user.getId());
+        LocalDateTime expireAt = LocalDateTime.now().plusHours(168);
+        return LoginVO.builder()
+                .token(token)
+                .expireAt(expireAt)
+                .userInfo(LoginVO.UserInfoVO.builder()
+                        .id(user.getId())
+                        .nickname(user.getNickname())
+                        .avatar(user.getAvatar())
+                        .phone(user.getPhone() != null ? maskPhone(user.getPhone()) : null)
+                        .role("user")
+                        .isNew(false)
                         .build())
                 .build();
     }

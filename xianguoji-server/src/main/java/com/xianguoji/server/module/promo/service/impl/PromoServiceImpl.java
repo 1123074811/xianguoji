@@ -35,10 +35,20 @@ public class PromoServiceImpl implements PromoService {
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
-    public List<CouponVO> getAvailableCoupons() {
+    public List<CouponVO> getAvailableCoupons(Long uid) {
         List<Coupon> list = couponMapper.selectList(
                 new LambdaQueryWrapper<Coupon>().eq(Coupon::getStatus, 1));
-        return list.stream().map(this::toCouponVO).toList();
+        return list.stream().map(c -> {
+            CouponVO vo = toCouponVO(c);
+            if (uid != null) {
+                Long userReceived = userCouponMapper.selectCount(
+                        new LambdaQueryWrapper<UserCoupon>()
+                                .eq(UserCoupon::getUserId, uid)
+                                .eq(UserCoupon::getCouponId, c.getId()));
+                vo.setUserReceivedCount(userReceived.intValue());
+            }
+            return vo;
+        }).toList();
     }
 
     @Override

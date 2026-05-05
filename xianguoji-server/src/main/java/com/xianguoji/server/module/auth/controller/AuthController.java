@@ -9,6 +9,7 @@ import com.xianguoji.server.module.auth.dto.AdminResetPasswordDto;
 import com.xianguoji.server.module.auth.dto.SmsLoginDto;
 import com.xianguoji.server.module.auth.dto.SmsSendDto;
 import com.xianguoji.server.module.auth.dto.WechatLoginDto;
+import com.xianguoji.server.module.auth.dto.WechatQuickLoginDto;
 import com.xianguoji.server.module.auth.service.AuthService;
 import com.xianguoji.server.module.auth.vo.LoginVO;
 import com.xianguoji.server.module.staff.entity.Staff;
@@ -44,6 +45,12 @@ public class AuthController {
     @PostMapping("/api/pub/auth/login/wechat")
     public R<LoginVO> wechatLogin(@Valid @RequestBody WechatLoginDto dto) {
         return R.ok(authService.wechatLogin(dto));
+    }
+
+    @Operation(summary = "微信小程序静默登录（已注册用户复用）")
+    @PostMapping("/api/pub/auth/login/wechat/quick")
+    public R<LoginVO> quickWechatLogin(@Valid @RequestBody WechatQuickLoginDto dto) {
+        return R.ok(authService.quickWechatLogin(dto));
     }
 
     @Operation(summary = "用户退出登录")

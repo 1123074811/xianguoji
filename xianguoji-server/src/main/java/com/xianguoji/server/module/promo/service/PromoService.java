@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface PromoService {
 
-    List<CouponVO> getAvailableCoupons();
+    List<CouponVO> getAvailableCoupons(Long uid);
 
     void receiveCoupon(Long uid, Long couponId);
 

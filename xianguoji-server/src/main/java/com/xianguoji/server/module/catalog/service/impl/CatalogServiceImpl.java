@@ -102,7 +102,10 @@ public class CatalogServiceImpl implements CatalogService {
                 if (childIds.isEmpty()) {
                     wrapper.eq(Product::getCategoryId, qry.getCategoryId());
                 } else {
-                    wrapper.in(Product::getCategoryId, childIds);
+                    // 同时包含挂在父分类本身的商品 + 所有子分类下的商品
+                    java.util.List<Long> allIds = new java.util.ArrayList<>(childIds);
+                    allIds.add(qry.getCategoryId());
+                    wrapper.in(Product::getCategoryId, allIds);
                 }
             } else {
                 wrapper.eq(Product::getCategoryId, qry.getCategoryId());
@@ -135,6 +138,7 @@ public class CatalogServiceImpl implements CatalogService {
                 new LambdaQueryWrapper<Product>()
                         .eq(Product::getStatus, 1)
                         .eq(Product::getIsRecommend, 1)
+                        .orderByDesc(Product::getCreatedAt)
                         .orderByDesc(Product::getSales));
         return list.stream().map(this::toProductVO).toList();
     }

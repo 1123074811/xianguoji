@@ -87,6 +87,16 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    public PageVO<ReviewVO> getMyReviews(Long uid, Integer page, Integer size) {
+        LambdaQueryWrapper<Review> wrapper = new LambdaQueryWrapper<Review>()
+                .eq(Review::getUserId, uid)
+                .orderByDesc(Review::getCreatedAt);
+        Page<Review> p = reviewMapper.selectPage(new Page<>(page, size), wrapper);
+        List<ReviewVO> voList = p.getRecords().stream().map(this::toReviewVO).toList();
+        return new PageVO<>(p.getTotal(), voList, page, size);
+    }
+
+    @Override
     public ReviewSummaryVO getReviewSummary(Long productId) {
         Long total = reviewMapper.selectCount(
                 new LambdaQueryWrapper<Review>().eq(Review::getProductId, productId).eq(Review::getIsHidden, 0));

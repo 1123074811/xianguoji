@@ -24,4 +24,5 @@ public class CouponVO {
     private Integer validDays;
     private Integer scope;
     private Integer status;
+    private Integer userReceivedCount;
 }

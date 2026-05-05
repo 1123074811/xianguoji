@@ -16,6 +16,10 @@ public class LoginContext {
         return get() == null ? null : get().getUid();
     }
 
+    public static Long uidOptional() {
+        return uid();
+    }
+
     public static Long sid() {
         return get() == null ? null : get().getSid();
     }

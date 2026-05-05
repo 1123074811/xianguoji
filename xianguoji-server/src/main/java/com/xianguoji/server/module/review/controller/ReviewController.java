@@ -33,6 +33,14 @@ public class ReviewController {
         return R.ok(reviewService.getPendingReviews(LoginContext.uid()));
     }
 
+    @Operation(summary = "我的评价列表")
+    @GetMapping("/api/u/review/my")
+    @LoginRequired
+    public R<PageVO<ReviewVO>> myReviews(@RequestParam(defaultValue = "1") Integer page,
+                                          @RequestParam(defaultValue = "20") Integer size) {
+        return R.ok(reviewService.getMyReviews(LoginContext.uid(), page, size));
+    }
+
     @Operation(summary = "提交评价")
     @PostMapping("/api/u/review")
     @LoginRequired

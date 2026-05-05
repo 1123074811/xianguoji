@@ -21,4 +21,5 @@ public class UserProfileVO {
     private int couponCount;
     private int favoriteCount;
     private int footprintCount;
+    private int groupBuyCount;
 }

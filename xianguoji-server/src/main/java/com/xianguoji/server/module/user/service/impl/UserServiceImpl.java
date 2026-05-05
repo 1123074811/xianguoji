@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.ResultCode;
+import com.xianguoji.server.module.promo.entity.GroupBuyParticipant;
 import com.xianguoji.server.module.promo.entity.UserCoupon;
+import com.xianguoji.server.module.promo.mapper.GroupBuyParticipantMapper;
 import com.xianguoji.server.module.promo.mapper.UserCouponMapper;
 import com.xianguoji.server.module.user.dto.AddressAddDto;
 import com.xianguoji.server.module.user.dto.AddressUpdDto;
@@ -35,6 +37,7 @@ public class UserServiceImpl implements UserService {
     private final UserCouponMapper userCouponMapper;
     private final FavoriteMapper favoriteMapper;
     private final FootprintMapper footprintMapper;
+    private final GroupBuyParticipantMapper groupBuyParticipantMapper;
 
     @Override
     public UserProfileVO getProfile(Long uid) {
@@ -47,6 +50,8 @@ public class UserServiceImpl implements UserService {
                 new LambdaQueryWrapper<Favorite>().eq(Favorite::getUserId, uid));
         Long footprintCount = footprintMapper.selectCount(
                 new LambdaQueryWrapper<Footprint>().eq(Footprint::getUserId, uid));
+        Long groupBuyCount = groupBuyParticipantMapper.selectCount(
+                new LambdaQueryWrapper<GroupBuyParticipant>().eq(GroupBuyParticipant::getUserId, uid));
 
         return UserProfileVO.builder()
                 .id(user.getId())
@@ -60,6 +65,7 @@ public class UserServiceImpl implements UserService {
                 .couponCount(couponCount.intValue())
                 .favoriteCount(favoriteCount.intValue())
                 .footprintCount(footprintCount.intValue())
+                .groupBuyCount(groupBuyCount.intValue())
                 .build();
     }
 

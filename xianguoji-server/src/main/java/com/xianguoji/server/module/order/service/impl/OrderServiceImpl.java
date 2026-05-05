@@ -36,11 +36,14 @@ import com.xianguoji.server.module.promo.mapper.CouponMapper;
 import com.xianguoji.server.module.promo.mapper.PromotionRuleMapper;
 import com.xianguoji.server.module.promo.mapper.UserCouponMapper;
 import com.xianguoji.server.module.promo.service.PromoService;
+import com.xianguoji.server.common.websocket.WsNotificationService;
 import com.xianguoji.server.module.shop.entity.DeliverySetting;
 import com.xianguoji.server.module.shop.entity.PickupPoint;
+import com.xianguoji.server.module.shop.entity.Shop;
 import com.xianguoji.server.module.user.entity.UserAddress;
 import com.xianguoji.server.module.shop.mapper.DeliverySettingMapper;
 import com.xianguoji.server.module.shop.mapper.PickupPointMapper;
+import com.xianguoji.server.module.shop.mapper.ShopMapper;
 import com.xianguoji.server.module.user.mapper.UserAddressMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,9 +77,12 @@ public class OrderServiceImpl implements OrderService {
     private final CouponMapper couponMapper;
     private final PromotionRuleMapper promotionRuleMapper;
     private final PromoService promoService;
+    private final ShopMapper shopMapper;
+    private final WsNotificationService wsNotificationService;
 
     @Override
     public OrderPreviewVO preview(Long uid, OrderPreviewDto dto) {
+        checkShopOpen();
         List<CartItem> cartItems = getSelectedCartItems(uid, dto.getCartItemIds());
         if (cartItems.isEmpty()) throw new BizException(ResultCode.BIZ_ERROR, "购物车为空");
 
@@ -161,6 +167,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String submit(Long uid, OrderSubmitDto dto) {
+        checkShopOpen();
         List<CartItem> cartItems = getSelectedCartItems(uid, dto.getCartItemIds());
         if (cartItems.isEmpty()) throw new BizException(ResultCode.BIZ_ERROR, "购物车为空");
 
@@ -278,6 +285,10 @@ public class OrderServiceImpl implements OrderService {
             syncProductFields(ci.getProductId());
         }
 
+        // 9. WebSocket通知商家端
+        String dtLabel = dto.getDeliveryType() == 1 ? "配送" : "自提";
+        wsNotificationService.notifyNewOrder(orderNo, payAmount.toPlainString(), dtLabel);
+
         return orderNo;
     }
 
@@ -347,7 +358,7 @@ public class OrderServiceImpl implements OrderService {
     public void remindShip(Long uid, String orderNo) {
         Order order = getOrderByNo(orderNo);
         if (!order.getUserId().equals(uid)) throw new BizException(ResultCode.ACCESS_DENIED);
-        // TODO: 推送提醒给商家
+        wsNotificationService.notifyRemindShip(orderNo);
         log.info("用户{}提醒发货，订单{}", uid, orderNo);
     }
 
@@ -401,6 +412,9 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.REFUNDING.getCode());
         orderMapper.updateById(order);
         addStatusLog(order.getId(), order.getStatus(), OrderStatus.REFUNDING.getCode(), 1, uid, "申请退款");
+
+        // WebSocket通知商家端
+        wsNotificationService.notifyRefundApply(order.getOrderNo(), order.getPayAmount().toPlainString());
     }
 
     @Override
@@ -573,6 +587,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     // ===== 私有方法 =====
+
+    private void checkShopOpen() {
+        Shop shop = shopMapper.selectOne(new LambdaQueryWrapper<Shop>().last("LIMIT 1"));
+        if (shop == null || shop.getIsOpen() == null || shop.getIsOpen() != 1) {
+            throw new BizException(ResultCode.SHOP_CLOSED);
+        }
+    }
 
     private Order getOrderByNo(String orderNo) {
         Order order = orderMapper.selectOne(

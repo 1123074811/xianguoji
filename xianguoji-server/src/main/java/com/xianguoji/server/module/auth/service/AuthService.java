@@ -5,6 +5,7 @@ import com.xianguoji.server.module.auth.dto.AdminResetPasswordDto;
 import com.xianguoji.server.module.auth.dto.SmsLoginDto;
 import com.xianguoji.server.module.auth.dto.SmsSendDto;
 import com.xianguoji.server.module.auth.dto.WechatLoginDto;
+import com.xianguoji.server.module.auth.dto.WechatQuickLoginDto;
 import com.xianguoji.server.module.auth.vo.LoginVO;
 
 public interface AuthService {
@@ -14,6 +15,8 @@ public interface AuthService {
     LoginVO smsLogin(SmsLoginDto dto);
 
     LoginVO wechatLogin(WechatLoginDto dto);
+
+    LoginVO quickWechatLogin(WechatQuickLoginDto dto);
 
     LoginVO adminLogin(AdminLoginDto dto);
 

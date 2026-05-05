@@ -6,6 +6,10 @@ server:
 spring:
   profiles:
     active: dev
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
@@ -49,6 +53,13 @@ xianguoji:
   upload:
     base-dir: D:/xianguoji/upload
     domain: http://127.0.0.1:8080/static
+  oss:
+    endpoint: ${ALIYUN_OSS_ENDPOINT:}
+    access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET:}
+    bucket: ${ALIYUN_OSS_BUCKET:}
+    # 自定义访问域名（可选，未配置时使用 https://{bucket}.{endpoint}）
+    domain:
   sms:
     provider: mock
   wechat:

@@ -25,7 +25,8 @@ public class CouponController {
     @Operation(summary = "当前可领券列表")
     @GetMapping("/api/pub/coupon/list")
     public R<List<CouponVO>> couponList() {
-        return R.ok(promoService.getAvailableCoupons());
+        Long uid = LoginContext.uidOptional();
+        return R.ok(promoService.getAvailableCoupons(uid));
     }
 
     @Operation(summary = "领取优惠券")

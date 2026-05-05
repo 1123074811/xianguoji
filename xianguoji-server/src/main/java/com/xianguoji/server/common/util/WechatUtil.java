@@ -3,6 +3,8 @@ package com.xianguoji.server.common.util;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.xianguoji.server.common.exception.BizException;
+import com.xianguoji.server.common.result.ResultCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -39,7 +41,7 @@ public class WechatUtil {
         if (errcode != null && errcode != 0) {
             String errmsg = json.getStr("errmsg", "unknown");
             log.error("[WechatUtil] code2Session failed: errcode={}, errmsg={}", errcode, errmsg);
-            throw new RuntimeException("微信登录失败: " + errmsg);
+            throw new BizException(ResultCode.THIRD_PARTY_ERROR, "微信登录失败: " + errmsg);
         }
         return json;
     }

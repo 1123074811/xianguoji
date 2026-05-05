@@ -15,6 +15,8 @@ public interface ReviewService {
 
     PageVO<ReviewVO> getProductReviews(Long productId, String filter, Integer page, Integer size);
 
+    PageVO<ReviewVO> getMyReviews(Long uid, Integer page, Integer size);
+
     ReviewSummaryVO getReviewSummary(Long productId);
 
     PageVO<ReviewVO> adminReviewPage(String filter, Integer page, Integer size);
