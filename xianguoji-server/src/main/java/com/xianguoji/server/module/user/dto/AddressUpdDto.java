@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class AddressUpdDto {
 
@@ -29,4 +31,8 @@ public class AddressUpdDto {
     private String tag;
 
     private Integer isDefault;
+
+    private BigDecimal longitude;
+
+    private BigDecimal latitude;
 }

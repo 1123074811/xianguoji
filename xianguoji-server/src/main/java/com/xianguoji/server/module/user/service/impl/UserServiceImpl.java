@@ -106,6 +106,8 @@ public class UserServiceImpl implements UserService {
         addr.setDetail(dto.getDetail());
         addr.setTag(dto.getTag());
         addr.setIsDefault(dto.getIsDefault() != null ? dto.getIsDefault() : 0);
+        addr.setLongitude(dto.getLongitude());
+        addr.setLatitude(dto.getLatitude());
         addressMapper.insert(addr);
     }
 
@@ -129,6 +131,8 @@ public class UserServiceImpl implements UserService {
         addr.setDetail(dto.getDetail());
         addr.setTag(dto.getTag());
         addr.setIsDefault(dto.getIsDefault());
+        addr.setLongitude(dto.getLongitude());
+        addr.setLatitude(dto.getLatitude());
         addressMapper.updateById(addr);
     }
 
