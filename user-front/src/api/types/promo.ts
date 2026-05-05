@@ -14,13 +14,10 @@ export interface CouponVO {
 export interface UserCouponVO {
   id: number;
   couponId: number;
-  name: string;
-  type: number;
-  amount: string;
-  threshold: string;
-  startTime: string;
-  endTime: string;
   status: 0 | 1 | 2;
+  expireAt: string;
+  coupon: CouponVO;
+  unavailableReason?: string;
 }
 export interface GroupBuyActivityVO {
   id: number;

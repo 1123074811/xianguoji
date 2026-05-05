@@ -102,13 +102,14 @@ function mapCoupon(coupon: CouponVO): CouponItem {
 }
 
 function mapUserCoupon(coupon: UserCouponVO): CouponItem {
+  const c = coupon.coupon;
   return {
     id: coupon.id,
     couponId: coupon.couponId,
-    amount: coupon.amount,
-    condition: buildCondition(coupon.threshold),
-    title: coupon.name,
-    time: buildTime(coupon.startTime, coupon.endTime),
+    amount: c?.amount || '0',
+    condition: buildCondition(c?.threshold || '0'),
+    title: c?.name || '',
+    time: c?.endTime ? buildTime(c.startTime, c.endTime) : buildTime(undefined, coupon.expireAt),
     status: currentTab.value,
   };
 }
