@@ -9,7 +9,13 @@
 
     <scroll-view scroll-y class="main-scroll">
       <view class="pickup-list">
-        <view v-for="point in points" :key="point.id" class="pickup-card card">
+        <view
+          v-for="point in points"
+          :key="point.id"
+          class="pickup-card card"
+          :class="{ selectable: selectMode }"
+          @tap="selectPoint(point)"
+        >
           <view class="left-info">
             <text class="name">{{ point.name }}</text>
             <text class="address">{{ point.address }}</text>
@@ -19,10 +25,10 @@
             </view>
           </view>
           <view class="right-actions">
-            <view class="icon-btn">
+            <view class="icon-btn" @tap.stop="openMap(point)">
               <svg-icon name="location" :size="40" color="#2E7D32" />
             </view>
-            <view class="icon-btn">
+            <view class="icon-btn" @tap.stop>
               <svg-icon name="chat" :size="40" color="#2E7D32" />
             </view>
           </view>
@@ -34,11 +40,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
 import SvgIcon from '@/components/svg-icon.vue';
 import { shopApi } from '@/api/modules/shop';
 import type { PickupPointVO } from '@/api/types/shop';
 
 const points = ref<PickupPointVO[]>([]);
+const selectMode = ref(false);
+
+onLoad((options: any) => {
+  selectMode.value = options?.select === '1';
+});
 
 onMounted(loadPickupPoints);
 
@@ -49,6 +61,28 @@ async function loadPickupPoints() {
     console.warn('自提点加载失败', e);
     points.value = [];
   }
+}
+
+function selectPoint(point: PickupPointVO) {
+  if (!selectMode.value) return;
+  const pages = getCurrentPages();
+  const prevPage = pages[pages.length - 2] as any;
+  if (prevPage?.$vm) {
+    prevPage.$vm.selectedPickupPoint = point;
+  }
+  uni.navigateBack();
+}
+
+function openMap(point: PickupPointVO) {
+  if (!point.latitude || !point.longitude) {
+    return uni.showToast({ title: '暂无位置信息', icon: 'none' });
+  }
+  uni.openLocation({
+    latitude: Number(point.latitude),
+    longitude: Number(point.longitude),
+    name: point.name,
+    address: point.address,
+  });
 }
 
 function isOpen(businessHours?: string): boolean {

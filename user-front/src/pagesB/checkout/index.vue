@@ -16,8 +16,8 @@
           @tap="deliveryType = 1"
         >
           <svg-icon name="shipping" :size="48" :color="deliveryType === 1 ? '#2E7D32' : '#BDBDBD'" />
-          <text class="label">外卖配送</text>
-          <text class="desc">最快 30 分钟送达</text>
+          <text class="label">快递配送</text>
+          <text class="desc">最快次日送达</text>
           <view v-if="deliveryType === 1" class="active-tag">已选</view>
         </view>
         <view 
@@ -48,7 +48,7 @@
         <view class="divider"></view>
         <view class="time-info">
           <view class="left">
-            <svg-icon name="star" :size="32" color="#2E7D32" />
+            <svg-icon name="schedule" :size="32" color="#2E7D32" />
             <text class="label">立即送达</text>
           </view>
           <text class="time">预计 {{ estimatedTime }} 送达</text>
@@ -95,8 +95,8 @@
       <view class="coupon-remark-card card">
         <view class="coupon-row" @tap="showCouponPicker">
           <view class="left">
-            <svg-icon name="star" :size="36" color="#BA1A1A" />
-            <text class="label">平台优惠券</text>
+            <svg-icon name="local_offer" :size="36" color="#E53935" />
+            <text class="label">优惠券</text>
           </view>
           <view class="right">
             <text class="coupon-avail">{{ usableCoupons.length }} 张可用</text>
@@ -149,6 +149,52 @@
       </view>
     </scroll-view>
 
+    <!-- Coupon Picker Popup -->
+    <view v-if="couponPickerVisible" class="coupon-mask" @tap="closeCouponPicker">
+      <view class="coupon-popup" @tap.stop>
+        <view class="popup-header">
+          <text class="popup-title">选择优惠券</text>
+          <view class="popup-close" @tap="closeCouponPicker">
+            <svg-icon name="close" :size="36" color="#757575" />
+          </view>
+        </view>
+        <scroll-view scroll-y class="popup-list">
+          <!-- No coupon option -->
+          <view class="coupon-item" :class="{ selected: !selectedCouponId }" @tap="selectCoupon(0)">
+            <view class="coupon-left no-discount">
+              <text class="no-amount">不使用</text>
+            </view>
+            <view class="coupon-right">
+              <text class="coupon-name">不使用优惠券</text>
+              <view v-if="!selectedCouponId" class="check-mark">
+                <svg-icon name="check" :size="28" color="#2E7D32" />
+              </view>
+            </view>
+          </view>
+          <view
+            v-for="c in usableCoupons"
+            :key="c.id"
+            class="coupon-item"
+            :class="{ selected: selectedCouponId === c.id, disabled: !!c.unavailableReason }"
+            @tap="!c.unavailableReason && selectCoupon(c.id)"
+          >
+            <view class="coupon-left">
+              <text class="coupon-symbol">¥</text>
+              <text class="coupon-amount">{{ c.coupon?.amount || '0' }}</text>
+            </view>
+            <view class="coupon-right">
+              <text class="coupon-name">{{ c.coupon?.name || '优惠券' }}</text>
+              <text class="coupon-condition">{{ Number(c.coupon?.threshold || 0) > 0 ? `满${c.coupon.threshold}元可用` : '无门槛' }}</text>
+              <text v-if="c.unavailableReason" class="coupon-reason">{{ c.unavailableReason }}</text>
+              <view v-if="selectedCouponId === c.id" class="check-mark">
+                <svg-icon name="check" :size="28" color="#2E7D32" />
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+
     <!-- Bottom Bar -->
     <view class="bottom-bar">
       <view v-if="!shopOpen" class="closed-bar-tip">
@@ -169,6 +215,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import { useAppStore } from '@/stores/app';
 import { orderApi } from '@/api/modules/order';
 import { promoApi } from '@/api/modules/promo';
@@ -184,6 +231,7 @@ const remark = ref('');
 const preview = ref<OrderPreviewVO | null>(null);
 const selectedCouponId = ref<number | undefined>();
 const usableCoupons = ref<UserCouponVO[]>([]);
+const couponPickerVisible = ref(false);
 const submitLoading = ref(false);
 const routeOptions = ref<Record<string, string>>({});
 
@@ -244,6 +292,34 @@ onMounted(() => {
   loadPreview();
 });
 
+// When returning from address/pickup page, reload preview with selected address or pickup point
+onShow(() => {
+  const pages = getCurrentPages();
+  const page = pages[pages.length - 1] as any;
+
+  const selectedAddress = page?.$vm?.selectedAddress;
+  if (selectedAddress) {
+    const addr = {
+      id: selectedAddress.id,
+      consignee: selectedAddress.consignee,
+      phone: selectedAddress.phone,
+      fullAddress: `${selectedAddress.province}${selectedAddress.city}${selectedAddress.district}${selectedAddress.detail}`,
+    };
+    if (!preview.value) preview.value = {} as OrderPreviewVO;
+    preview.value.address = addr;
+    page.$vm.selectedAddress = null;
+    loadPreview();
+  }
+
+  const selectedPickupPoint = page?.$vm?.selectedPickupPoint;
+  if (selectedPickupPoint) {
+    if (!preview.value) preview.value = {} as OrderPreviewVO;
+    preview.value.pickupPoint = selectedPickupPoint;
+    page.$vm.selectedPickupPoint = null;
+    loadPreview();
+  }
+});
+
 watch(deliveryType, () => {
   loadPreview();
 });
@@ -252,13 +328,21 @@ async function showCouponPicker() {
   if (!usableCoupons.value.length) {
     return uni.showToast({ title: '暂无可用优惠券', icon: 'none' });
   }
-  uni.showActionSheet({
-    itemList: usableCoupons.value.map(c => `${c.name} - ¥${c.amount}`),
-    success: async (res) => {
-      selectedCouponId.value = usableCoupons.value[res.tapIndex]?.id;
-      await loadPreview();
-    }
-  });
+  couponPickerVisible.value = true;
+}
+
+function closeCouponPicker() {
+  couponPickerVisible.value = false;
+}
+
+async function selectCoupon(couponId: number) {
+  if (couponId === 0) {
+    selectedCouponId.value = undefined;
+  } else {
+    selectedCouponId.value = couponId;
+  }
+  closeCouponPicker();
+  await loadPreview();
 }
 
 function goBack() {
@@ -275,6 +359,13 @@ function goToPickupPoint() {
 
 async function submitOrder() {
   if (submitLoading.value) return;
+  // Validate address/pickup point before submit
+  if (deliveryType.value === 1 && !preview.value?.address?.id) {
+    return uni.showToast({ title: '请选择收货地址', icon: 'none' });
+  }
+  if (deliveryType.value === 2 && !preview.value?.pickupPoint?.id) {
+    return uni.showToast({ title: '请选择自提点', icon: 'none' });
+  }
   submitLoading.value = true;
   uni.showLoading({ title: '提交中' });
   try {
@@ -771,6 +862,139 @@ async function submitOrder() {
     &.disabled {
       background-color: #BDBDBD;
       color: #ffffff;
+    }
+  }
+}
+
+.coupon-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+}
+
+.coupon-popup {
+  width: 100%;
+  max-height: 70vh;
+  background-color: #ffffff;
+  border-radius: $radius-lg $radius-lg 0 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+
+  .popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $space-4;
+    border-bottom: 2rpx solid $color-divider;
+
+    .popup-title {
+      font-size: $font-lg;
+      font-weight: $weight-semibold;
+      color: $color-text-primary;
+    }
+
+    .popup-close {
+      padding: $space-1;
+    }
+  }
+
+  .popup-list {
+    max-height: 60vh;
+    padding: $space-3 $space-4;
+  }
+
+  .coupon-item {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: $space-3;
+    border-radius: $radius-md;
+    overflow: hidden;
+    border: 2rpx solid $color-divider;
+    transition: all 0.2s;
+
+    &.selected {
+      border-color: $color-primary;
+      background-color: rgba($color-primary, 0.02);
+    }
+
+    &.disabled {
+      opacity: 0.5;
+    }
+
+    .coupon-left {
+      width: 180rpx;
+      min-height: 160rpx;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 2rpx;
+      background: linear-gradient(135deg, #E53935, #FF7043);
+      color: #ffffff;
+      position: relative;
+      flex-shrink: 0;
+
+      &.no-discount {
+        background: linear-gradient(135deg, #9E9E9E, #BDBDBD);
+      }
+
+      .coupon-symbol {
+        font-size: $font-base;
+        font-weight: $weight-semibold;
+        line-height: 1;
+        margin-bottom: 6rpx;
+      }
+
+      .coupon-amount {
+        font-size: 56rpx;
+        font-weight: bold;
+        line-height: 1;
+      }
+
+      .no-amount {
+        font-size: $font-base;
+        font-weight: $weight-semibold;
+      }
+    }
+
+    .coupon-right {
+      flex: 1;
+      padding: $space-3 $space-4;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4rpx;
+      position: relative;
+
+      .coupon-name {
+        font-size: $font-base;
+        font-weight: $weight-semibold;
+        color: $color-text-primary;
+      }
+
+      .coupon-condition {
+        font-size: $font-xs;
+        color: $color-text-secondary;
+      }
+
+      .coupon-reason {
+        font-size: $font-xs;
+        color: $color-price;
+      }
+
+      .check-mark {
+        position: absolute;
+        top: $space-3;
+        right: $space-3;
+      }
     }
   }
 }
