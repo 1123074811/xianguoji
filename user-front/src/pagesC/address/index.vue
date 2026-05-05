@@ -31,6 +31,18 @@
       <view class="form-section">
         <view class="form-title">新增收货地址</view>
 
+        <!-- Quick Import Buttons -->
+        <view class="quick-import-row">
+          <button class="import-btn wechat" @tap="importWxAddress">
+            <svg-icon name="wechat" :size="28" color="#07C160" />
+            <text>微信地址导入</text>
+          </button>
+          <button class="import-btn locate" @tap="getLocation">
+            <svg-icon name="location" :size="28" color="#2E7D32" />
+            <text>定位当前地址</text>
+          </button>
+        </view>
+
         <!-- Paste Import -->
         <view class="paste-row">
           <textarea
@@ -58,12 +70,7 @@
         </view>
         <view class="form-item">
           <text class="label">所在地区</text>
-          <view class="region-row">
-            <region-picker v-model="newAddr.region" placeholder="请选择省/市/区" @change="onRegionChange" class="region-picker-wrap" />
-            <view class="locate-btn" @tap="getLocation">
-              <svg-icon name="location" :size="32" color="#2E7D32" />
-            </view>
-          </view>
+          <region-picker v-model="newAddr.region" placeholder="请选择省/市/区" @change="onRegionChange" />
         </view>
         <view class="form-item">
           <text class="label">详细地址</text>
@@ -265,86 +272,38 @@ function matchRegionFromData(regionStr: string) {
   return null;
 }
 
-/** Get current location via map picker */
-function getLocation() {
-  uni.chooseLocation({
+/** Import address from WeChat payment address book */
+function importWxAddress() {
+  uni.chooseAddress({
     success(res: any) {
-      const province = res.province || '';
-      const city = res.city || '';
-      const district = res.district || '';
-      if (province && city) {
-        newAddr.value.province = province;
-        newAddr.value.city = city;
-        newAddr.value.district = district;
-        newAddr.value.region = `${province}/${city}/${district}`;
-        newAddr.value.longitude = res.longitude;
-        newAddr.value.latitude = res.latitude;
-        if (res.address) {
-          const detailAddr = res.address
-            .replace(province, '')
-            .replace(city, '')
-            .replace(district, '')
-            .replace(/^[\s,，、]+/, '');
-          if (detailAddr && !newAddr.value.detail) {
-            newAddr.value.detail = detailAddr || res.name || '';
-          }
-        }
-        uni.showToast({ title: '定位成功', icon: 'success' });
-      }
+      newAddr.value.consignee = res.userName || '';
+      newAddr.value.phone = res.telNumber || '';
+      newAddr.value.province = res.provinceName || '';
+      newAddr.value.city = res.cityName || '';
+      newAddr.value.district = res.countyName || '';
+      newAddr.value.region = `${res.provinceName || ''}/${res.cityName || ''}/${res.countyName || ''}`;
+      newAddr.value.detail = res.detailInfo || '';
+      newAddr.value.isDefault = false;
+      uni.showToast({ title: '导入成功', icon: 'success' });
     },
     fail(err: any) {
-      const msg = err.errMsg || '';
-      // User cancelled - do nothing
-      if (msg.includes('cancel')) return;
-      // chooseLocation may not work in dev tools, fallback to getLocation + reverse geocode
-      fallbackGetLocation();
+      if (err.errMsg?.includes('cancel')) return;
+      uni.showToast({ title: '获取微信地址失败', icon: 'none' });
     },
   });
 }
 
-/** Fallback: getLocation + reverse geocode via Tencent Map */
-function fallbackGetLocation() {
+/** Get current location and fill address via reverse geocode */
+function getLocation() {
+  uni.showLoading({ title: '定位中...' });
   uni.getLocation({
     type: 'gcj02',
     success(loc) {
-      uni.request({
-        url: 'https://apis.map.qq.com/ws/geocoder/v1/',
-        data: {
-          location: `${loc.latitude},${loc.longitude}`,
-          key: import.meta.env.VITE_TENCENT_MAP_KEY,
-          get_poi: 0,
-        },
-        success(res: any) {
-          const data = res.data?.result;
-          if (data?.address_component) {
-            const comp = data.address_component;
-            const province = comp.province || '';
-            const city = comp.city || '';
-            const district = comp.district || '';
-            if (province && city) {
-              newAddr.value.province = province;
-              newAddr.value.city = city;
-              newAddr.value.district = district;
-              newAddr.value.region = `${province}/${city}/${district}`;
-              newAddr.value.longitude = loc.longitude;
-              newAddr.value.latitude = loc.latitude;
-              if (data.address && !newAddr.value.detail) {
-                const street = data.address.replace(province + city + district, '').replace(/^[\s,，、]+/, '');
-                newAddr.value.detail = street;
-              }
-              uni.showToast({ title: '定位成功', icon: 'success' });
-            }
-          } else {
-            uni.showToast({ title: '解析地址失败', icon: 'none' });
-          }
-        },
-        fail() {
-          uni.showToast({ title: '逆地理编码失败', icon: 'none' });
-        },
-      });
+      uni.hideLoading();
+      reverseGeocode(loc.latitude, loc.longitude);
     },
     fail() {
-      // getLocation also failed - check authorization
+      uni.hideLoading();
       uni.showModal({
         title: '位置授权',
         content: '需要获取您的位置信息来填充所在地区，是否前往设置开启？',
@@ -353,13 +312,52 @@ function fallbackGetLocation() {
             uni.openSetting({
               success(settingRes: any) {
                 if (settingRes.authSetting?.['scope.userLocation']) {
-                  setTimeout(() => fallbackGetLocation(), 300);
+                  setTimeout(() => getLocation(), 300);
                 }
               },
             });
           }
         },
       });
+    },
+  });
+}
+
+/** Reverse geocode coordinates to address via Tencent Map */
+function reverseGeocode(latitude: number, longitude: number) {
+  uni.request({
+    url: 'https://apis.map.qq.com/ws/geocoder/v1/',
+    data: {
+      location: `${latitude},${longitude}`,
+      key: import.meta.env.VITE_TENCENT_MAP_KEY,
+      get_poi: 0,
+    },
+    success(res: any) {
+      const data = res.data?.result;
+      if (data?.address_component) {
+        const comp = data.address_component;
+        const province = comp.province || '';
+        const city = comp.city || '';
+        const district = comp.district || '';
+        if (province && city) {
+          newAddr.value.province = province;
+          newAddr.value.city = city;
+          newAddr.value.district = district;
+          newAddr.value.region = `${province}/${city}/${district}`;
+          newAddr.value.longitude = longitude;
+          newAddr.value.latitude = latitude;
+          if (data.address && !newAddr.value.detail) {
+            const street = data.address.replace(province + city + district, '').replace(/^[\s,，、]+/, '');
+            newAddr.value.detail = street;
+          }
+          uni.showToast({ title: '定位成功', icon: 'success' });
+        }
+      } else {
+        uni.showToast({ title: '解析地址失败', icon: 'none' });
+      }
+    },
+    fail() {
+      uni.showToast({ title: '逆地理编码失败', icon: 'none' });
     },
   });
 }
@@ -494,6 +492,41 @@ async function handleSave() {
   }
 }
 
+.quick-import-row {
+  display: flex;
+  gap: $space-3;
+  margin-bottom: $space-4;
+
+  .import-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-1;
+    height: 72rpx;
+    border-radius: $radius-sm;
+    font-size: $font-sm;
+    font-weight: $weight-semibold;
+    &::after { border: none; }
+
+    .import-icon {
+      font-size: $font-md;
+    }
+
+    &.wechat {
+      background-color: rgba(7, 193, 96, 0.1);
+      color: #07C160;
+      border: 2rpx solid rgba(7, 193, 96, 0.3);
+    }
+
+    &.locate {
+      background-color: rgba($color-primary, 0.08);
+      color: $color-primary;
+      border: 2rpx solid rgba($color-primary, 0.3);
+    }
+  }
+}
+
 .paste-row {
   display: flex;
   gap: $space-2;
@@ -504,11 +537,11 @@ async function handleSave() {
     background-color: #ffffff;
     border: 2rpx solid $color-divider;
     border-radius: $radius-sm;
-    padding: $space-2 $space-3;
-    font-size: $font-xs;
-    height: 200rpx;
+    padding: $space-3;
+    font-size: $font-sm;
+    height: 240rpx;
     width: auto;
-    line-height: 1.6;
+    line-height: 1.8;
   }
 
   .paste-btn-wrap {
@@ -575,26 +608,6 @@ async function handleSave() {
   }
 }
 
-.region-row {
-  display: flex;
-  align-items: center;
-  gap: $space-2;
-
-  .region-picker-wrap {
-    flex: 1;
-  }
-
-  .locate-btn {
-    width: 80rpx;
-    height: 80rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba($color-primary, 0.08);
-    border-radius: $radius-sm;
-    flex-shrink: 0;
-  }
-}
 
 .switch-row {
   display: flex;
