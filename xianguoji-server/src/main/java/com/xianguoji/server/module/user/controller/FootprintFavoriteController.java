@@ -47,6 +47,28 @@ public class FootprintFavoriteController {
         return R.ok(new PageVO<>(p.getTotal(), voList, page, size));
     }
 
+    @Operation(summary = "记录足迹")
+    @PostMapping("/footprint/{productId}")
+    @LoginRequired
+    public R<Void> addFootprint(@PathVariable Long productId) {
+        Long uid = LoginContext.uid();
+        Footprint existing = footprintMapper.selectOne(
+                new LambdaQueryWrapper<Footprint>()
+                        .eq(Footprint::getUserId, uid)
+                        .eq(Footprint::getProductId, productId));
+        if (existing != null) {
+            existing.setViewedAt(LocalDateTime.now());
+            footprintMapper.updateById(existing);
+        } else {
+            Footprint fp = new Footprint();
+            fp.setUserId(uid);
+            fp.setProductId(productId);
+            fp.setViewedAt(LocalDateTime.now());
+            footprintMapper.insert(fp);
+        }
+        return R.ok();
+    }
+
     @Operation(summary = "清空足迹")
     @DeleteMapping("/footprint")
     @LoginRequired

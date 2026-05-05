@@ -6,6 +6,7 @@ import com.xianguoji.server.common.result.R;
 import com.xianguoji.server.module.shop.entity.AdminNotification;
 import com.xianguoji.server.module.shop.entity.DeliverySetting;
 import com.xianguoji.server.module.shop.entity.NotifySetting;
+import com.xianguoji.server.common.cache.PickupGeoService;
 import com.xianguoji.server.module.shop.entity.PickupPoint;
 import com.xianguoji.server.module.shop.entity.Shop;
 import com.xianguoji.server.module.shop.mapper.AdminNotificationMapper;
@@ -16,6 +17,7 @@ import com.xianguoji.server.module.shop.mapper.ShopMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +31,7 @@ public class AdminShopController {
 
     private final ShopMapper shopMapper;
     private final PickupPointMapper pickupPointMapper;
+    private final PickupGeoService pickupGeoService;
     private final DeliverySettingMapper deliverySettingMapper;
     private final NotifySettingMapper notifySettingMapper;
     private final AdminNotificationMapper adminNotificationMapper;
@@ -44,6 +47,7 @@ public class AdminShopController {
     @Operation(summary = "修改店铺信息")
     @PutMapping("/shop/info")
     @AdminRequired
+    @CacheEvict(value = "shop", allEntries = true)
     public R<Void> updateShopInfo(@RequestBody Shop dto) {
         Shop shop = shopMapper.selectOne(new LambdaQueryWrapper<Shop>().last("LIMIT 1"));
         if (shop == null) return R.fail(4040, "店铺不存在");
@@ -55,6 +59,7 @@ public class AdminShopController {
     @Operation(summary = "切换营业状态")
     @PutMapping("/shop/open-status")
     @AdminRequired
+    @CacheEvict(value = "shop", allEntries = true)
     public R<Void> toggleOpenStatus(@RequestBody Map<String, Integer> body) {
         Shop shop = shopMapper.selectOne(new LambdaQueryWrapper<Shop>().last("LIMIT 1"));
         if (shop == null) return R.fail(4040, "店铺不存在");
@@ -76,6 +81,7 @@ public class AdminShopController {
     @AdminRequired
     public R<Void> addPickupPoint(@RequestBody PickupPoint dto) {
         pickupPointMapper.insert(dto);
+        pickupGeoService.rebuildGeoIndex();
         return R.ok();
     }
 
@@ -85,6 +91,7 @@ public class AdminShopController {
     public R<Void> updatePickupPoint(@PathVariable Long id, @RequestBody PickupPoint dto) {
         dto.setId(id);
         pickupPointMapper.updateById(dto);
+        pickupGeoService.rebuildGeoIndex();
         return R.ok();
     }
 
@@ -93,6 +100,7 @@ public class AdminShopController {
     @AdminRequired
     public R<Void> deletePickupPoint(@PathVariable Long id) {
         pickupPointMapper.deleteById(id);
+        pickupGeoService.rebuildGeoIndex();
         return R.ok();
     }
 

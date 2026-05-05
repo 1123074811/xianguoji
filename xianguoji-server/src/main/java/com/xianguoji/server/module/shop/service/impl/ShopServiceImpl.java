@@ -14,6 +14,8 @@ import com.xianguoji.server.module.shop.vo.DeliverySettingVO;
 import com.xianguoji.server.module.shop.vo.PickupPointVO;
 import com.xianguoji.server.module.shop.vo.ShopVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,6 +29,7 @@ public class ShopServiceImpl implements ShopService {
     private final DeliverySettingMapper deliverySettingMapper;
 
     @Override
+    @Cacheable(value = "shop", key = "'info'")
     public ShopVO getShopInfo() {
         Shop shop = shopMapper.selectOne(new LambdaQueryWrapper<Shop>().last("LIMIT 1"));
         if (shop == null) throw new BizException(ResultCode.NOT_FOUND, "店铺信息不存在");
