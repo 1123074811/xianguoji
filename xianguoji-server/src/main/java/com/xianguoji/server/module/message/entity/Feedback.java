@@ -1,9 +1,6 @@
 package com.xianguoji.server.module.message.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.Data;
 
@@ -23,5 +20,10 @@ public class Feedback {
     private List<String> images;
     private String contact;
     private Integer status;
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
+    @TableField(fill = FieldFill.INSERT)
+    private Long createBy;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Long updateBy;
 }

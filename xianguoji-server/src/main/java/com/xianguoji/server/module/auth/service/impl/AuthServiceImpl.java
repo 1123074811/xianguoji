@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xianguoji.server.common.annotation.RateLimit;
 import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.ResultCode;
+import com.xianguoji.server.common.security.JwtBlacklistManager;
 import com.xianguoji.server.common.security.JwtUtil;
 import com.xianguoji.server.common.util.SmsUtil;
 import com.xianguoji.server.common.util.WechatUtil;
@@ -39,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final StaffMapper staffMapper;
     private final JwtUtil jwtUtil;
+    private final JwtBlacklistManager jwtBlacklistManager;
     private final SmsUtil smsUtil;
     private final WechatUtil wechatUtil;
 
@@ -120,6 +122,9 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtUtil.issueUserToken(user.getId());
         LocalDateTime expireAt = LocalDateTime.now().plusHours(168);
 
+        // P2-8: 注册活跃 token
+        jwtBlacklistManager.registerActiveToken(token, user.getId(), 168 * 3600_000L);
+
         return LoginVO.builder()
                 .token(token)
                 .expireAt(expireAt)
@@ -159,6 +164,10 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtUtil.issueUserToken(user.getId());
         LocalDateTime expireAt = LocalDateTime.now().plusHours(168);
+
+        // P2-8: 注册活跃 token
+        jwtBlacklistManager.registerActiveToken(token, user.getId(), 168 * 3600_000L);
+
         return LoginVO.builder()
                 .token(token)
                 .expireAt(expireAt)
@@ -218,6 +227,9 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtUtil.issueUserToken(user.getId());
         LocalDateTime expireAt = LocalDateTime.now().plusHours(168);
 
+        // P2-8: 注册活跃 token
+        jwtBlacklistManager.registerActiveToken(token, user.getId(), 168 * 3600_000L);
+
         return LoginVO.builder()
                 .token(token)
                 .expireAt(expireAt)
@@ -257,6 +269,9 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtUtil.issueAdminToken(staff.getId(), staff.getRole());
         LocalDateTime expireAt = LocalDateTime.now().plusHours(12);
+
+        // P2-8: 注册活跃 token
+        jwtBlacklistManager.registerActiveToken(token, staff.getId(), 12 * 3600_000L);
 
         return LoginVO.builder()
                 .token(token)

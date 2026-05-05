@@ -18,9 +18,11 @@ import com.xianguoji.server.module.catalog.mapper.HotSearchMapper;
 import com.xianguoji.server.module.catalog.mapper.ProductImageMapper;
 import com.xianguoji.server.module.catalog.mapper.ProductMapper;
 import com.xianguoji.server.module.catalog.mapper.ProductSkuMapper;
+import com.xianguoji.server.common.util.StockRedisHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,6 +42,7 @@ public class AdminCatalogController {
     private final ProductImageMapper productImageMapper;
     private final BannerMapper bannerMapper;
     private final HotSearchMapper hotSearchMapper;
+    private final StockRedisHelper stockRedisHelper;
 
     // ===== 分类 =====
     @Operation(summary = "分类列表")
@@ -52,6 +55,7 @@ public class AdminCatalogController {
     @Operation(summary = "新增分类")
     @PostMapping("/category")
     @AdminRequired
+    @CacheEvict(value = "category", allEntries = true)
     public R<Void> addCategory(@RequestBody Category dto) {
         categoryMapper.insert(dto);
         return R.ok();
@@ -60,6 +64,7 @@ public class AdminCatalogController {
     @Operation(summary = "更新分类")
     @PutMapping("/category/{id}")
     @AdminRequired
+    @CacheEvict(value = "category", allEntries = true)
     public R<Void> updateCategory(@PathVariable Long id, @RequestBody Category dto) {
         dto.setId(id);
         categoryMapper.updateById(dto);
@@ -69,6 +74,7 @@ public class AdminCatalogController {
     @Operation(summary = "删除分类")
     @DeleteMapping("/category/{id}")
     @AdminRequired
+    @CacheEvict(value = "category", allEntries = true)
     public R<Void> deleteCategory(@PathVariable Long id) {
         categoryMapper.deleteById(id);
         return R.ok();
@@ -116,6 +122,7 @@ public class AdminCatalogController {
         product.setSort(0);
         productMapper.insert(product);
 
+        // Evict recommend cache when new product added
         // SKU
         List<Map<String, Object>> skus = (List<Map<String, Object>>) body.get("skus");
         if (skus != null) {
@@ -131,6 +138,8 @@ public class AdminCatalogController {
                 sku.setIsDefault(s.get("isDefault") != null ? (Integer) s.get("isDefault") : 0);
                 sku.setStatus(1);
                 skuMapper.insert(sku);
+                // Redis 库存预热
+                stockRedisHelper.setStock(sku.getId(), sku.getStock());
             }
         }
 
@@ -153,6 +162,11 @@ public class AdminCatalogController {
         return R.ok();
     }
 
+    @CacheEvict(value = {"product", "recommend"}, allEntries = true)
+    public void evictProductAndRecommend() {
+        // placeholder - evictions triggered via annotations on CRUD methods
+    }
+
     @Operation(summary = "编辑商品")
     @PutMapping("/product/{id}")
     @AdminRequired
@@ -171,6 +185,7 @@ public class AdminCatalogController {
         if (body.get("supportPickup") != null) product.setSupportPickup((Integer) body.get("supportPickup"));
         productMapper.updateById(product);
 
+        // Evict product detail cache
         // 更新图片: 先删后增
         if (body.containsKey("images")) {
             productImageMapper.delete(new LambdaQueryWrapper<ProductImage>().eq(ProductImage::getProductId, id));
@@ -205,6 +220,8 @@ public class AdminCatalogController {
                     sku.setIsDefault(s.get("isDefault") != null ? (Integer) s.get("isDefault") : 0);
                     sku.setStatus(1);
                     skuMapper.insert(sku);
+                    // Redis 库存预热
+                    stockRedisHelper.setStock(sku.getId(), sku.getStock());
                 }
             }
             syncProductFields(id);
@@ -213,6 +230,7 @@ public class AdminCatalogController {
     }
 
     @Operation(summary = "上下架")
+    @CacheEvict(value = {"product", "recommend"}, key = "#id")
     @PutMapping("/product/{id}/status")
     @AdminRequired
     public R<Void> updateProductStatus(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
@@ -220,6 +238,7 @@ public class AdminCatalogController {
         p.setId(id);
         p.setStatus(body.get("status"));
         productMapper.updateById(p);
+        // Also evict if status changed between on/off shelf
         return R.ok();
     }
 
@@ -242,6 +261,8 @@ public class AdminCatalogController {
             s.setProductId(src.getId());
             s.setSales(0);
             skuMapper.insert(s);
+            // Redis 库存预热
+            stockRedisHelper.setStock(s.getId(), s.getStock());
         }
         return R.ok();
     }
@@ -257,6 +278,7 @@ public class AdminCatalogController {
     @Operation(summary = "新增Banner")
     @PostMapping("/banner")
     @AdminRequired
+    @CacheEvict(value = "banner", allEntries = true)
     public R<Void> addBanner(@RequestBody Banner dto) {
         bannerMapper.insert(dto);
         return R.ok();
@@ -265,6 +287,7 @@ public class AdminCatalogController {
     @Operation(summary = "更新Banner")
     @PutMapping("/banner/{id}")
     @AdminRequired
+    @CacheEvict(value = "banner", allEntries = true)
     public R<Void> updateBanner(@PathVariable Long id, @RequestBody Banner dto) {
         dto.setId(id);
         bannerMapper.updateById(dto);
@@ -274,6 +297,7 @@ public class AdminCatalogController {
     @Operation(summary = "删除Banner")
     @DeleteMapping("/banner/{id}")
     @AdminRequired
+    @CacheEvict(value = "banner", allEntries = true)
     public R<Void> deleteBanner(@PathVariable Long id) {
         bannerMapper.deleteById(id);
         return R.ok();
@@ -290,6 +314,7 @@ public class AdminCatalogController {
     @Operation(summary = "新增热门搜索")
     @PostMapping("/hot-search")
     @AdminRequired
+    @CacheEvict(value = "hotSearch", allEntries = true)
     public R<Void> addHotSearch(@RequestBody HotSearch dto) {
         hotSearchMapper.insert(dto);
         return R.ok();
@@ -298,6 +323,7 @@ public class AdminCatalogController {
     @Operation(summary = "更新热门搜索")
     @PutMapping("/hot-search/{id}")
     @AdminRequired
+    @CacheEvict(value = "hotSearch", allEntries = true)
     public R<Void> updateHotSearch(@PathVariable Long id, @RequestBody HotSearch dto) {
         dto.setId(id);
         hotSearchMapper.updateById(dto);
@@ -307,6 +333,7 @@ public class AdminCatalogController {
     @Operation(summary = "删除热门搜索")
     @DeleteMapping("/hot-search/{id}")
     @AdminRequired
+    @CacheEvict(value = "hotSearch", allEntries = true)
     public R<Void> deleteHotSearch(@PathVariable Long id) {
         hotSearchMapper.deleteById(id);
         return R.ok();

@@ -1,6 +1,7 @@
 package com.xianguoji.server.module.catalog.controller;
 
 import com.xianguoji.server.common.annotation.LoginRequired;
+import com.xianguoji.server.common.cache.ProductUvService;
 import com.xianguoji.server.common.result.PageVO;
 import com.xianguoji.server.common.result.R;
 import com.xianguoji.server.common.security.LoginContext;
@@ -24,6 +25,7 @@ public class CatalogController {
 
     private final CatalogService catalogService;
     private final SearchHistoryMapper searchHistoryMapper;
+    private final ProductUvService productUvService;
 
     @Operation(summary = "分类树")
     @GetMapping("/api/pub/category/tree")
@@ -58,6 +60,11 @@ public class CatalogController {
     @Operation(summary = "商品详情")
     @GetMapping("/api/pub/product/{id}")
     public R<ProductDetailVO> productDetail(@PathVariable Long id) {
+        // P1-7: UV 必须放在缓存外，否则缓存命中后无法记录
+        try {
+            Long uid = LoginContext.uid();
+            if (uid != null) productUvService.recordUv(id, uid);
+        } catch (Exception ignored) {}
         return R.ok(catalogService.getProductDetail(id));
     }
 

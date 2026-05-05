@@ -3,6 +3,8 @@ package com.xianguoji.server.module.auth.controller;
 import com.xianguoji.server.common.annotation.AdminRequired;
 import com.xianguoji.server.common.annotation.LoginRequired;
 import com.xianguoji.server.common.result.R;
+import com.xianguoji.server.common.security.JwtBlacklistManager;
+import com.xianguoji.server.common.security.JwtUtil;
 import com.xianguoji.server.common.security.LoginContext;
 import com.xianguoji.server.module.auth.dto.AdminLoginDto;
 import com.xianguoji.server.module.auth.dto.AdminResetPasswordDto;
@@ -16,6 +18,7 @@ import com.xianguoji.server.module.staff.entity.Staff;
 import com.xianguoji.server.module.staff.mapper.StaffMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +30,8 @@ public class AuthController {
 
     private final AuthService authService;
     private final StaffMapper staffMapper;
+    private final JwtBlacklistManager jwtBlacklistManager;
+    private final JwtUtil jwtUtil;
 
     @Operation(summary = "发送验证码")
     @PostMapping("/api/pub/auth/sms/send")
@@ -56,8 +61,13 @@ public class AuthController {
     @Operation(summary = "用户退出登录")
     @PostMapping("/api/u/auth/logout")
     @LoginRequired
-    public R<Void> userLogout() {
-        // JWT 无状态，客户端删除 token 即可
+    public R<Void> userLogout(HttpServletRequest request) {
+        String token = extractToken(request);
+        if (token != null) {
+            var claims = jwtUtil.parse(token);
+            long remainMs = claims.getExpiration().getTime() - System.currentTimeMillis();
+            jwtBlacklistManager.blacklist(token, remainMs);
+        }
         return R.ok();
     }
 
@@ -77,7 +87,13 @@ public class AuthController {
     @Operation(summary = "商家退出")
     @PostMapping("/api/admin/auth/logout")
     @AdminRequired
-    public R<Void> adminLogout() {
+    public R<Void> adminLogout(HttpServletRequest request) {
+        String token = extractToken(request);
+        if (token != null) {
+            var claims = jwtUtil.parse(token);
+            long remainMs = claims.getExpiration().getTime() - System.currentTimeMillis();
+            jwtBlacklistManager.blacklist(token, remainMs);
+        }
         return R.ok();
     }
 
@@ -99,5 +115,13 @@ public class AuthController {
                 .staffRole(staff.getRole())
                 .build();
         return R.ok(vo);
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
+        }
+        return request.getHeader("token");
     }
 }
