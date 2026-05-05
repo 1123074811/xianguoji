@@ -28,7 +28,7 @@
           <span class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center" :class="iconWrapClass">
             <span class="material-symbols-outlined text-sm" :class="iconColorClass">{{ icon }}</span>
           </span>
-          <div class="flex-1 min-w-0">
+          <div class="flex-1 min-w-0 text-left">
             <p v-if="title" class="font-label-bold text-slate-800 text-sm mb-0.5">{{ title }}</p>
             <p class="text-[11px] text-slate-500 leading-relaxed">{{ message }}</p>
           </div>
@@ -151,8 +151,8 @@ const positionClass = computed(() => {
 const arrowClass = computed(() => {
   switch (props.placement) {
     case 'bottom': return 'top-[-5px] left-1/2 -translate-x-1/2 border-t border-l'
-    case 'left': return 'right-[-5px] top-1/2 -translate-y-1/2 border-t border-l'
-    case 'right': return 'left-[-5px] top-1/2 -translate-y-1/2 border-r border-b'
+    case 'left': return 'right-[-5px] top-1/2 -translate-y-1/2 border-t border-r'
+    case 'right': return 'left-[-5px] top-1/2 -translate-y-1/2 border-b border-l'
     case 'top':
     default: return 'bottom-[-5px] left-1/2 -translate-x-1/2 border-r border-b'
   }

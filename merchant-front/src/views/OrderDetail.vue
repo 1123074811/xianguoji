@@ -121,6 +121,9 @@
       <PopInput v-if="order.deliveryType === 2 && order.status === 2" title="核销自提码" message="请输入用户出示的自提码进行核销。" placeholder="输入自提码" type="info" confirm-text="核销" placement="top" @confirm="onPickupVerify($event)">
         <button class="px-10 py-2.5 rounded-lg bg-primary text-white font-label-bold shadow-md">核销自提码</button>
       </PopInput>
+      <Popconfirm v-if="order.status === 3" title="确认送达" :message="`确认订单 ${order.orderNo} 已送达？`" type="info" confirm-text="确认" placement="top" @confirm="onComplete">
+        <button class="px-10 py-2.5 rounded-lg bg-primary text-white font-label-bold shadow-md hover:bg-primary-container">确认送达</button>
+      </Popconfirm>
     </div>
   </div>
   <div v-else class="text-center text-slate-400 py-20">{{ loadError ? '加载失败' : '加载中...' }}</div>
@@ -133,6 +136,7 @@ import { adminOrderApi } from '@/api/modules/order';
 import type { AdminOrderVO } from '@/api/types/order';
 import { resolveImageUrl } from '@/utils/image';
 import PopInput from '@/components/PopInput.vue';
+import Popconfirm from '@/components/Popconfirm.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -197,6 +201,11 @@ async function onShip() {
 async function onPickupVerify(code: string) {
   if (!order.value) return;
   await adminOrderApi.pickupVerify(order.value.orderNo, code);
+  await load();
+}
+async function onComplete() {
+  if (!order.value) return;
+  await adminOrderApi.complete(order.value.orderNo);
   await load();
 }
 

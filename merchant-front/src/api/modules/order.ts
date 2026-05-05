@@ -25,6 +25,9 @@ export const adminOrderApi = {
       data: { pickupCode },
     }),
 
+  complete: (orderNo: string) =>
+    request<void>({ url: `/api/admin/order/${orderNo}/complete`, method: 'POST' }),
+
   print: (orderNo: string) =>
     request<any>({ url: `/api/admin/order/${orderNo}/print`, method: 'POST' }),
 

@@ -65,7 +65,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-outline-variant">
-            <tr v-for="order in orders" :key="order.orderNo" class="hover:bg-slate-50 transition-colors group">
+            <tr v-for="order in orders" :key="order.orderNo" class="hover:bg-[#F1F8E9] transition-colors group">
               <td class="px-stack-md py-3 font-label-bold text-primary cursor-pointer hover:underline" @click="$router.push(`/orders/${order.orderNo}`)">{{ order.orderNo }}</td>
               <td class="px-stack-md py-3 font-body-sm text-on-surface-variant">{{ order.createdAt }}</td>
               <td class="px-stack-md py-3">
@@ -80,8 +80,9 @@
               </td>
               <td class="px-stack-md py-3 text-right font-label-bold">¥{{ order.payAmount }}</td>
               <td class="px-stack-md py-3 text-center">
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-secondary-fixed text-on-secondary-fixed-variant">
-                  {{ order.deliveryType === 1 ? '🚚 配送' : '🏠 自提' }}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700">
+                  <span class="material-symbols-outlined text-[14px]">{{ order.deliveryType === 1 ? 'local_shipping' : 'storefront' }}</span>
+                  {{ order.deliveryType === 1 ? '配送' : '自提' }}
                 </span>
               </td>
               <td class="px-stack-md py-3 text-center">
@@ -89,26 +90,56 @@
               </td>
               <td class="px-stack-md py-3 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  <Popconfirm v-if="order.status === 1" title="确认接单" :message="`确认接单 ${order.orderNo}？接单后需尽快备货发货。`" type="info" confirm-text="接单" @confirm="acceptOrder(order)">
-                    <Tooltip text="接单（确认有库存可发货）">
-                      <button class="p-1.5 text-primary hover:bg-primary-container/10 rounded-lg">
-                        <span class="material-symbols-outlined text-[20px]">check_circle</span>
-                      </button>
-                    </Tooltip>
-                  </Popconfirm>
-                  <PopInput v-if="order.status === 1" title="拒单原因" :message="`拒单 ${order.orderNo} 后金额将原路退回，请填写拒单原因。`" placeholder="请输入拒单原因" type="danger" confirm-text="确认拒单" placement="bottom" @confirm="rejectOrder(order, $event)">
-                    <Tooltip text="拒单（订单将关闭，金额原路退回）">
-                      <button class="p-1.5 text-error hover:bg-error-container/20 rounded-lg">
-                        <span class="material-symbols-outlined text-[20px]">cancel</span>
-                      </button>
-                    </Tooltip>
-                  </PopInput>
-                  <button v-if="order.status === 2" @click="shipOrder(order)" class="px-3 py-1 bg-primary text-white text-xs font-bold rounded hover:bg-primary-container">标记发货</button>
-                  <Tooltip text="查看订单详情">
-                    <button @click="$router.push(`/orders/${order.orderNo}`)" class="p-1.5 text-on-surface-variant hover:bg-surface-variant rounded-lg">
-                      <span class="material-symbols-outlined text-[20px]">visibility</span>
+                  <Popconfirm
+                    v-if="order.status === 1"
+                    title="确认接单"
+                    :message="`确认接单 ${order.orderNo}？接单后需尽快备货发货。`"
+                    type="info"
+                    confirm-text="接单"
+                    placement="left"
+                    @confirm="acceptOrder(order)"
+                  >
+                    <button
+                      title="接单（确认有库存可发货）"
+                      class="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-white hover:bg-primary-container transition-colors shadow-sm"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">check</span>
                     </button>
-                  </Tooltip>
+                  </Popconfirm>
+                  <PopInput
+                    v-if="order.status === 1"
+                    title="拒单原因"
+                    :message="`拒单 ${order.orderNo} 后金额将原路退回，请填写拒单原因。`"
+                    placeholder="请输入拒单原因"
+                    type="danger"
+                    confirm-text="确认拒单"
+                    placement="left"
+                    @confirm="rejectOrder(order, $event)"
+                  >
+                    <button
+                      title="拒单（订单将关闭，金额原路退回）"
+                      class="w-8 h-8 flex items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                  </PopInput>
+                  <button
+                    v-if="order.status === 2"
+                    @click="shipOrder(order)"
+                    class="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary-container transition-colors shadow-sm"
+                  >
+                    标记发货
+                  </button>
+                  <Popconfirm v-if="order.status === 3" title="确认送达" :message="`确认订单 ${order.orderNo} 已送达？`" type="info" confirm-text="确认" placement="left" @confirm="completeOrder(order)">
+                    <button class="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary-container">确认送达</button>
+                  </Popconfirm>
+                  <button
+                    title="查看订单详情"
+                    @click="$router.push(`/orders/${order.orderNo}`)"
+                    class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -137,7 +168,6 @@
 import { ref, computed, onMounted } from 'vue';
 import { adminOrderApi } from '@/api/modules/order';
 import type { AdminOrderVO, AdminOrderItemVO } from '@/api/types/order';
-import Tooltip from '@/components/Tooltip.vue';
 import Popconfirm from '@/components/Popconfirm.vue';
 import PopInput from '@/components/PopInput.vue';
 
@@ -147,16 +177,19 @@ const tabs: { label: string; value?: number }[] = [
   { label: '备货中', value: 2 },
   { label: '配送中', value: 3 },
   { label: '已完成', value: 5 },
+  { label: '退款中', value: 6 },
+  { label: '已退款', value: 7 },
+  { label: '已拒单', value: 8 },
   { label: '已取消', value: 0 },
 ];
 
 const STATUS_MAP: Record<number, { label: string; cls: string }> = {
-  0: { label: '已取消', cls: 'bg-surface-variant text-on-surface-variant border-outline-variant' },
-  1: { label: '待接单', cls: 'bg-tertiary-fixed text-on-tertiary-fixed-variant border-tertiary-container/20' },
-  2: { label: '备货中', cls: 'bg-primary-fixed text-on-primary-fixed-variant border-primary/20' },
-  3: { label: '配送中', cls: 'bg-secondary-fixed text-on-secondary-fixed-variant border-secondary/20' },
-  4: { label: '已送达', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-  5: { label: '已完成', cls: 'bg-surface-variant text-on-surface-variant border-outline-variant' },
+  0: { label: '已取消', cls: 'bg-slate-100 text-slate-500 border-slate-200' },
+  1: { label: '待接单', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+  2: { label: '备货中', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+  3: { label: '配送中', cls: 'bg-green-50 text-green-700 border-green-200' },
+  4: { label: '已送达', cls: 'bg-green-50 text-green-700 border-green-200' },
+  5: { label: '已完成', cls: 'bg-slate-100 text-slate-500 border-slate-200' },
   6: { label: '退款中', cls: 'bg-purple-50 text-purple-700 border-purple-200' },
   7: { label: '已退款', cls: 'bg-purple-100 text-purple-700 border-purple-300' },
   8: { label: '已拒单', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
@@ -231,6 +264,10 @@ async function rejectOrder(order: AdminOrderVO, reason: string) {
 }
 async function shipOrder(order: AdminOrderVO) {
   await adminOrderApi.ship(order.orderNo, { deliveryType: order.deliveryType });
+  await loadOrders();
+}
+async function completeOrder(order: AdminOrderVO) {
+  await adminOrderApi.complete(order.orderNo);
   await loadOrders();
 }
 
