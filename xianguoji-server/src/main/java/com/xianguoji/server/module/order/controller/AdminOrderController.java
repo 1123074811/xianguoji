@@ -70,6 +70,14 @@ public class AdminOrderController {
         return R.ok();
     }
 
+    @Operation(summary = "确认送达")
+    @PostMapping("/order/{orderNo}/complete")
+    @AdminRequired
+    public R<Void> complete(@PathVariable String orderNo) {
+        orderService.completeOrder(orderNo);
+        return R.ok();
+    }
+
     @Operation(summary = "打印小票")
     @PostMapping("/order/{orderNo}/print")
     @AdminRequired

@@ -139,8 +139,24 @@ public class OrderServiceImpl implements OrderService {
 
         OrderPreviewVO.AddressVO addressVO = null;
         OrderPreviewVO.PickupPointVO pickupVO = null;
-        if (dto.getDeliveryType() == 1 && dto.getAddressId() != null) {
-            UserAddress addr = addressMapper.selectById(dto.getAddressId());
+        if (dto.getDeliveryType() == 1) {
+            UserAddress addr = null;
+            if (dto.getAddressId() != null) {
+                addr = addressMapper.selectById(dto.getAddressId());
+            }
+            // Auto-load default address if no addressId provided
+            if (addr == null) {
+                addr = addressMapper.selectOne(new LambdaQueryWrapper<UserAddress>()
+                        .eq(UserAddress::getUserId, uid)
+                        .eq(UserAddress::getIsDefault, 1)
+                        .last("LIMIT 1"));
+            }
+            // Fallback to any address if no default
+            if (addr == null) {
+                addr = addressMapper.selectOne(new LambdaQueryWrapper<UserAddress>()
+                        .eq(UserAddress::getUserId, uid)
+                        .last("LIMIT 1"));
+            }
             if (addr != null) addressVO = OrderPreviewVO.AddressVO.builder()
                     .id(addr.getId()).consignee(addr.getConsignee()).phone(addr.getPhone())
                     .fullAddress(addr.getProvince() + addr.getCity() + addr.getDistrict() + addr.getDetail()).build();
@@ -168,6 +184,13 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(rollbackFor = Exception.class)
     public String submit(Long uid, OrderSubmitDto dto) {
         checkShopOpen();
+        // Validate: delivery requires address, pickup requires pickup point
+        if (dto.getDeliveryType() == 1 && dto.getAddressId() == null) {
+            throw new BizException(ResultCode.BIZ_ERROR, "请选择收货地址");
+        }
+        if (dto.getDeliveryType() == 2 && dto.getPickupPointId() == null) {
+            throw new BizException(ResultCode.BIZ_ERROR, "请选择自提点");
+        }
         List<CartItem> cartItems = getSelectedCartItems(uid, dto.getCartItemIds());
         if (cartItems.isEmpty()) throw new BizException(ResultCode.BIZ_ERROR, "购物车为空");
 
@@ -228,8 +251,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setOrderNo(orderNo);
         order.setUserId(uid);
-        order.setStatus(OrderStatus.PENDING_PAY.getCode());
-        order.setPayStatus(0);
+        order.setStatus(OrderStatus.PENDING_ACCEPT.getCode());
+        order.setPayStatus(1);
         order.setDeliveryType(dto.getDeliveryType());
         order.setDeliveryTime(dto.getDeliveryTime());
         order.setGoodsAmount(goodsAmount);
@@ -264,7 +287,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 5. 状态日志
-        addStatusLog(order.getId(), null, OrderStatus.PENDING_PAY.getCode(), 1, uid, "下单");
+        addStatusLog(order.getId(), null, OrderStatus.PENDING_ACCEPT.getCode(), 1, uid, "下单并支付");
 
         // 6. 标记优惠券已使用
         if (dto.getUserCouponId() != null) {
@@ -524,6 +547,20 @@ public class OrderServiceImpl implements OrderService {
         order.setFinishedAt(LocalDateTime.now());
         orderMapper.updateById(order);
         addStatusLog(order.getId(), OrderStatus.PENDING_PICKUP.getCode(), OrderStatus.COMPLETED.getCode(), 2, null, "核销自提码");
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void completeOrder(String orderNo) {
+        Order order = getOrderByNo(orderNo);
+        if (order.getStatus() != OrderStatus.DELIVERING.getCode()) {
+            throw new BizException(ResultCode.ORDER_STATUS_INVALID, "只能完成配送中的订单");
+        }
+        int fromStatus = order.getStatus();
+        order.setStatus(OrderStatus.COMPLETED.getCode());
+        order.setFinishedAt(LocalDateTime.now());
+        orderMapper.updateById(order);
+        addStatusLog(order.getId(), fromStatus, OrderStatus.COMPLETED.getCode(), 2, null, "商家确认送达");
     }
 
     @Override

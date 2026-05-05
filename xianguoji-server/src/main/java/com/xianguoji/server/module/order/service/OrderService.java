@@ -42,6 +42,8 @@ public interface OrderService {
 
     void pickupVerify(String orderNo, String pickupCode);
 
+    void completeOrder(String orderNo);
+
     Object printReceipt(String orderNo);
 
     void approveRefund(String refundNo);
