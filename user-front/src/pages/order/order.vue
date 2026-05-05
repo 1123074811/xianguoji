@@ -33,7 +33,7 @@
         <view v-for="order in filteredOrders" :key="order.orderNo" class="order-card card">
           <view class="card-header">
             <text class="order-no">订单号: {{ order.orderNo }}</text>
-            <text class="status">{{ order.statusText }}</text>
+            <text class="status">{{ statusText(order.status) }}</text>
           </view>
           
           <view class="goods-scroll">
@@ -41,7 +41,7 @@
               <image 
                 v-for="(item, index) in order.items" 
                 :key="index" 
-                :src="resolveImageUrl(item.mainImage)" 
+                :src="resolveImageUrl(item.image)" 
                 mode="aspectFill" 
                 class="goods-img" 
               />
@@ -87,6 +87,11 @@ import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
 import type { OrderVO } from '@/api/types/order';
+
+const STATUS_MAP: Record<number, string> = {
+  0: '待付款', 10: '待发货', 20: '待发货', 30: '配送中', 31: '待自提', 40: '已完成', 50: '已取消', 60: '售后中',
+};
+function statusText(s: number) { return STATUS_MAP[s] || '未知'; }
 
 onShow(async () => {
   uni.hideTabBar();

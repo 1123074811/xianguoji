@@ -78,12 +78,12 @@
           <text class="label">合计：</text>
           <text class="price">¥{{ cartStore.totalPrice }}</text>
         </view>
-        <button 
-          class="submit-btn" 
-          :class="{ delete: isManaging }"
+        <button
+          class="submit-btn"
+          :class="{ delete: isManaging, disabled: submitDisabled }"
           @tap="handleSubmit"
         >
-          {{ isManaging ? '删除' : '去结算' }}
+          {{ submitLabel }}
         </button>
       </view>
     </view>
@@ -115,6 +115,13 @@ onShow(async () => {
 
 const isAllSelected = computed(() => {
   return cartStore.items.length > 0 && cartStore.items.every(item => item.selected === 1);
+});
+
+const selectedCount = computed(() => cartStore.selectedItems.length);
+const submitDisabled = computed(() => selectedCount.value === 0);
+const submitLabel = computed(() => {
+  if (isManaging.value) return selectedCount.value > 0 ? `删除(${selectedCount.value})` : '删除';
+  return selectedCount.value > 0 ? `去结算(${selectedCount.value})` : '去结算';
 });
 
 function toggleManage() {
@@ -519,6 +526,11 @@ async function handleSubmit() {
       
       &.delete {
         background-color: $color-price;
+      }
+
+      &.disabled {
+        background-color: #BDBDBD;
+        opacity: 0.7;
       }
 
       &::after { border: none; }

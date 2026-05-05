@@ -49,7 +49,7 @@
                 <text class="name">{{ item.productName }}</text>
                 <view class="tags">
                   <text class="tag">{{ item.groupSize }}人团</text>
-                  <text class="sales">已拼 {{ item.currentCount }} 件</text>
+                  <text class="sales">已拼 {{ item.totalJoinCount }} 件</text>
                 </view>
               </view>
               <view class="bottom">

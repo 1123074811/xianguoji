@@ -17,7 +17,7 @@
         
         <view v-if="status === 'success'" class="price-box">
           <text class="currency">¥</text>
-          <text class="price">168.50</text>
+          <text class="price">{{ payAmount }}</text>
         </view>
         <view v-else class="error-box">
           <text class="error-text">原因：账户余额不足或支付平台响应超时</text>
@@ -57,18 +57,32 @@ import { onLoad } from '@dcloudio/uni-app';
 import GoodsCard from '@/components/goods-card.vue';
 import SvgIcon from '@/components/svg-icon.vue';
 import { catalogApi } from '@/api/modules/catalog';
+import { orderApi } from '@/api/modules/order';
 import type { ProductVO } from '@/api/types/catalog';
 
 const status = ref('success');
+const payAmount = ref('0.00');
+const orderNo = ref('');
 const recommendations = ref<ProductVO[]>([]);
 
 onLoad((options) => {
-  if (options && options.status) {
-    status.value = options.status;
+  if (options) {
+    if (options.status) status.value = options.status;
+    if (options.orderNo) orderNo.value = options.orderNo;
   }
 });
 
 onMounted(async () => {
+  // 加载订单金额
+  if (orderNo.value && status.value === 'success') {
+    try {
+      const order = await orderApi.detail(orderNo.value);
+      payAmount.value = order.payAmount;
+    } catch (e) {
+      console.warn('加载订单详情失败', e);
+    }
+  }
+  // 加载推荐商品
   try {
     recommendations.value = await catalogApi.recommend();
   } catch (e) {

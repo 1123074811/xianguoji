@@ -19,7 +19,7 @@
               <text class="nickname">{{ userStore.userInfo?.nickname || '用户' }}</text>
               <view class="level-tag">
                 <svg-icon name="star" :size="24" color="#2E7D32" />
-                <text class="level-text">{{ userStore.userInfo?.level || '普通会员' }}</text>
+                <text class="level-text">{{ tagLabel[userStore.userInfo?.tag || 'regular'] || '普通会员' }}</text>
               </view>
             </template>
             <template v-else>
@@ -88,7 +88,6 @@ import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/stores/user';
 import { authApi } from '@/api/modules/auth';
-import { promoApi } from '@/api/modules/promo';
 import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
 
@@ -96,39 +95,25 @@ onShow(async () => {
   uni.hideTabBar();
   if (userStore.isLogin) {
     await userStore.fetchProfile();
-    loadAssetCounts();
   }
 });
 
 const userStore = useUserStore();
 
-const couponCount = ref(0);
-const groupBuyCount = ref(0);
-const favoriteCount = ref(0);
-const footprintCount = ref(0);
-
-async function loadAssetCounts() {
-  try {
-    const coupons = await promoApi.myCoupons({ status: 0 });
-    couponCount.value = coupons.length;
-  } catch (e) { /* ignore */ }
-  try {
-    const favorites = await userApi.favoritePage({ page: 1, size: 1 });
-    favoriteCount.value = favorites.total;
-  } catch (e) { /* ignore */ }
-  try {
-    const footprints = await userApi.footprintPage({ page: 1, size: 1 });
-    footprintCount.value = footprints.total;
-  } catch (e) { /* ignore */ }
-}
+const tagLabel: Record<string, string> = {
+  new: '新客会员',
+  regular: '普通会员',
+  silent: '沉默会员',
+};
 
 const assets = computed(() => {
-  if (userStore.isLogin) {
+  const p = userStore.userInfo;
+  if (userStore.isLogin && p) {
     return [
-      { id: 'coupon', label: '优惠券', value: String(couponCount.value || '-') },
-      { id: 'groupbuy', label: '我的拼团', value: String(groupBuyCount.value || '-') },
-      { id: 'favorite', label: '收藏夹', value: String(favoriteCount.value || '-') },
-      { id: 'footprint', label: '足迹', value: String(footprintCount.value || '-') }
+      { id: 'coupon', label: '优惠券', value: String(p.couponCount ?? '-') },
+      { id: 'groupbuy', label: '我的拼团', value: String(p.groupBuyCount ?? '-') },
+      { id: 'favorite', label: '收藏夹', value: String(p.favoriteCount ?? '-') },
+      { id: 'footprint', label: '足迹', value: String(p.footprintCount ?? '-') }
     ];
   } else {
     return [

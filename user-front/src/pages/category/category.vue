@@ -76,8 +76,13 @@ import type { CategoryTreeVO, ProductVO } from '@/api/types/catalog';
 
 onShow(() => {
   uni.hideTabBar();
-  fetchCategories();
+  refresh();
 });
+
+async function refresh() {
+  await fetchCategories();
+  await fetchGoods(true);
+}
 
 const categories = ref<CategoryTreeVO[]>([]);
 const activeCatId = ref(0);

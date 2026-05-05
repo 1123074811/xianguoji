@@ -16,7 +16,7 @@
         <view v-for="addr in addresses" :key="addr.id" class="address-card card" @tap="handleSelect(addr)">
           <view class="left">
             <view class="user-row">
-              <text class="name">{{ addr.name }}</text>
+              <text class="name">{{ addr.consignee }}</text>
               <text class="phone">{{ addr.phone }}</text>
               <view v-if="addr.isDefault" class="tag default">默认</view>
               <view class="tag type">{{ addr.tag }}</view>
@@ -35,7 +35,7 @@
         <view class="form-grid">
           <view class="form-item">
             <text class="label">联系人</text>
-            <input class="input" placeholder="收货人姓名" v-model="newAddr.name" />
+            <input class="input" placeholder="收货人姓名" v-model="newAddr.consignee" />
           </view>
           <view class="form-item">
             <text class="label">手机号码</text>
@@ -86,11 +86,14 @@ async function loadAddresses() {
 onMounted(() => loadAddresses());
 
 const newAddr = ref({
-  name: '',
+  consignee: '',
   phone: '',
   region: '',
+  province: '',
+  city: '',
+  district: '',
   detail: '',
-  isDefault: false,
+  isDefault: false as boolean | 0 | 1,
   tag: '',
 });
 
@@ -109,29 +112,43 @@ function handleSelect(addr: AddressVO) {
 
 function handleEdit(addr: AddressVO) {
   newAddr.value = {
-    name: addr.name,
+    consignee: addr.consignee,
     phone: addr.phone,
     region: `${addr.province}${addr.city}${addr.district}`,
+    province: addr.province,
+    city: addr.city,
+    district: addr.district,
     detail: addr.detail,
     isDefault: addr.isDefault,
     tag: addr.tag || '',
   };
 }
 
+function parseRegion(region: string) {
+  // 尝试解析 "广东省深圳市南山区" 格式
+  const match = region.match(/^(.+?[省自治区])\s*(.+?[市州盟])\s*(.+?[区县市旗])/);
+  if (match) return { province: match[1], city: match[2], district: match[3] };
+  // 退回：整个region作为province
+  return { province: region, city: '', district: '' };
+}
+
 async function handleSave() {
-  if (!newAddr.value.name || !newAddr.value.phone || !newAddr.value.detail) {
+  if (!newAddr.value.consignee || !newAddr.value.phone || !newAddr.value.detail) {
     return uni.showToast({ title: '请填写完整地址信息', icon: 'none' });
   }
+  const { province, city, district } = newAddr.value.province
+    ? { province: newAddr.value.province, city: newAddr.value.city, district: newAddr.value.district }
+    : parseRegion(newAddr.value.region);
   try {
     await userApi.addAddress({
-      name: newAddr.value.name,
+      consignee: newAddr.value.consignee,
       phone: newAddr.value.phone,
-      province: '',
-      city: '',
-      district: '',
+      province,
+      city,
+      district,
       detail: newAddr.value.detail,
-      isDefault: newAddr.value.isDefault,
-      tag: newAddr.value.tag,
+      isDefault: newAddr.value.isDefault ? 1 : 0,
+      tag: newAddr.value.tag || undefined,
     });
     uni.showToast({ title: '地址已保存', icon: 'success' });
     loadAddresses();

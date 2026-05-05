@@ -51,7 +51,7 @@
       <!-- WeChat Login -->
       <view class="social-login">
         <!-- #ifdef MP-WEIXIN -->
-        <button class="wechat-btn" hover-class="btn-active" @tap="showWechatModal = true">
+        <button class="wechat-btn" hover-class="btn-active" :loading="quickLoading" @tap="handleWechatTap">
           <svg-icon name="wechat" :size="64" color="#07C160" />
         </button>
         <!-- #endif -->
@@ -139,6 +139,8 @@ const showWechatModal = ref(false);
 const wxAvatarUrl = ref('');
 const wxNickname = ref('');
 const wxLoginLoading = ref(false);
+const quickLoading = ref(false);
+let cachedJsCode = ''; // 缓存静默登录用的 jsCode，弹窗确认时复用
 
 const userStore = useUserStore();
 
@@ -187,6 +189,45 @@ async function handleLogin() {
   }
 }
 
+async function handleWechatTap() {
+  if (!agreed.value) {
+    return uni.showToast({ title: '请先同意协议', icon: 'none' });
+  }
+  if (quickLoading.value) return;
+  quickLoading.value = true;
+  try {
+    const jsCode = await new Promise<string>((resolve, reject) => {
+      uni.login({
+        provider: 'weixin',
+        success: (r: any) => r.code ? resolve(r.code) : reject(new Error('无code')),
+        fail: reject,
+      });
+    });
+    cachedJsCode = jsCode;
+    try {
+      await userStore.wechatQuickLogin(jsCode);
+      // 已注册用户：直接登录
+      await useCartStore().refreshCount();
+      uni.showToast({ title: '登录成功', icon: 'success' });
+      setTimeout(() => uni.switchTab({ url: '/pages/index/index' }), 400);
+    } catch (err: any) {
+      // 4101 = WX_PROFILE_REQUIRED：新用户需要补全资料
+      if (err?.code === 4101) {
+        showWechatModal.value = true;
+      } else {
+        console.warn('微信静默登录失败', err);
+        uni.showToast({ title: err?.message || '微信登录失败', icon: 'none' });
+        cachedJsCode = '';
+      }
+    }
+  } catch (e) {
+    console.warn('wx.login 失败', e);
+    uni.showToast({ title: '获取微信授权失败', icon: 'none' });
+  } finally {
+    quickLoading.value = false;
+  }
+}
+
 function onChooseAvatar(e: any) {
   wxAvatarUrl.value = e.detail.avatarUrl || '';
 }
@@ -232,17 +273,21 @@ async function handleWechatConfirm() {
       }
     }
 
-    // 2. wx.login 获取 code
-    const loginRes = await new Promise<string>((resolve, reject) => {
-      uni.login({
-        provider: 'weixin',
-        success: (r: any) => r.code ? resolve(r.code) : reject(new Error('无code')),
-        fail: reject,
+    // 2. 优先复用静默登录已拿到的 jsCode；过期/不存在则重新拿
+    let loginRes = cachedJsCode;
+    if (!loginRes) {
+      loginRes = await new Promise<string>((resolve, reject) => {
+        uni.login({
+          provider: 'weixin',
+          success: (r: any) => r.code ? resolve(r.code) : reject(new Error('无code')),
+          fail: reject,
+        });
       });
-    });
+    }
 
     // 3. 调用后端登录接口
     await userStore.wechatLogin(loginRes, wxNickname.value.trim(), avatarUrl);
+    cachedJsCode = ''; // 用过就丢
     await useCartStore().refreshCount();
     showWechatModal.value = false;
     uni.showToast({ title: '登录成功', icon: 'success' });

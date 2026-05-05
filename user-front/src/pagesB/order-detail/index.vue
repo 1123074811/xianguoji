@@ -18,7 +18,7 @@
         <view class="top">
           <view class="status-info">
             <text class="label">订单状态</text>
-            <text class="status-text">{{ order.statusText }}</text>
+            <text class="status-text">{{ statusText(order?.status) }}</text>
           </view>
         </view>
       </view>
@@ -39,7 +39,7 @@
       <view class="goods-card card" v-if="order">
         <view class="goods-list">
           <view v-for="item in order.items" :key="item.skuId" class="goods-item">
-            <image :src="resolveImageUrl(item.mainImage)" mode="aspectFill" class="goods-img" />
+            <image :src="resolveImageUrl(item.image)" mode="aspectFill" class="goods-img" />
             <view class="info">
               <view class="top">
                 <text class="name">{{ item.productName }}</text>
@@ -55,7 +55,7 @@
         <view class="summary">
           <view class="row">
             <text class="label">商品总额</text>
-            <text class="value">¥{{ order.totalAmount }}</text>
+            <text class="value">¥{{ order.goodsAmount }}</text>
           </view>
           <view class="row">
             <text class="label">运费</text>
@@ -80,7 +80,7 @@
         </view>
         <view class="row">
           <text class="label">下单时间</text>
-          <text class="value">{{ order.createTime }}</text>
+          <text class="value">{{ order.createdAt }}</text>
         </view>
         <view class="row" v-if="order.payTime">
           <text class="label">支付时间</text>
@@ -103,6 +103,11 @@ import { orderApi } from '@/api/modules/order';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { OrderVO } from '@/api/types/order';
+
+const STATUS_MAP: Record<number, string> = {
+  0: '待付款', 10: '待发货', 20: '待发货', 30: '配送中', 31: '待自提', 40: '已完成', 50: '已取消', 60: '售后中',
+};
+function statusText(s?: number) { return STATUS_MAP[s ?? -1] || '未知'; }
 
 const order = ref<OrderVO | null>(null);
 const orderNo = ref('');

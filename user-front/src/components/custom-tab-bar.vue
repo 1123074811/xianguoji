@@ -57,6 +57,7 @@ function switchTab(path: string) {
   left: 0;
   right: 0;
   z-index: 999;
+  pointer-events: none;
 }
 
 .tab-bar-placeholder {
@@ -65,6 +66,7 @@ function switchTab(path: string) {
 }
 
 .tab-bar {
+  pointer-events: auto;
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20rpx);
   height: calc(128rpx + constant(safe-area-inset-bottom));

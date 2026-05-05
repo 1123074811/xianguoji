@@ -12,6 +12,14 @@
     </view>
 
     <scroll-view scroll-y class="main-scroll" @scrolltolower="loadMore">
+      <!-- Shop Closed Banner -->
+      <view v-if="!shopOpen" class="closed-banner">
+        <svg-icon name="store" :size="36" color="#C62828" />
+        <view class="closed-info">
+          <text class="closed-title">店铺休息中</text>
+          <text class="closed-desc">商家暂未营业，暂时无法下单，请稍后再来～</text>
+        </view>
+      </view>
       <!-- Category Shortcuts -->
       <view class="category-shortcuts">
         <view 
@@ -49,12 +57,12 @@
           >
             <view class="coupon-info">
               <text class="coupon-amount" :style="{ color: couponTextColors[idx % couponTextColors.length] }">¥{{ formatAmount(coupon.amount) }}</text>
-              <text class="coupon-condition" :style="{ color: couponTextColors[idx % couponTextColors.length] }">满{{ formatAmount(coupon.threshold) }}可用</text>
               <text class="coupon-name" :style="{ color: couponTextColors[idx % couponTextColors.length] }">{{ coupon.name }}</text>
               <text class="coupon-expire" :style="{ color: couponTextColors[idx % couponTextColors.length] }">{{ formatExpire(coupon.endTime) }}前</text>
             </view>
             <view class="coupon-action">
-              <text class="coupon-btn" :style="{ backgroundColor: couponTextColors[idx % couponTextColors.length], color: '#ffffff' }" @tap="claimCoupon(coupon)">领取</text>
+              <text v-if="isCouponClaimed(coupon)" class="coupon-btn claimed" :style="{ color: couponTextColors[idx % couponTextColors.length] }">已领取</text>
+              <text v-else class="coupon-btn" :style="{ backgroundColor: couponTextColors[idx % couponTextColors.length], color: '#ffffff' }" @tap="claimCoupon(coupon)">领取</text>
             </view>
             <view class="coupon-notch" :style="{ borderLeftColor: couponBgColors[idx % couponBgColors.length] }"></view>
           </view>
@@ -94,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import GoodsCard from '@/components/goods-card.vue';
 import SvgIcon from '@/components/svg-icon.vue';
@@ -104,9 +112,14 @@ import { resolveImageUrl } from '@/utils/image';
 import { promoApi } from '@/api/modules/promo';
 import type { BannerVO, CategoryTreeVO, ProductVO } from '@/api/types/catalog';
 import type { CouponVO } from '@/api/types/promo';
+import { useAppStore } from '@/stores/app';
+
+const appStore = useAppStore();
+const shopOpen = computed(() => appStore.shopInfo?.isOpen === 1);
 
 onShow(() => {
   uni.hideTabBar();
+  appStore.loadShopInfo();
   loadHomeData();
 });
 
@@ -160,10 +173,15 @@ function formatExpire(endTime: string) {
   return `${m}.${day}`;
 }
 
+function isCouponClaimed(coupon: CouponVO) {
+  return (coupon.userReceivedCount || 0) >= (coupon.perUserLimit || 1);
+}
+
 async function claimCoupon(coupon: CouponVO) {
   try {
     await promoApi.claimCoupon(coupon.id);
     uni.showToast({ title: `已领取 ¥${coupon.amount} 优惠券`, icon: 'success' });
+    await loadHomeData();
   } catch (e) {
     console.warn('领券失败', e);
   }
@@ -271,6 +289,36 @@ function goToGroupBuy() {
 .main-scroll {
   flex: 1;
   overflow: hidden;
+}
+
+.closed-banner {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin: $space-3 $space-4 0;
+  padding: $space-3 $space-4;
+  background-color: #FFF3E0;
+  border: 2rpx solid #FFB74D;
+  border-radius: $radius-md;
+
+  .closed-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4rpx;
+
+    .closed-title {
+      font-size: $font-base;
+      font-weight: $weight-semibold;
+      color: #C62828;
+    }
+
+    .closed-desc {
+      font-size: $font-xs;
+      color: #BF360C;
+      opacity: 0.8;
+    }
+  }
 }
 
 .category-shortcuts {
@@ -407,10 +455,6 @@ function goToGroupBuy() {
         font-weight: $weight-semibold;
       }
 
-      .coupon-condition {
-        font-size: $font-xs;
-      }
-
       .coupon-name {
         font-size: 22rpx;
         font-weight: $weight-medium;
@@ -434,6 +478,11 @@ function goToGroupBuy() {
         font-size: 20rpx;
         padding: 8rpx 16rpx;
         border-radius: 8rpx;
+
+        &.claimed {
+          background-color: transparent;
+          opacity: 0.7;
+        }
       }
     }
 

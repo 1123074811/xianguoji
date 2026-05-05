@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import { reactive, computed } from 'vue';
+import { messageApi } from '@/api/modules/message';
 import SvgIcon from '@/components/svg-icon.vue';
 
 const types = [
@@ -103,17 +104,26 @@ function removeImage(i: number) {
   form.images.splice(i, 1);
 }
 
-function handleSubmit() {
+async function handleSubmit() {
   if (!canSubmit.value) {
     uni.showToast({ title: '请填写至少 5 个字的描述', icon: 'none' });
     return;
   }
   uni.showLoading({ title: '提交中...' });
-  setTimeout(() => {
+  try {
+    await messageApi.submitFeedback({
+      type: form.type,
+      content: form.content,
+      images: form.images.length ? form.images : undefined,
+      contact: form.contact || undefined,
+    });
     uni.hideLoading();
     uni.showToast({ title: '反馈提交成功', icon: 'success' });
     setTimeout(() => uni.navigateBack(), 1000);
-  }, 600);
+  } catch (e) {
+    uni.hideLoading();
+    uni.showToast({ title: '提交失败，请稍后重试', icon: 'none' });
+  }
 }
 </script>
 
@@ -198,9 +208,14 @@ function handleSubmit() {
 
   .img-item {
     position: relative;
-    aspect-ratio: 1;
+    // 微信小程序不支持 aspect-ratio
+    height: 0;
+    padding-bottom: 100%;
 
     .img {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       border-radius: $radius-sm;
@@ -222,7 +237,10 @@ function handleSubmit() {
   }
 
   .add-btn {
-    aspect-ratio: 1;
+    // 微信小程序不支持 aspect-ratio
+    height: 0;
+    padding-bottom: 100%;
+    position: relative;
     border: 2rpx dashed $color-divider;
     border-radius: $radius-sm;
     display: flex;

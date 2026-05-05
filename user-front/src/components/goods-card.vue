@@ -18,11 +18,16 @@
         </view>
       </view>
     </view>
+    <view
+      v-if="ball.visible"
+      class="fly-ball"
+      :style="ballStyle"
+    >+</view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, reactive, ref, nextTick } from 'vue';
 import { useCartStore } from '@/stores/cart';
 import SvgIcon from './svg-icon.vue';
 import { resolveImageUrl } from '@/utils/image';
@@ -44,21 +49,67 @@ function handleTap() {
   });
 }
 
-async function handleAddToCart() {
+const ball = reactive({ visible: false, x: 0, y: 0, dx: 0, dy: 0, flying: false });
+const ballStyle = computed(() => ({
+  left: ball.x + 'px',
+  top: ball.y + 'px',
+  transform: ball.flying
+    ? `translate(${ball.dx}px, ${ball.dy}px) scale(0.3)`
+    : 'translate(0, 0) scale(1)',
+  opacity: ball.flying ? 0.4 : 1,
+  transition: ball.flying
+    ? 'transform 600ms cubic-bezier(0.55, -0.2, 0.7, 0.4), opacity 600ms ease'
+    : 'none',
+}));
+
+async function handleAddToCart(e: any) {
   if (!props.goods.defaultSkuId) {
-    uni.navigateTo({ url: `/pagesA/goods-detail/index?id=${props.goods.id}` });
+    uni.showToast({ title: '请先选择规格', icon: 'none', duration: 1200 });
+    setTimeout(() => {
+      uni.navigateTo({ url: `/pagesA/goods-detail/index?id=${props.goods.id}` });
+    }, 600);
     return;
   }
+
+  // 取点击位置（视口坐标），优先 changedTouches，回退 detail
+  const touch = e?.changedTouches?.[0] || e?.touches?.[0];
+  const startX = touch?.clientX ?? e?.detail?.x ?? 0;
+  const startY = touch?.clientY ?? e?.detail?.y ?? 0;
+
+  // 终点：底部 tab 栏中央（购物车是5个tab中第3个，正好屏幕中线）
+  let endX = startX;
+  let endY = startY + 200;
+  try {
+    const sys = uni.getWindowInfo ? uni.getWindowInfo() : uni.getSystemInfoSync();
+    endX = sys.windowWidth / 2;
+    endY = sys.windowHeight - 40; // 约 tab 图标中心
+  } catch (_) {}
+
+  ball.x = startX - 16;
+  ball.y = startY - 16;
+  ball.dx = 0;
+  ball.dy = 0;
+  ball.flying = false;
+  ball.visible = true;
+
+  await nextTick();
+  // 触发动画
+  ball.dx = endX - startX;
+  ball.dy = endY - startY;
+  ball.flying = true;
+
+  // 并行调用加车
   try {
     await cartStore.addToCart(props.goods.defaultSkuId, 1);
-    uni.showToast({
-      title: '已加入购物车',
-      icon: 'success',
-      duration: 1000
-    });
-  } catch (e) {
-    console.warn('加车失败', e);
+  } catch (err) {
+    console.warn('加车失败', err);
+    uni.showToast({ title: '加入购物车失败', icon: 'none', duration: 1200 });
   }
+
+  setTimeout(() => {
+    ball.visible = false;
+    ball.flying = false;
+  }, 650);
 }
 
 function handleImageError() {
@@ -78,10 +129,15 @@ function handleImageError() {
   .image-wrapper {
     position: relative;
     width: 100%;
-    aspect-ratio: 1;
+    // 微信小程序不支持 aspect-ratio，用 padding-bottom 撑正方形
+    height: 0;
+    padding-bottom: 100%;
     background-color: $color-bg-page;
 
     .goods-image {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
     }
@@ -167,12 +223,29 @@ function handleImageError() {
         align-items: center;
         justify-content: center;
         color: #ffffff;
-        
+
         .icon-add {
           font-size: 24rpx;
         }
       }
     }
   }
+}
+
+.fly-ball {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: $color-primary;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+  text-align: center;
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 4rpx 12rpx rgba(46, 125, 50, 0.4);
+  will-change: transform, opacity;
 }
 </style>

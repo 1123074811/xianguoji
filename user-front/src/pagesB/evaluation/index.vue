@@ -243,7 +243,10 @@ async function handleSubmit() {
     margin-bottom: $space-5;
 
     .upload-btn {
-      aspect-ratio: 1;
+      // 微信小程序不支持 aspect-ratio
+      height: 0;
+      padding-bottom: 100%;
+      position: relative;
       background-color: $color-bg-page;
       border: 2rpx dashed $color-divider;
       border-radius: $radius-md;
@@ -258,9 +261,11 @@ async function handleSubmit() {
     }
 
     .img-wrapper {
-      aspect-ratio: 1;
+      // 微信小程序不支持 aspect-ratio
+      height: 0;
+      padding-bottom: 100%;
       position: relative;
-      .upload-img { width: 100%; height: 100%; border-radius: $radius-md; }
+      .upload-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: $radius-md; }
       .close-btn {
         position: absolute;
         top: 4rpx;

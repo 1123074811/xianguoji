@@ -12,35 +12,36 @@
       <view class="delivery-method">
         <view 
           class="method-card" 
-          :class="{ active: deliveryType === 'express' }"
-          @tap="deliveryType = 'express'"
+          :class="{ active: deliveryType === 1 }"
+          @tap="deliveryType = 1"
         >
-          <svg-icon name="shipping" :size="48" :color="deliveryType === 'express' ? '#2E7D32' : '#BDBDBD'" />
+          <svg-icon name="shipping" :size="48" :color="deliveryType === 1 ? '#2E7D32' : '#BDBDBD'" />
           <text class="label">外卖配送</text>
           <text class="desc">最快 30 分钟送达</text>
-          <view v-if="deliveryType === 'express'" class="active-tag">已选</view>
+          <view v-if="deliveryType === 1" class="active-tag">已选</view>
         </view>
         <view 
           class="method-card" 
-          :class="{ active: deliveryType === 'pickup' }"
-          @tap="deliveryType = 'pickup'"
+          :class="{ active: deliveryType === 2 }"
+          @tap="deliveryType = 2"
         >
-          <svg-icon name="home" :size="48" :color="deliveryType === 'pickup' ? '#2E7D32' : '#BDBDBD'" />
+          <svg-icon name="home" :size="48" :color="deliveryType === 2 ? '#2E7D32' : '#BDBDBD'" />
           <text class="label">到店自提</text>
-          <text class="desc">离您 1.2km</text>
-          <view v-if="deliveryType === 'pickup'" class="active-tag">已选</view>
+          <text class="desc">到店自取</text>
+          <view v-if="deliveryType === 2" class="active-tag">已选</view>
         </view>
       </view>
 
-      <!-- Address Info -->
-      <view class="address-card card">
+      <!-- Address / Pickup Info -->
+      <view v-if="deliveryType === 1" class="address-card card">
         <view class="address-info" @tap="goToAddress">
           <view class="left">
-            <view class="top">
+            <view v-if="preview?.address" class="top">
               <view class="tag">家</view>
-              <text class="addr-text">静安区南京西路 1618 号</text>
+              <text class="addr-text">{{ preview.address.fullAddress }}</text>
             </view>
-            <text class="user-text">久光百货 5 楼 502 (张先生) 138****8888</text>
+            <text v-if="preview?.address" class="user-text">{{ preview.address.consignee }} {{ preview.address.phone }}</text>
+            <text v-else class="user-text" style="color: #E53935;">请选择收货地址</text>
           </view>
           <svg-icon name="chevron-right" :size="32" color="#BDBDBD" />
         </view>
@@ -50,7 +51,20 @@
             <svg-icon name="star" :size="32" color="#2E7D32" />
             <text class="label">立即送达</text>
           </view>
-          <text class="time">预计 14:35 分送达</text>
+          <text class="time">预计 {{ estimatedTime }} 送达</text>
+        </view>
+      </view>
+      <view v-else class="address-card card">
+        <view class="address-info" @tap="goToPickupPoint">
+          <view class="left">
+            <view v-if="preview?.pickupPoint" class="top">
+              <view class="tag">自提</view>
+              <text class="addr-text">{{ preview.pickupPoint.name }}</text>
+            </view>
+            <text v-if="preview?.pickupPoint" class="user-text">{{ preview.pickupPoint.address }}</text>
+            <text v-else class="user-text" style="color: #E53935;">请选择自提点</text>
+          </view>
+          <svg-icon name="chevron-right" :size="32" color="#BDBDBD" />
         </view>
       </view>
 
@@ -61,16 +75,16 @@
           <text class="shop-name">鲜果记 (精品果园店)</text>
         </view>
         <view class="goods-list">
-          <view v-for="item in cartStore.items" :key="item.id" class="goods-item">
+          <view v-for="item in preview?.items || []" :key="item.skuId" class="goods-item">
             <image :src="resolveImageUrl(item.image)" mode="aspectFill" class="goods-img" />
             <view class="info">
               <view class="top">
-                <text class="name">{{ item.name }}</text>
-                <text class="specs">约 250g-300g / 个</text>
+                <text class="name">{{ item.productName }}</text>
+                <text class="specs">{{ item.specName }}</text>
               </view>
               <view class="bottom">
                 <text class="price">¥{{ item.price }}</text>
-                <text class="count">x {{ item.count }}</text>
+                <text class="count">x {{ item.quantity }}</text>
               </view>
             </view>
           </view>
@@ -85,8 +99,8 @@
             <text class="label">平台优惠券</text>
           </view>
           <view class="right">
-            <text class="coupon-avail">{{ preview?.availableCoupons?.length || 0 }} 张可用</text>
-            <text v-if="selectedCoupon" class="coupon-discount">-¥{{ selectedCoupon.amount }}</text>
+            <text class="coupon-avail">{{ usableCoupons.length }} 张可用</text>
+            <text v-if="preview?.couponAmount && Number(preview.couponAmount) > 0" class="coupon-discount">-¥{{ preview.couponAmount }}</text>
             <svg-icon name="chevron-right" :size="28" color="#BDBDBD" />
           </view>
         </view>
@@ -104,7 +118,7 @@
       <view class="price-detail-card card">
         <view class="row">
           <text class="label">商品小计</text>
-          <text class="value">¥{{ preview?.items?.reduce((sum, item) => sum + Number(item.subtotal), 0).toFixed(2) || cartStore.totalPrice }}</text>
+          <text class="value">¥{{ preview?.goodsAmount || '0.00' }}</text>
         </view>
         <view class="row">
           <text class="label">优惠金额</text>
@@ -112,21 +126,24 @@
         </view>
         <view class="row">
           <text class="label">优惠券抵扣</text>
-          <text class="value discount">-¥{{ selectedCoupon?.amount || '0.00' }}</text>
+          <text class="value discount">-¥{{ preview?.couponAmount || '0.00' }}</text>
         </view>
         <view class="row">
           <view class="label-with-tag">
             <text class="label">配送费</text>
-            <text class="free-tag">满39免运费</text>
+            <text v-if="deliveryType === 1" class="free-tag">满额免运费</text>
           </view>
           <view class="value-group">
-            <text v-if="preview?.originalDeliveryFee !== preview?.deliveryFee" class="value line-through">¥{{ preview?.originalDeliveryFee }}</text>
             <text class="value">¥{{ preview?.deliveryFee || '0.00' }}</text>
           </view>
         </view>
+        <view v-if="preview?.promotionTip" class="row">
+          <text class="label" style="color: #2E7D32;">{{ preview.promotionTip }}</text>
+          <text></text>
+        </view>
         <view class="total-divider"></view>
         <view class="total-row">
-          <text class="total-label">共 {{ preview?.items?.reduce((sum, item) => sum + item.quantity, 0) || cartStore.totalCount }} 件, 实付合计</text>
+          <text class="total-label">共 {{ totalQuantity }} 件, 实付合计</text>
           <text class="total-price">¥{{ finalPrice }}</text>
         </view>
       </view>
@@ -134,41 +151,62 @@
 
     <!-- Bottom Bar -->
     <view class="bottom-bar">
-      <view class="price-info">
+      <view v-if="!shopOpen" class="closed-bar-tip">
+        <svg-icon name="store" :size="28" color="#C62828" />
+        <text class="closed-bar-text">店铺休息中，暂无法下单</text>
+      </view>
+      <view v-else class="price-info">
         <view class="price-row">
           <text class="label">合计:</text>
           <text class="price">¥{{ finalPrice }}</text>
         </view>
-        <text class="discount-text">已优惠 ¥{{ preview?.discountAmount || '0.00' }}</text>
+        <text v-if="totalDiscount > 0" class="discount-text">已优惠 ¥{{ totalDiscount }}</text>
       </view>
-      <button class="submit-btn" @tap="submitOrder">提交订单</button>
+      <button class="submit-btn" :class="{ disabled: !shopOpen }" :disabled="!shopOpen" @tap="submitOrder">{{ shopOpen ? '提交订单' : '店铺休息中' }}</button>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useCartStore } from '@/stores/cart';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useAppStore } from '@/stores/app';
 import { orderApi } from '@/api/modules/order';
+import { promoApi } from '@/api/modules/promo';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { OrderPreviewVO } from '@/api/types/order';
+import type { UserCouponVO } from '@/api/types/promo';
 
-const cartStore = useCartStore();
+const appStore = useAppStore();
+const shopOpen = computed(() => appStore.shopInfo?.isOpen === 1);
 const deliveryType = ref<1 | 2>(1);
 const remark = ref('');
 const preview = ref<OrderPreviewVO | null>(null);
 const selectedCouponId = ref<number | undefined>();
+const usableCoupons = ref<UserCouponVO[]>([]);
 const submitLoading = ref(false);
 const routeOptions = ref<Record<string, string>>({});
 
 const finalPrice = computed(() => {
-  if (preview.value) return preview.value.totalAmount;
+  if (preview.value) return preview.value.payAmount;
   return '0.00';
 });
 
-const selectedCoupon = computed(() => {
-  return preview.value?.availableCoupons?.find(c => c.id === selectedCouponId.value);
+const totalQuantity = computed(() => {
+  if (!preview.value?.items) return 0;
+  return preview.value.items.reduce((sum, item) => sum + item.quantity, 0);
+});
+
+const totalDiscount = computed(() => {
+  if (!preview.value) return 0;
+  const d = Number(preview.value.discountAmount || 0);
+  const c = Number(preview.value.couponAmount || 0);
+  return (d + c).toFixed(2);
+});
+
+const estimatedTime = computed(() => {
+  const now = new Date(Date.now() + 30 * 60 * 1000);
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 });
 
 async function loadPreview() {
@@ -179,11 +217,24 @@ async function loadPreview() {
     const cartItemIds = routeOptions.value.cartItemIds?.split(',').map(Number).filter(Boolean) || [];
     const data = await orderApi.preview({
       deliveryType: deliveryType.value,
+      addressId: preview.value?.address?.id || (routeOptions.value.addressId ? Number(routeOptions.value.addressId) : undefined),
+      pickupPointId: deliveryType.value === 2 ? (preview.value?.pickupPoint?.id || (routeOptions.value.pickupPointId ? Number(routeOptions.value.pickupPointId) : undefined)) : undefined,
       cartItemIds: cartItemIds.length ? cartItemIds : undefined,
       userCouponId: selectedCouponId.value,
-      groupBuyActivityId: routeOptions.value.groupBuyActivityId ? Number(routeOptions.value.groupBuyActivityId) : undefined,
+      userRemark: remark.value || undefined,
     });
     preview.value = data;
+    // Load usable coupons based on preview items
+    if (data.items?.length) {
+      try {
+        usableCoupons.value = await promoApi.usableCoupons({
+          skuList: data.items.map(i => ({ skuId: i.skuId, quantity: i.quantity })),
+          goodsAmount: data.goodsAmount,
+        });
+      } catch {
+        usableCoupons.value = [];
+      }
+    }
   } catch (e) {
     console.warn('加载订单预览失败', e);
   }
@@ -193,14 +244,18 @@ onMounted(() => {
   loadPreview();
 });
 
+watch(deliveryType, () => {
+  loadPreview();
+});
+
 async function showCouponPicker() {
-  if (!preview.value?.availableCoupons?.length) {
+  if (!usableCoupons.value.length) {
     return uni.showToast({ title: '暂无可用优惠券', icon: 'none' });
   }
   uni.showActionSheet({
-    itemList: preview.value.availableCoupons.map(c => `${c.name} - ¥${c.amount}`),
+    itemList: usableCoupons.value.map(c => `${c.name} - ¥${c.amount}`),
     success: async (res) => {
-      selectedCouponId.value = preview.value?.availableCoupons[res.tapIndex]?.id;
+      selectedCouponId.value = usableCoupons.value[res.tapIndex]?.id;
       await loadPreview();
     }
   });
@@ -211,7 +266,11 @@ function goBack() {
 }
 
 function goToAddress() {
-  uni.navigateTo({ url: '/pagesC/address/index' });
+  uni.navigateTo({ url: '/pagesC/address/index?select=1' });
+}
+
+function goToPickupPoint() {
+  uni.navigateTo({ url: '/pagesC/pickup-point/index?select=1' });
 }
 
 async function submitOrder() {
@@ -223,14 +282,13 @@ async function submitOrder() {
     const page = pages[pages.length - 1] as any;
     const cartItemIds = page?.options?.cartItemIds?.split(',').map(Number).filter(Boolean) || [];
     const result = await orderApi.submit({
-      addressId: preview.value?.address?.id,
+      addressId: deliveryType.value === 1 ? preview.value?.address?.id : undefined,
       pickupPointId: deliveryType.value === 2 ? preview.value?.pickupPoint?.id : undefined,
       deliveryType: deliveryType.value,
       cartItemIds: cartItemIds.length ? cartItemIds : undefined,
       userCouponId: selectedCouponId.value,
       userRemark: remark.value || undefined,
       payMethod: 'wechat',
-      groupBuyActivityId: routeOptions.value.groupBuyActivityId ? Number(routeOptions.value.groupBuyActivityId) : undefined,
     });
     uni.hideLoading();
     uni.redirectTo({ url: `/pagesB/payment-result/index?orderNo=${result.orderNo}` });
@@ -655,6 +713,18 @@ async function submitOrder() {
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 100;
 
+  .closed-bar-tip {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+
+    .closed-bar-text {
+      font-size: $font-sm;
+      color: #C62828;
+      font-weight: $weight-medium;
+    }
+  }
+
   .price-info {
     display: flex;
     flex-direction: column;
@@ -697,6 +767,11 @@ async function submitOrder() {
     margin: 0;
     
     &::after { border: none; }
+
+    &.disabled {
+      background-color: #BDBDBD;
+      color: #ffffff;
+    }
   }
 }
 </style>

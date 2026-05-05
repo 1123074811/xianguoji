@@ -74,13 +74,13 @@
       </view>
 
       <!-- Discount Bar -->
-      <view class="discount-bar">
+      <view class="discount-bar" v-if="promotionTip">
         <view class="bar-content">
           <view class="left">
             <svg-icon name="star" :size="36" color="#2E7D32" />
-            <text class="text">满39减5，再买¥12即可享受</text>
+            <text class="text">{{ promotionTip }}</text>
           </view>
-          <view class="right">
+          <view class="right" @tap="goToHome">
             去凑单 <svg-icon name="chevron-right" :size="24" color="#2E7D32" />
           </view>
         </view>
@@ -88,14 +88,14 @@
 
       <!-- Delivery Info -->
       <view class="delivery-section card-flat">
-        <view class="info-item">
+        <view class="info-item" v-if="goods && goods.supportDelivery">
           <svg-icon name="shipping" :size="40" color="#2E7D32" />
           <view class="content">
-            <text class="label">次日送达</text>
-            <text class="desc">16:00前下单预计明日上午送达</text>
+            <text class="label">同城配送</text>
+            <text class="desc">满{{ deliverySetting?.freeAmount || '39' }}元免配送费</text>
           </view>
         </view>
-        <view class="info-item">
+        <view class="info-item" v-if="goods && goods.supportPickup">
           <svg-icon name="home" :size="40" color="#2E7D32" />
           <view class="content">
             <text class="label">支持自提</text>
@@ -111,7 +111,7 @@
           <view class="reviews-score">
             <text class="score-num">{{ reviewSummary.avgRating }}</text>
             <svg-icon name="star" :size="24" color="#FFA000" />
-            <text class="satisfaction">满意度 {{ reviewSummary.goodRate }}%</text>
+            <text class="satisfaction">满意度 {{ reviewSummary.totalCount ? Math.round(reviewSummary.goodCount / reviewSummary.totalCount * 100) : 0 }}%</text>
           </view>
         </view>
         <view class="review-list">
@@ -170,10 +170,12 @@ import { ref, computed, onMounted } from 'vue';
 import { useCartStore } from '@/stores/cart';
 import { catalogApi } from '@/api/modules/catalog';
 import { reviewApi } from '@/api/modules/review';
+import { shopApi } from '@/api/modules/shop';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { ProductDetailVO } from '@/api/types/catalog';
 import type { ReviewVO, ReviewSummaryVO } from '@/api/types/review';
+import type { DeliverySettingVO } from '@/api/types/shop';
 
 const cartStore = useCartStore();
 
@@ -181,6 +183,8 @@ const productId = ref(0);
 const goods = ref<ProductDetailVO | null>(null);
 const reviewSummary = ref<ReviewSummaryVO | null>(null);
 const reviews = ref<ReviewVO[]>([]);
+const deliverySetting = ref<DeliverySettingVO | null>(null);
+const promotionTip = ref('');
 
 const activeSkuId = ref(0);
 
@@ -203,13 +207,24 @@ async function loadDetail() {
     const defaultSku = detail.skuList.find(s => s.isDefault === 1) || detail.skuList[0];
     if (defaultSku) activeSkuId.value = defaultSku.id;
 
-    // 加载评价摘要和评价列表
-    const [summary, reviewList] = await Promise.all([
+    // 并行加载评价、配送设置
+    const [summary, reviewList, ds] = await Promise.all([
       reviewApi.summary(productId.value).catch(() => null),
       reviewApi.productReviews(productId.value, { size: 3 }).catch(() => null),
+      shopApi.deliverySetting().catch(() => null),
     ]);
     if (summary) reviewSummary.value = summary;
     if (reviewList) reviews.value = reviewList.list;
+    if (ds) deliverySetting.value = ds;
+
+    // 生成满减提示：基于默认SKU价格和满减规则
+    if (ds && ds.freeAmount && activeSku.value) {
+      const price = Number(activeSku.value.price);
+      const freeAmt = Number(ds.freeAmount);
+      if (price < freeAmt) {
+        promotionTip.value = `再购¥${(freeAmt - price).toFixed(0)}可享满减优惠`;
+      }
+    }
   } catch (e) {
     console.warn('加载商品详情失败', e);
   }
@@ -308,11 +323,16 @@ async function handleBuyNow() {
 
 .carousel {
   width: 100%;
-  aspect-ratio: 4/3;
+  // 微信小程序不支持 aspect-ratio，用 padding-bottom 撑 4:3
+  height: 0;
+  padding-bottom: 75%;
   position: relative;
   background-color: #ffffff;
 
   .swiper {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
   }
@@ -667,7 +687,9 @@ async function handleBuyNow() {
 
       .detail-img-sm {
         width: 100%;
-        aspect-ratio: 1;
+        // 微信小程序不支持 aspect-ratio
+        height: 0;
+        padding-bottom: 100%;
         border-radius: $radius-lg;
       }
     }

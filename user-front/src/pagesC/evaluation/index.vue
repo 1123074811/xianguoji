@@ -79,8 +79,12 @@ const doneList = ref<ReviewVO[]>([]);
 
 async function loadData() {
   try {
-    pendingList.value = await reviewApi.pendingReviews();
-    doneList.value = [];
+    const [pending, done] = await Promise.all([
+      reviewApi.pendingReviews().catch(() => []),
+      reviewApi.myReviews({ page: 1, size: 50 }).catch(() => null),
+    ]);
+    pendingList.value = pending;
+    if (done) doneList.value = done.list;
   } catch (e) {
     console.warn('加载评价数据失败', e);
   }

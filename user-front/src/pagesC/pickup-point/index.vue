@@ -14,8 +14,8 @@
             <text class="name">{{ point.name }}</text>
             <text class="address">{{ point.address }}</text>
             <view class="tags">
-              <text class="tag distance">{{ point.openTime }}-{{ point.closeTime }}</text>
-              <text class="tag status">营业中</text>
+              <text class="tag distance">{{ point.businessHours }}</text>
+              <text class="tag status" :class="{ closed: !isOpen(point.businessHours) }">{{ isOpen(point.businessHours) ? '营业中' : '休息中' }}</text>
             </view>
           </view>
           <view class="right-actions">
@@ -49,6 +49,19 @@ async function loadPickupPoints() {
     console.warn('自提点加载失败', e);
     points.value = [];
   }
+}
+
+function isOpen(businessHours?: string): boolean {
+  if (!businessHours) return true;
+  const [start, end] = businessHours.split('-');
+  if (!start || !end) return true;
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const nowMin = h * 60 + m;
+  return nowMin >= sh * 60 + (sm || 0) && nowMin <= eh * 60 + (em || 0);
 }
 </script>
 
@@ -123,6 +136,11 @@ async function loadPickupPoints() {
         &.status {
           background-color: #FFF3E0;
           color: #EF6C00;
+
+          &.closed {
+            background-color: #FFEBEE;
+            color: #C62828;
+          }
         }
       }
     }
