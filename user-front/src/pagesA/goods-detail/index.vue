@@ -171,6 +171,7 @@ import { useCartStore } from '@/stores/cart';
 import { catalogApi } from '@/api/modules/catalog';
 import { reviewApi } from '@/api/modules/review';
 import { shopApi } from '@/api/modules/shop';
+import { userApi } from '@/api/modules/user';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { ProductDetailVO } from '@/api/types/catalog';
@@ -234,8 +235,19 @@ onMounted(() => {
   const pages = getCurrentPages();
   const page = pages[pages.length - 1] as any;
   productId.value = Number(page?.options?.id || page?.options?.productId || 0);
-  if (productId.value) loadDetail();
+  if (productId.value) {
+    loadDetail();
+    recordFootprint();
+  }
 });
+
+async function recordFootprint() {
+  try {
+    await userApi.addFootprint(productId.value);
+  } catch {
+    // 未登录时静默忽略
+  }
+}
 
 function goBack() {
   uni.navigateBack();
