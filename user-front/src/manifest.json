@@ -17,8 +17,8 @@
             }
         },
         "requiredPrivateInfos" : [
-            "chooseLocation",
-            "getLocation"
+            "getLocation",
+            "chooseAddress"
         ]
     },
     "vueVersion" : "3",

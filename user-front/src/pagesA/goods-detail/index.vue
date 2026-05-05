@@ -152,7 +152,7 @@
           <text class="text">首页</text>
         </view>
         <view class="nav-item" @tap="goToCart">
-          <svg-icon name="cart" :size="40" color="#757575" />
+          <svg-icon name="shopping_cart" :size="40" color="#757575" />
           <text class="text">购物车</text>
           <view v-if="cartStore.totalCount > 0" class="badge">{{ cartStore.totalCount }}</view>
         </view>
