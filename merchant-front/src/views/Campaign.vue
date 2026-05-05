@@ -141,7 +141,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { adminPromoApi } from '@/api/modules/promo'
+import { adminPromoApi, type CouponStatsVO } from '@/api/modules/promo'
 import type { AdminCouponVO } from '@/api/types/promo'
 import Tooltip from '@/components/Tooltip.vue'
 import Popconfirm from '@/components/Popconfirm.vue'
@@ -158,11 +158,12 @@ const pageSize = ref(10)
 const currentStatus = ref<number | null>(null) // null表示全部，1=生效中，2=已过期，3=待生效
 
 // 统计数据
-const stats = ref([
-  { label: '活跃优惠券', value: '0', change: '+0 本周', changeColor: 'text-green-600', desc: '正在发放中', icon: 'confirmation_number', iconClass: 'text-primary bg-primary/10' },
-  { label: '累计领取量', value: '0', change: '+0%', changeColor: 'text-green-600', desc: '较上月增长', icon: 'redeem', iconClass: 'text-tertiary bg-tertiary-fixed' },
-  { label: '核销率', value: '0%', change: '+0%', changeColor: 'text-green-600', desc: '高于行业均值', icon: 'verified', iconClass: 'text-secondary bg-secondary-fixed' },
-  { label: '带来营收', value: '¥0', change: '+0%', changeColor: 'text-green-600', desc: '优惠券贡献营收', icon: 'payments', iconClass: 'text-primary bg-primary/10' }
+const couponStats = ref<CouponStatsVO | null>(null)
+const stats = computed(() => [
+  { label: '活跃优惠券', value: couponStats.value ? String(couponStats.value.activeCount) : '0', change: '+0 本周', changeColor: 'text-green-600', desc: '正在发放中', icon: 'confirmation_number', iconClass: 'text-primary bg-primary/10' },
+  { label: '累计领取量', value: couponStats.value ? String(couponStats.value.totalReceived) : '0', change: '+0%', changeColor: 'text-green-600', desc: '较上月增长', icon: 'redeem', iconClass: 'text-tertiary bg-tertiary-fixed' },
+  { label: '核销率', value: couponStats.value?.verifyRate || '0%', change: '+0%', changeColor: 'text-green-600', desc: '高于行业均值', icon: 'verified', iconClass: 'text-secondary bg-secondary-fixed' },
+  { label: '带来营收', value: couponStats.value ? `¥${couponStats.value.couponRevenue}` : '¥0', change: '+0%', changeColor: 'text-green-600', desc: '优惠券贡献营收', icon: 'payments', iconClass: 'text-primary bg-primary/10' }
 ])
 
 // 标签页配置
@@ -207,8 +208,8 @@ const loadCoupons = async () => {
     coupons.value = data.list || data || []
     totalCount.value = data.total || coupons.value.length
     
-    // 更新统计数据
-    updateStats()
+    // 加载统计数据
+    loadCouponStats()
   } catch (error) {
     console.error('加载优惠券列表失败:', error)
     coupons.value = []
@@ -218,17 +219,13 @@ const loadCoupons = async () => {
   }
 }
 
-// 更新统计数据
-const updateStats = () => {
-  const activeCoupons = coupons.value.filter(c => c.status === 1)
-  const totalReceived = coupons.value.reduce((sum, c) => sum + (c.receivedCount || 0), 0)
-  const totalUsed = coupons.value.reduce((sum, c) => sum + (c.usedCount || 0), 0)
-  
-  stats.value[0].value = activeCoupons.length.toString()
-  stats.value[1].value = totalReceived.toString()
-  stats.value[2].value = totalReceived > 0 ? ((totalUsed / totalReceived) * 100).toFixed(1) + '%' : '0%'
-  // 营收数据需要后端提供，暂时显示0
-  stats.value[3].value = '¥0'
+// 加载优惠券统计
+const loadCouponStats = async () => {
+  try {
+    couponStats.value = await adminPromoApi.couponStats()
+  } catch (e) {
+    console.warn('加载优惠券统计失败', e)
+  }
 }
 
 // 切换标签页

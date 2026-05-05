@@ -2,6 +2,11 @@ import { request } from '@/api/request';
 import type { PageVO } from '@/api/types/common';
 import type { StaffVO, StaffCreateDto } from '@/api/types/staff';
 
+export interface StaffSecurityVO {
+  passwordChangedAt: string;
+  lastLoginAt: string;
+}
+
 export const staffApi = {
   page: (params: { page?: number; size?: number }) =>
     request<PageVO<StaffVO>>({ url: '/api/admin/staff/page', params }),
@@ -14,4 +19,10 @@ export const staffApi = {
 
   delete: (id: number) =>
     request<void>({ url: `/api/admin/staff/${id}`, method: 'DELETE' }),
+
+  securityInfo: () =>
+    request<StaffSecurityVO>({ url: '/api/admin/staff/me/security' }),
+
+  changePassword: (data: { oldPassword: string; newPassword: string }) =>
+    request<void>({ url: '/api/admin/staff/me/password', method: 'PUT', data }),
 };

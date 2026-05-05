@@ -74,7 +74,7 @@
                 <span class="material-symbols-outlined text-primary">lock</span>
                 <div>
                   <p class="font-label-bold text-slate-800">修改密码</p>
-                  <p class="text-xs text-slate-500">上次修改于 30 天前</p>
+                  <p class="text-xs text-slate-500">{{ passwordChangedDesc }}</p>
                 </div>
               </div>
               <button class="px-4 py-1.5 border border-primary text-primary font-label-bold text-xs rounded-lg hover:bg-primary/5 transition-colors">修改</button>
@@ -84,7 +84,7 @@
                 <span class="material-symbols-outlined text-secondary">devices</span>
                 <div>
                   <p class="font-label-bold text-slate-800">登录设备管理</p>
-                  <p class="text-xs text-slate-500">当前有 2 台设备在线</p>
+                  <p class="text-xs text-slate-500">上次登录 {{ lastLoginDesc || '暂无记录' }}</p>
                 </div>
               </div>
               <button class="px-4 py-1.5 border border-primary text-primary font-label-bold text-xs rounded-lg hover:bg-primary/5 transition-colors">管理</button>
@@ -153,14 +153,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { adminShopApi } from '@/api/modules/shop'
+import { staffApi, type StaffSecurityVO } from '@/api/modules/staff'
 import type { AdminShopVO, NotifySettingVO } from '@/api/types/shop'
 import { toast } from '@/utils/toast'
 
 const shop = ref<Partial<AdminShopVO>>({})
 const notifySettings = ref<NotifySettingVO[]>([])
+const securityInfo = ref<StaffSecurityVO | null>(null)
 const saving = ref(false)
+
+const passwordChangedDesc = computed(() => {
+  if (!securityInfo.value?.passwordChangedAt) return '从未修改'
+  const d = new Date(securityInfo.value.passwordChangedAt)
+  const diff = Math.floor((Date.now() - d.getTime()) / 86400000)
+  if (diff === 0) return '今天修改'
+  if (diff < 30) return `${diff} 天前修改`
+  if (diff < 365) return `${Math.floor(diff / 30)} 个月前修改`
+  return `${Math.floor(diff / 365)} 年前修改`
+})
+
+const lastLoginDesc = computed(() => {
+  if (!securityInfo.value?.lastLoginAt) return ''
+  const d = new Date(securityInfo.value.lastLoginAt)
+  const diff = Math.floor((Date.now() - d.getTime()) / 86400000)
+  if (diff === 0) return '今天'
+  if (diff === 1) return '昨天'
+  if (diff < 7) return `${diff} 天前`
+  return d.toLocaleDateString()
+})
 
 async function loadShop() {
   try {
@@ -236,8 +258,16 @@ function buildNotificationList() {
   }
 }
 
+async function loadSecurityInfo() {
+  try {
+    securityInfo.value = await staffApi.securityInfo()
+  } catch (e) {
+    console.warn('加载安全信息失败', e)
+  }
+}
+
 onMounted(async () => {
-  await Promise.all([loadShop(), loadNotifySettings()])
+  await Promise.all([loadShop(), loadNotifySettings(), loadSecurityInfo()])
   buildNotificationList()
 })
 </script>

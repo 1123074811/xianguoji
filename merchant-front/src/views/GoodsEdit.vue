@@ -158,14 +158,14 @@
             <div>
               <label class="block text-xs font-bold text-slate-500 mb-1">最低成团人数</label>
               <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden">
-                <button class="px-3 py-2 bg-slate-50 text-slate-500">-</button>
-                <input class="flex-1 text-center border-none text-sm font-medium outline-none" type="number" value="5" />
-                <button class="px-3 py-2 bg-slate-50 text-slate-500">+</button>
+                <button class="px-3 py-2 bg-slate-50 text-slate-500" @click="groupBuy.groupSize = Math.max(2, groupBuy.groupSize - 1)">-</button>
+                <input class="flex-1 text-center border-none text-sm font-medium outline-none" type="number" v-model.number="groupBuy.groupSize" min="2" />
+                <button class="px-3 py-2 bg-slate-50 text-slate-500" @click="groupBuy.groupSize++">+</button>
               </div>
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-500 mb-1">拼团折扣 (%)</label>
-              <input class="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none" type="text" value="15" />
+              <input class="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none" type="number" v-model.number="groupBuy.discountPercent" min="1" max="99" />
             </div>
           </div>
         </section>
@@ -216,13 +216,13 @@
           </div>
           <div class="space-y-4">
             <div class="flex items-end justify-between">
-              <div class="text-3xl font-black">94%</div>
-              <div class="text-[10px] font-bold uppercase py-1 px-2 bg-white/20 rounded">表现优异</div>
+              <div class="text-3xl font-black">{{ healthScore }}%</div>
+              <div class="text-[10px] font-bold uppercase py-1 px-2 bg-white/20 rounded">{{ healthLabel }}</div>
             </div>
             <div class="w-full bg-white/20 h-1 rounded-full overflow-hidden">
-              <div class="bg-white w-[94%] h-full"></div>
+              <div class="bg-white h-full transition-all" :style="{ width: healthScore + '%' }"></div>
             </div>
-            <p class="text-xs opacity-70 leading-relaxed">完善详细的产品描述可以将您的搜索可见度提升 12%。</p>
+            <p class="text-xs opacity-70 leading-relaxed">{{ healthTip }}</p>
           </div>
         </section>
       </div>
@@ -244,7 +244,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { adminCatalogApi } from '@/api/modules/catalog'
 import { request } from '@/api/request'
@@ -276,6 +276,7 @@ const form = ref({
 
 const carouselImages = ref<string[]>([])
 const detailImages = ref<string[]>([])
+const groupBuy = reactive({ groupSize: 5, discountPercent: 15 })
 
 interface SkuItem {
   id?: number
@@ -290,6 +291,36 @@ interface SkuItem {
 const skuList = ref<SkuItem[]>([{ specName: '', price: '', originalPrice: '', stock: 0, isDefault: 1 }])
 
 const categories = ref<AdminCategoryVO[]>([])
+
+const healthScore = computed(() => {
+  let score = 0
+  if (form.value.name) score += 20
+  if (form.value.categoryId && form.value.categoryId > 0) score += 15
+  if (carouselImages.value.length > 0) score += 20
+  if (skuList.value.some(s => s.specName && s.price)) score += 20
+  if (form.value.description) score += 15
+  if (detailImages.value.length > 0) score += 10
+  return Math.min(score, 100)
+})
+
+const healthLabel = computed(() => {
+  const s = healthScore.value
+  if (s >= 90) return '表现优异'
+  if (s >= 70) return '表现良好'
+  if (s >= 50) return '需要完善'
+  return '信息不足'
+})
+
+const healthTip = computed(() => {
+  const missing: string[] = []
+  if (!form.value.name) missing.push('商品名称')
+  if (!form.value.categoryId || form.value.categoryId <= 0) missing.push('类目')
+  if (carouselImages.value.length === 0) missing.push('轮播图')
+  if (!skuList.value.some(s => s.specName && s.price)) missing.push('规格价格')
+  if (!form.value.description) missing.push('商品描述')
+  if (missing.length === 0) return '商品信息完善，搜索可见度已最大化！'
+  return `补充${missing.slice(0, 2).join('、')}可提升搜索可见度`
+})
 
 // ---- 加载数据 ----
 async function loadCategories() {

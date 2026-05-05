@@ -9,6 +9,7 @@ export interface AdminShopVO {
   isOpen: number;
   autoAccept: number;
   voiceNotify: number;
+  supportPhone: string;
   createdAt: string;
   updatedAt: string;
 }

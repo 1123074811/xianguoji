@@ -87,7 +87,7 @@
               </button>
               <button class="w-full py-2.5 bg-white/20 text-white rounded-lg font-label-bold text-sm hover:bg-white/30 transition-colors flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-lg">call</span>
-                400-888-9999
+                {{ supportPhone || '联系客服' }}
               </button>
             </div>
           </div>
@@ -115,6 +115,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { helpApi, type HelpFaqVO, type HelpGuideVO } from '@/api/modules/help'
+import { adminShopApi } from '@/api/modules/shop'
+import type { AdminShopVO } from '@/api/types/shop'
 
 const searchQuery = ref('')
 const activeSection = ref('')
@@ -126,6 +128,7 @@ const feedbackContact = ref('')
 const submittingFeedback = ref(false)
 const feedbackTip = ref('')
 const feedbackTipClass = ref('text-slate-500')
+const supportPhone = ref('')
 
 const quickHelp = [
   { title: '订单管理', desc: '接单、备货、发货流程', icon: 'shopping_cart', iconBg: 'bg-primary/10', iconColor: 'text-primary', section: 'orders' },
@@ -164,6 +167,15 @@ async function loadGuides() {
   }
 }
 
+async function loadSupportPhone() {
+  try {
+    const shop = await adminShopApi.shopInfo()
+    supportPhone.value = shop.supportPhone || shop.phone || ''
+  } catch (e) {
+    console.warn('加载客服电话失败', e)
+  }
+}
+
 watch(activeSection, () => loadFaqs())
 
 async function submitFeedback() {
@@ -190,5 +202,6 @@ async function submitFeedback() {
 onMounted(() => {
   loadFaqs()
   loadGuides()
+  loadSupportPhone()
 })
 </script>

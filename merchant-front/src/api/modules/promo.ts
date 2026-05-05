@@ -2,7 +2,17 @@ import { request } from '@/api/request';
 import type { PageVO } from '@/api/types/common';
 import type { AdminCouponVO, CouponCreateDto, AdminGroupBuyVO } from '@/api/types/promo';
 
+export interface CouponStatsVO {
+  activeCount: number;
+  totalReceived: number;
+  verifyRate: string;
+  couponRevenue: number;
+}
+
 export const adminPromoApi = {
+  couponStats: () =>
+    request<CouponStatsVO>({ url: '/api/admin/coupon/stats' }),
+
   couponPage: (params: { page?: number; size?: number; status?: number }) =>
     request<PageVO<AdminCouponVO>>({ url: '/api/admin/coupon/list', params }),
 
