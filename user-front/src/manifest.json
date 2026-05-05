@@ -15,7 +15,11 @@
             "scope.userLocation" : {
                 "desc" : "您的位置将用于展示附近的自提点"
             }
-        }
+        },
+        "requiredPrivateInfos" : [
+            "chooseLocation",
+            "getLocation"
+        ]
     },
     "vueVersion" : "3",
     "locale" : "zh-Hans"

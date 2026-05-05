@@ -16,6 +16,7 @@
     "@dcloudio/uni-h5": "3.0.0-alpha-3080220230511001",
     "@dcloudio/uni-mp-weixin": "3.0.0-alpha-3080220230511001",
     "pinia": "2.0.36",
+    "province-city-china": "^8.5.8",
     "vue": "^3.3.4",
     "vue-i18n": "^9.2.2",
     "wot-design-uni": "^1.2.14"
