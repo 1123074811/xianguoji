@@ -6,6 +6,8 @@ import com.xianguoji.server.common.result.R;
 import com.xianguoji.server.common.security.LoginContext;
 import com.xianguoji.server.module.staff.dto.StaffAddDto;
 import com.xianguoji.server.module.staff.dto.StaffUpdDto;
+import com.xianguoji.server.module.staff.entity.Staff;
+import com.xianguoji.server.module.staff.mapper.StaffMapper;
 import com.xianguoji.server.module.staff.service.StaffService;
 import com.xianguoji.server.module.staff.vo.StaffVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +26,19 @@ import java.util.Map;
 public class StaffController {
 
     private final StaffService staffService;
+    private final StaffMapper staffMapper;
+
+    @Operation(summary = "当前员工安全信息")
+    @GetMapping("/me/security")
+    @AdminRequired
+    public R<Map<String, Object>> meSecurity() {
+        Staff me = staffMapper.selectById(LoginContext.sid());
+        if (me == null) return R.fail(4040, "员工不存在");
+        return R.ok(Map.of(
+                "passwordChangedAt", me.getPasswordChangedAt() != null ? me.getPasswordChangedAt().toString() : "",
+                "lastLoginAt", me.getLastLoginAt() != null ? me.getLastLoginAt().toString() : ""
+        ));
+    }
 
     @Operation(summary = "员工列表")
     @GetMapping("/page")

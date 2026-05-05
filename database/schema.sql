@@ -25,6 +25,7 @@ CREATE TABLE `shop` (
   `is_open`         TINYINT      NOT NULL DEFAULT 1              COMMENT '0已打烊 1营业中',
   `auto_accept`     TINYINT      NOT NULL DEFAULT 0              COMMENT '自动接单开关',
   `voice_notify`    TINYINT      NOT NULL DEFAULT 1              COMMENT '来单语音播报',
+  `support_phone`   VARCHAR(20)                                   COMMENT '客服电话',
   `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB COMMENT='店铺信息（单商户）';
@@ -42,6 +43,7 @@ CREATE TABLE `staff` (
   `role`          VARCHAR(16)  NOT NULL DEFAULT 'admin'          COMMENT 'owner店主 / admin管理员 / packer打包员 / courier配送员',
   `permissions`   JSON                                           COMMENT '权限点 JSON 数组',
   `status`        TINYINT      NOT NULL DEFAULT 1                COMMENT '0禁用 1正常',
+  `password_changed_at` DATETIME                                   COMMENT '上次修改密码时间',
   `last_login_at` DATETIME,
   `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -585,8 +587,8 @@ CREATE TABLE `admin_notification` (
 -- =====================================================================
 
 -- 店铺信息
-INSERT INTO `shop` (`name`, `logo`, `description`, `phone`, `address`, `business_hours`, `is_open`)
-VALUES ('鲜果记', '/static/seed/shop/logo.jpg', '新鲜直达，每日精选', '0571-12345678', '杭州市西湖区文三路 100 号', '08:00-22:00', 1);
+INSERT INTO `shop` (`name`, `logo`, `description`, `phone`, `address`, `business_hours`, `is_open`, `support_phone`)
+VALUES ('鲜果记', '/static/seed/shop/logo.jpg', '新鲜直达，每日精选', '0571-12345678', '杭州市西湖区文三路 100 号', '08:00-22:00', 1, '400-888-9999');
 
 -- 默认店主账号  密码: 123456 （bcrypt 占位 hash，正式上线请替换）
 INSERT INTO `staff` (`username`, `password_hash`, `name`, `phone`, `role`) VALUES

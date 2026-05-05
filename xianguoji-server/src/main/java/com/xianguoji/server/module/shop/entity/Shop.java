@@ -22,6 +22,7 @@ public class Shop {
     private Integer isOpen;
     private Integer autoAccept;
     private Integer voiceNotify;
+    private String supportPhone;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

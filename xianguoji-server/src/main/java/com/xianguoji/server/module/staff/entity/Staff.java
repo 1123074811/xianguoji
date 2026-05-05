@@ -25,6 +25,7 @@ public class Staff {
     @TableField(typeHandler = JacksonTypeHandler.class)
     private List<String> permissions;
     private Integer status;
+    private LocalDateTime passwordChangedAt;
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

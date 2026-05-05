@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -73,6 +74,7 @@ public class StaffServiceImpl implements StaffService {
         Staff staff = staffMapper.selectById(id);
         if (staff == null) throw new BizException(ResultCode.NOT_FOUND);
         staff.setPasswordHash(passwordEncoder.encode(newPassword));
+        staff.setPasswordChangedAt(LocalDateTime.now());
         staffMapper.updateById(staff);
     }
 
@@ -84,6 +86,7 @@ public class StaffServiceImpl implements StaffService {
             throw new BizException(ResultCode.BIZ_ERROR, "原密码不正确");
         }
         staff.setPasswordHash(passwordEncoder.encode(newPassword));
+        staff.setPasswordChangedAt(LocalDateTime.now());
         staffMapper.updateById(staff);
     }
 

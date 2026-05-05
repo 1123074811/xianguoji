@@ -9,6 +9,7 @@ import com.xianguoji.server.module.promo.entity.PromotionRule;
 import com.xianguoji.server.module.promo.mapper.CouponMapper;
 import com.xianguoji.server.module.promo.mapper.GroupBuyActivityMapper;
 import com.xianguoji.server.module.promo.mapper.PromotionRuleMapper;
+import com.xianguoji.server.module.promo.mapper.UserCouponMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,30 @@ public class AdminPromoController {
     private final CouponMapper couponMapper;
     private final PromotionRuleMapper promotionRuleMapper;
     private final GroupBuyActivityMapper groupBuyActivityMapper;
+    private final UserCouponMapper userCouponMapper;
+
+    // ===== 优惠券统计 =====
+    @Operation(summary = "优惠券统计概览")
+    @GetMapping("/coupon/stats")
+    @AdminRequired
+    public R<java.util.Map<String, Object>> couponStats() {
+        List<Coupon> allCoupons = couponMapper.selectList(null);
+        long activeCount = allCoupons.stream().filter(c -> c.getStatus() != null && c.getStatus() == 1).count();
+        int totalReceived = allCoupons.stream().mapToInt(c -> c.getReceivedCount() != null ? c.getReceivedCount() : 0).sum();
+        int totalUsed = allCoupons.stream().mapToInt(c -> c.getUsedCount() != null ? c.getUsedCount() : 0).sum();
+        String verifyRate = totalReceived > 0 ? String.format("%.1f", totalUsed * 100.0 / totalReceived) : "0";
+        // 优惠券贡献营收 = 已核销优惠券关联订单的 pay_amount 之和（简化：用 used_count * avg_amount 估算）
+        long couponRevenue = allCoupons.stream()
+                .filter(c -> c.getUsedCount() != null && c.getUsedCount() > 0 && c.getType() != null && c.getType() == 1)
+                .mapToLong(c -> (long) c.getUsedCount() * (c.getAmount() != null ? c.getAmount().longValue() : 0))
+                .sum();
+        return R.ok(java.util.Map.of(
+                "activeCount", activeCount,
+                "totalReceived", totalReceived,
+                "verifyRate", verifyRate + "%",
+                "couponRevenue", couponRevenue
+        ));
+    }
 
     // ===== 优惠券 =====
     @Operation(summary = "优惠券列表")
