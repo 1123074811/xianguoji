@@ -3,6 +3,7 @@ package com.xianguoji.server.common.scheduler;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.xianguoji.server.common.enums.OrderStatus;
+import com.xianguoji.server.common.util.StockRedisHelper;
 import com.xianguoji.server.module.order.entity.Order;
 import com.xianguoji.server.module.order.entity.OrderItem;
 import com.xianguoji.server.module.order.entity.OrderStatusLog;
@@ -41,6 +42,7 @@ public class ScheduledTasks {
     private final FootprintMapper footprintMapper;
     private final GroupBuyService groupBuyService;
     private final ProductSkuMapper skuMapper;
+    private final StockRedisHelper stockRedisHelper;
 
     /**
      * 每1分钟：取消超过15分钟未支付订单
@@ -55,9 +57,16 @@ public class ScheduledTasks {
                         .lt(Order::getCreatedAt, threshold));
 
         for (Order order : orders) {
-            order.setStatus(OrderStatus.CANCELLED.getCode());
-            order.setCancelReason("超时未付款，系统自动取消");
-            orderMapper.updateById(order);
+            // 原子更新：仅当 status 仍为 PENDING_PAY 时才取消，防止并发支付覆盖
+            int rows = orderMapper.update(null, new LambdaUpdateWrapper<Order>()
+                    .eq(Order::getId, order.getId())
+                    .eq(Order::getStatus, OrderStatus.PENDING_PAY.getCode())
+                    .set(Order::getStatus, OrderStatus.CANCELLED.getCode())
+                    .set(Order::getCancelReason, "超时未付款，系统自动取消"));
+            if (rows == 0) {
+                log.info("订单已被支付或取消，跳过: {}", order.getOrderNo());
+                continue;
+            }
 
             statusLogMapper.insert(new OrderStatusLog() {{
                 setOrderId(order.getId());
@@ -67,23 +76,25 @@ public class ScheduledTasks {
                 setRemark("超时自动取消");
             }});
 
-            // 释放库存
+            // 释放库存（DB + Redis）
             List<OrderItem> items = orderItemMapper.selectList(
                     new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, order.getId()));
             for (OrderItem oi : items) {
                 skuMapper.update(null, new LambdaUpdateWrapper<com.xianguoji.server.module.catalog.entity.ProductSku>()
                         .eq(com.xianguoji.server.module.catalog.entity.ProductSku::getId, oi.getSkuId())
                         .setSql("stock = stock + " + oi.getQuantity() + ", sales = GREATEST(sales - " + oi.getQuantity() + ", 0)"));
+                // Redis 库存回补
+                stockRedisHelper.rollback(oi.getSkuId(), oi.getQuantity());
             }
 
             // 退回优惠券
             if (order.getUserCouponId() != null) {
-                UserCoupon uc = new UserCoupon();
-                uc.setId(order.getUserCouponId());
-                uc.setStatus(0);
-                uc.setOrderId(null);
-                uc.setUsedAt(null);
-                userCouponMapper.updateById(uc);
+                userCouponMapper.update(null, new LambdaUpdateWrapper<UserCoupon>()
+                        .eq(UserCoupon::getId, order.getUserCouponId())
+                        .eq(UserCoupon::getStatus, 1)
+                        .set(UserCoupon::getStatus, 0)
+                        .set(UserCoupon::getOrderId, null)
+                        .set(UserCoupon::getUsedAt, null));
             }
 
             log.info("自动取消订单: {}", order.getOrderNo());
@@ -112,22 +123,12 @@ public class ScheduledTasks {
 
     /**
      * 每天凌晨4点：用户标签更新（30天无下单 → silent）
+     * 单 SQL 替代 N+1 循环
      */
     @Scheduled(cron = "0 0 4 * * *")
     public void updateUserTags() {
         LocalDateTime threshold = LocalDateTime.now().minusDays(30);
-        List<User> users = userMapper.selectList(
-                new LambdaQueryWrapper<User>().eq(User::getTag, "regular"));
-        for (User u : users) {
-            Long orderCount = orderMapper.selectCount(
-                    new LambdaQueryWrapper<Order>()
-                            .eq(Order::getUserId, u.getId())
-                            .gt(Order::getCreatedAt, threshold));
-            if (orderCount == 0) {
-                u.setTag("silent");
-                userMapper.updateById(u);
-            }
-        }
+        userMapper.updateToSilent(threshold);
         log.info("用户标签更新完成");
     }
 
