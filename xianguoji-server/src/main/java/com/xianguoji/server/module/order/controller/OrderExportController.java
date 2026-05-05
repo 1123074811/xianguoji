@@ -1,12 +1,9 @@
 package com.xianguoji.server.module.order.controller;
 
-import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xianguoji.server.common.annotation.AdminRequired;
+import com.xianguoji.server.common.excel.ExcelExportTemplate;
 import com.xianguoji.server.module.order.entity.Order;
-import com.xianguoji.server.module.order.entity.OrderItem;
-import com.xianguoji.server.module.order.mapper.OrderItemMapper;
 import com.xianguoji.server.module.order.mapper.OrderMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -32,17 +28,14 @@ import java.util.List;
 public class OrderExportController {
 
     private final OrderMapper orderMapper;
-    private final OrderItemMapper orderItemMapper;
+    private final ExcelExportTemplate excelExportTemplate;
 
     @Operation(summary = "导出Excel")
     @GetMapping("/export")
     public void export(@RequestParam(required = false) Integer status,
                        @RequestParam(required = false) String startDate,
                        @RequestParam(required = false) String endDate,
-                       HttpServletResponse response) throws IOException {
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        response.setHeader("Content-Disposition", "attachment;filename=orders.xlsx");
-
+                       HttpServletResponse response) {
         LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
         if (status != null) wrapper.eq(Order::getStatus, status);
         if (startDate != null) wrapper.ge(Order::getCreatedAt, startDate + " 00:00:00");
@@ -65,10 +58,7 @@ public class OrderExportController {
             rows.add(row);
         }
 
-        EasyExcel.write(response.getOutputStream(), OrderExportRow.class)
-                .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
-                .sheet("订单")
-                .doWrite(rows);
+        excelExportTemplate.export(response, "orders", "订单", OrderExportRow.class, rows);
     }
 
     @Data

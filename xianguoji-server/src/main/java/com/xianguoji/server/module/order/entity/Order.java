@@ -1,8 +1,6 @@
 package com.xianguoji.server.module.order.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -42,6 +40,12 @@ public class Order {
     private String courierPhone;
     private LocalDateTime deliveredAt;
     private LocalDateTime finishedAt;
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
+    @TableField(fill = FieldFill.INSERT)
+    private Long createBy;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Long updateBy;
 }

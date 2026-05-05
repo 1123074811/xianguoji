@@ -10,6 +10,7 @@ import com.xianguoji.server.common.result.PageVO;
 import com.xianguoji.server.common.result.ResultCode;
 import com.xianguoji.server.common.util.OrderNoUtil;
 import com.xianguoji.server.common.util.PickupCodeUtil;
+import com.xianguoji.server.common.util.StockRedisHelper;
 import com.xianguoji.server.module.cart.entity.CartItem;
 import com.xianguoji.server.module.cart.mapper.CartItemMapper;
 import com.xianguoji.server.module.catalog.entity.Product;
@@ -36,6 +37,9 @@ import com.xianguoji.server.module.promo.mapper.CouponMapper;
 import com.xianguoji.server.module.promo.mapper.PromotionRuleMapper;
 import com.xianguoji.server.module.promo.mapper.UserCouponMapper;
 import com.xianguoji.server.module.promo.service.PromoService;
+import com.xianguoji.server.common.event.OrderCreatedEvent;
+import com.xianguoji.server.common.event.OrderPaidEvent;
+import com.xianguoji.server.common.event.OrderCancelledEvent;
 import com.xianguoji.server.common.websocket.WsNotificationService;
 import com.xianguoji.server.module.shop.entity.DeliverySetting;
 import com.xianguoji.server.module.shop.entity.PickupPoint;
@@ -47,6 +51,7 @@ import com.xianguoji.server.module.shop.mapper.ShopMapper;
 import com.xianguoji.server.module.user.mapper.UserAddressMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,6 +84,8 @@ public class OrderServiceImpl implements OrderService {
     private final PromoService promoService;
     private final ShopMapper shopMapper;
     private final WsNotificationService wsNotificationService;
+    private final StockRedisHelper stockRedisHelper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public OrderPreviewVO preview(Long uid, OrderPreviewDto dto) {
@@ -182,6 +189,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @com.xianguoji.server.common.annotation.Idempotent(key = "order:submit", ttl = 5, message = "请勿重复提交订单")
     public String submit(Long uid, OrderSubmitDto dto) {
         checkShopOpen();
         // Validate: delivery requires address, pickup requires pickup point
@@ -197,34 +205,53 @@ public class OrderServiceImpl implements OrderService {
         // 1. 锁库存 + 计算商品总价
         BigDecimal goodsAmount = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
-        for (CartItem ci : cartItems) {
-            ProductSku sku = skuMapper.selectById(ci.getSkuId());
-            Product product = productMapper.selectById(ci.getProductId());
-            if (sku == null || product == null || product.getStatus() != 1) {
-                throw new BizException(ResultCode.PRODUCT_OFF_SHELF, product != null ? product.getName() + "已下架" : "商品不存在");
+        // 记录已 Redis 预扣的 (skuId, quantity)，异常时按实际数量回滚
+        java.util.Map<Long, Integer> redisDeducted = new java.util.LinkedHashMap<>();
+        try {
+            for (CartItem ci : cartItems) {
+                ProductSku sku = skuMapper.selectById(ci.getSkuId());
+                Product product = productMapper.selectById(ci.getProductId());
+                if (sku == null || product == null || product.getStatus() != 1) {
+                    throw new BizException(ResultCode.PRODUCT_OFF_SHELF, product != null ? product.getName() + "已下架" : "商品不存在");
+                }
+                // Redis 预扣库存（活动/抢购场景）
+                if (stockRedisHelper.getStock(ci.getSkuId()) >= 0) {
+                    if (!stockRedisHelper.deduct(ci.getSkuId(), ci.getQuantity())) {
+                        throw new BizException(ResultCode.STOCK_NOT_ENOUGH, product.getName() + " 库存不足");
+                    }
+                    redisDeducted.merge(ci.getSkuId(), ci.getQuantity(), Integer::sum);
+                }
+                // DB 乐观锁兜底
+                int rows = skuMapper.update(null, new LambdaUpdateWrapper<ProductSku>()
+                        .eq(ProductSku::getId, ci.getSkuId())
+                        .ge(ProductSku::getStock, ci.getQuantity())
+                        .setSql("stock = stock - " + ci.getQuantity() + ", sales = sales + " + ci.getQuantity()));
+                if (rows == 0) {
+                    throw new BizException(ResultCode.STOCK_NOT_ENOUGH, product.getName() + " 库存不足");
+                }
+
+                BigDecimal subtotal = sku.getPrice().multiply(BigDecimal.valueOf(ci.getQuantity()));
+                goodsAmount = goodsAmount.add(subtotal);
+
+                OrderItem oi = new OrderItem();
+                oi.setProductId(product.getId());
+                oi.setSkuId(sku.getId());
+                oi.setProductName(product.getName());
+                oi.setSpecName(sku.getSpecName());
+                oi.setImage(product.getMainImage());
+                oi.setPrice(sku.getPrice());
+                oi.setOriginalPrice(sku.getOriginalPrice());
+                oi.setQuantity(ci.getQuantity());
+                oi.setSubtotal(subtotal);
+                oi.setIsReviewed(0);
+                orderItems.add(oi);
             }
-            // 锁库存
-            int rows = skuMapper.update(null, new LambdaUpdateWrapper<ProductSku>()
-                    .eq(ProductSku::getId, ci.getSkuId())
-                    .ge(ProductSku::getStock, ci.getQuantity())
-                    .setSql("stock = stock - " + ci.getQuantity() + ", sales = sales + " + ci.getQuantity()));
-            if (rows == 0) throw new BizException(ResultCode.STOCK_NOT_ENOUGH, product.getName() + " 库存不足");
-
-            BigDecimal subtotal = sku.getPrice().multiply(BigDecimal.valueOf(ci.getQuantity()));
-            goodsAmount = goodsAmount.add(subtotal);
-
-            OrderItem oi = new OrderItem();
-            oi.setProductId(product.getId());
-            oi.setSkuId(sku.getId());
-            oi.setProductName(product.getName());
-            oi.setSpecName(sku.getSpecName());
-            oi.setImage(product.getMainImage());
-            oi.setPrice(sku.getPrice());
-            oi.setOriginalPrice(sku.getOriginalPrice());
-            oi.setQuantity(ci.getQuantity());
-            oi.setSubtotal(subtotal);
-            oi.setIsReviewed(0);
-            orderItems.add(oi);
+        } catch (RuntimeException e) {
+            // 下单失败，按实际预扣量回滚 Redis 库存（DB 由 @Transactional 自动回滚）
+            for (java.util.Map.Entry<Long, Integer> en : redisDeducted.entrySet()) {
+                stockRedisHelper.rollback(en.getKey(), en.getValue());
+            }
+            throw e;
         }
 
         // 2. 计算金额
@@ -303,14 +330,18 @@ public class OrderServiceImpl implements OrderService {
         List<Long> cartIds = cartItems.stream().map(CartItem::getId).toList();
         cartItemMapper.deleteBatchIds(cartIds);
 
-        // 8. 同步商品冗余字段
-        for (CartItem ci : cartItems) {
-            syncProductFields(ci.getProductId());
-        }
+        // 8. 同步商品冗余字段（按 productId 去重，避免一单多 SKU 同商品时重复刷）
+        cartItems.stream()
+                .map(CartItem::getProductId)
+                .distinct()
+                .forEach(this::syncProductFields);
 
         // 9. WebSocket通知商家端
         String dtLabel = dto.getDeliveryType() == 1 ? "配送" : "自提";
         wsNotificationService.notifyNewOrder(orderNo, payAmount.toPlainString(), dtLabel);
+
+        // 10. P2-5: 发布订单创建事件（异步处理销量统计等）
+        eventPublisher.publishEvent(new OrderCreatedEvent(this, orderNo, order.getId(), uid));
 
         return orderNo;
     }
@@ -360,6 +391,9 @@ public class OrderServiceImpl implements OrderService {
 
         // 释放库存
         releaseStock(order.getId());
+
+        // P2-5: 发布订单取消事件（异步回退销量等）
+        eventPublisher.publishEvent(new OrderCancelledEvent(this, orderNo, order.getId(), "用户主动取消"));
     }
 
     @Override

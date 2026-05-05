@@ -8,6 +8,7 @@ import com.xianguoji.server.common.result.PageVO;
 import com.xianguoji.server.common.result.ResultCode;
 import com.xianguoji.server.common.util.OrderNoUtil;
 import com.xianguoji.server.common.util.PickupCodeUtil;
+import com.xianguoji.server.common.util.StockRedisHelper;
 import com.xianguoji.server.module.catalog.entity.Product;
 import com.xianguoji.server.module.catalog.entity.ProductSku;
 import com.xianguoji.server.module.catalog.mapper.ProductMapper;
@@ -57,6 +58,7 @@ public class GroupBuyServiceImpl implements GroupBuyService {
     private final ProductSkuMapper skuMapper;
     private final UserMapper userMapper;
     private final UserAddressMapper addressMapper;
+    private final StockRedisHelper stockRedisHelper;
 
     @Override
     public PageVO<GroupBuyActivityVO> getGroupBuyPage(Integer page, Integer size) {
@@ -79,14 +81,27 @@ public class GroupBuyServiceImpl implements GroupBuyService {
             throw new BizException(ResultCode.GROUP_BUY_ENDED, "拼团活动已结束");
         }
 
-        // 锁库存
+        // Redis 预扣库存（拼团场景）
         ProductSku sku = skuMapper.selectById(activity.getSkuId());
         if (sku == null) throw new BizException(ResultCode.NOT_FOUND, "SKU不存在");
+        boolean redisPreDeducted = false;
+        if (stockRedisHelper.getStock(activity.getSkuId()) >= 0) {
+            // Redis key 存在，走预扣路径
+            if (!stockRedisHelper.deduct(activity.getSkuId(), 1)) {
+                throw new BizException(ResultCode.STOCK_NOT_ENOUGH);
+            }
+            redisPreDeducted = true;
+        }
+
+        // DB 乐观锁兜底
         int rows = skuMapper.update(null, new LambdaUpdateWrapper<ProductSku>()
                 .eq(ProductSku::getId, activity.getSkuId())
                 .ge(ProductSku::getStock, 1)
                 .setSql("stock = stock - 1, sales = sales + 1"));
-        if (rows == 0) throw new BizException(ResultCode.STOCK_NOT_ENOUGH);
+        if (rows == 0) {
+            if (redisPreDeducted) stockRedisHelper.rollback(activity.getSkuId(), 1);
+            throw new BizException(ResultCode.STOCK_NOT_ENOUGH);
+        }
 
         // 创建拼团实例
         GroupBuyInstance instance = new GroupBuyInstance();
@@ -138,12 +153,24 @@ public class GroupBuyServiceImpl implements GroupBuyService {
 
         GroupBuyActivity activity = activityMapper.selectById(instance.getActivityId());
 
-        // 锁库存
-        int rows = skuMapper.update(null, new LambdaUpdateWrapper<ProductSku>()
+        // Redis 预扣库存（拼团场景）
+        boolean redisPreDeducted = false;
+        if (stockRedisHelper.getStock(activity.getSkuId()) >= 0) {
+            if (!stockRedisHelper.deduct(activity.getSkuId(), 1)) {
+                throw new BizException(ResultCode.STOCK_NOT_ENOUGH);
+            }
+            redisPreDeducted = true;
+        }
+
+        // DB 乐观锁兜底
+        int stockRows = skuMapper.update(null, new LambdaUpdateWrapper<ProductSku>()
                 .eq(ProductSku::getId, activity.getSkuId())
                 .ge(ProductSku::getStock, 1)
                 .setSql("stock = stock - 1, sales = sales + 1"));
-        if (rows == 0) throw new BizException(ResultCode.STOCK_NOT_ENOUGH);
+        if (stockRows == 0) {
+            if (redisPreDeducted) stockRedisHelper.rollback(activity.getSkuId(), 1);
+            throw new BizException(ResultCode.STOCK_NOT_ENOUGH);
+        }
 
         // 参团记录
         GroupBuyParticipant participant = new GroupBuyParticipant();
@@ -153,15 +180,27 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         participant.setJoinedAt(LocalDateTime.now());
         participantMapper.insert(participant);
 
-        // 更新实例人数
-        instance.setCurrentSize(instance.getCurrentSize() + 1);
-        if (instance.getCurrentSize() >= instance.getTargetSize()) {
-            instance.setStatus(2); // 已成团
-            instance.setSuccessAt(LocalDateTime.now());
+        // 原子自增 currentSize，防止并发超员
+        int instanceRows = instanceMapper.update(null, new LambdaUpdateWrapper<GroupBuyInstance>()
+                .eq(GroupBuyInstance::getId, instanceId)
+                .eq(GroupBuyInstance::getStatus, 1)
+                .lt(GroupBuyInstance::getCurrentSize, instance.getTargetSize())
+                .setSql("current_size = current_size + 1"));
+        if (instanceRows == 0) {
+            throw new BizException(ResultCode.GROUP_BUY_ENDED, "拼团已满或已结束");
+        }
+
+        // 重新查 currentSize 判断是否成团
+        GroupBuyInstance fresh = instanceMapper.selectById(instanceId);
+        if (fresh.getCurrentSize().equals(fresh.getTargetSize())) {
+            instanceMapper.update(null, new LambdaUpdateWrapper<GroupBuyInstance>()
+                    .eq(GroupBuyInstance::getId, instanceId)
+                    .eq(GroupBuyInstance::getStatus, 1)
+                    .set(GroupBuyInstance::getStatus, 2)
+                    .set(GroupBuyInstance::getSuccessAt, LocalDateTime.now()));
             activity.setSuccessCount(activity.getSuccessCount() + 1);
             activityMapper.updateById(activity);
         }
-        instanceMapper.updateById(instance);
 
         // 创建订单
         String orderNo = createGroupBuyOrder(uid, activity, instanceId, dto);

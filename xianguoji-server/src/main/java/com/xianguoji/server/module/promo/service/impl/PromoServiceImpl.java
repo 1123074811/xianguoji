@@ -1,6 +1,7 @@
 package com.xianguoji.server.module.promo.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.ResultCode;
 import com.xianguoji.server.module.promo.dto.UsableCouponQry;
@@ -13,15 +14,18 @@ import com.xianguoji.server.module.promo.mapper.UserCouponMapper;
 import com.xianguoji.server.module.promo.service.PromoService;
 import com.xianguoji.server.module.promo.vo.CouponVO;
 import com.xianguoji.server.module.promo.vo.UserCouponVO;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -33,6 +37,15 @@ public class PromoServiceImpl implements PromoService {
     private final UserCouponMapper userCouponMapper;
     private final PromotionRuleMapper promotionRuleMapper;
     private final StringRedisTemplate stringRedisTemplate;
+
+    private DefaultRedisScript<Long> couponReceiveScript;
+
+    @PostConstruct
+    public void init() {
+        couponReceiveScript = new DefaultRedisScript<>();
+        couponReceiveScript.setLocation(new org.springframework.core.io.ClassPathResource("lua/coupon_receive.lua"));
+        couponReceiveScript.setResultType(Long.class);
+    }
 
     @Override
     public List<CouponVO> getAvailableCoupons(Long uid) {
@@ -59,43 +72,48 @@ public class PromoServiceImpl implements PromoService {
             throw new BizException(ResultCode.COUPON_NOT_AVAILABLE, "优惠券不存在或已结束");
         }
 
-        // Redis 原子自增判断总量
-        String receivedKey = "coupon:received:" + couponId;
-        Long current = stringRedisTemplate.opsForValue().increment(receivedKey);
-        if (current != null && current == 1) {
-            stringRedisTemplate.opsForValue().set(receivedKey, String.valueOf(coupon.getReceivedCount()));
-        }
-        if (coupon.getTotal() > 0 && current != null && current > coupon.getTotal()) {
-            stringRedisTemplate.opsForValue().decrement(receivedKey);
+        // Lua 原子校验：总量 + 每人限领
+        String totalKey = "xgj:coupon:received:" + couponId;
+        String userKey = "xgj:coupon:user:" + couponId + ":" + uid;
+        Long result = stringRedisTemplate.execute(couponReceiveScript,
+                Arrays.asList(totalKey, userKey),
+                String.valueOf(coupon.getTotal()),
+                String.valueOf(coupon.getPerUserLimit()));
+        if (result == null || result == 0L) {
             throw new BizException(ResultCode.COUPON_NOT_AVAILABLE, "优惠券已被领完");
         }
-
-        // 每人限领
-        Long userReceived = userCouponMapper.selectCount(
-                new LambdaQueryWrapper<UserCoupon>()
-                        .eq(UserCoupon::getUserId, uid)
-                        .eq(UserCoupon::getCouponId, couponId));
-        if (userReceived >= coupon.getPerUserLimit()) {
-            stringRedisTemplate.opsForValue().decrement(receivedKey);
+        if (result == -1L) {
             throw new BizException(ResultCode.COUPON_NOT_AVAILABLE, "每人限领" + coupon.getPerUserLimit() + "张");
         }
 
-        // 写入用户优惠券
-        UserCoupon uc = new UserCoupon();
-        uc.setUserId(uid);
-        uc.setCouponId(couponId);
-        uc.setStatus(0);
-        uc.setReceivedAt(LocalDateTime.now());
-        if (coupon.getValidType() == 1) {
-            uc.setExpireAt(coupon.getEndTime());
-        } else if (coupon.getValidType() == 2 && coupon.getValidDays() != null) {
-            uc.setExpireAt(LocalDateTime.now().plusDays(coupon.getValidDays()));
-        }
-        userCouponMapper.insert(uc);
+        // Lua 已通过 → DB 写入。一旦异常，回滚 Redis 计数避免漏发
+        try {
+            UserCoupon uc = new UserCoupon();
+            uc.setUserId(uid);
+            uc.setCouponId(couponId);
+            uc.setStatus(0);
+            uc.setReceivedAt(LocalDateTime.now());
+            if (coupon.getValidType() == 1) {
+                uc.setExpireAt(coupon.getEndTime());
+            } else if (coupon.getValidType() == 2 && coupon.getValidDays() != null) {
+                uc.setExpireAt(LocalDateTime.now().plusDays(coupon.getValidDays()));
+            }
+            userCouponMapper.insert(uc);
 
-        // 更新已领取数
-        coupon.setReceivedCount(coupon.getReceivedCount() + 1);
-        couponMapper.updateById(coupon);
+            // DB 原子更新已领取数
+            couponMapper.update(null, new LambdaUpdateWrapper<Coupon>()
+                    .eq(Coupon::getId, couponId)
+                    .setSql("received_count = received_count + 1"));
+        } catch (RuntimeException ex) {
+            // 回滚 Redis 计数
+            try {
+                stringRedisTemplate.opsForValue().decrement(totalKey);
+                stringRedisTemplate.opsForValue().decrement(userKey);
+            } catch (Exception ignore) {
+                log.error("回滚优惠券Redis计数失败 couponId={} uid={}", couponId, uid, ignore);
+            }
+            throw ex;
+        }
     }
 
     @Override
