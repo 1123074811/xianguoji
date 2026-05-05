@@ -91,8 +91,8 @@
 
     <!-- Bottom Actions -->
     <view class="bottom-bar" v-if="order">
-      <button v-if="order.status >= 30" class="action-btn outline" @tap="handleRefund">申请售后</button>
-      <button v-if="order.status === 30" class="action-btn primary" @tap="handleConfirm">确认收货</button>
+      <button v-if="order.status >= 3" class="action-btn outline" @tap="handleRefund">申请售后</button>
+      <button v-if="order.status === 3" class="action-btn primary" @tap="handleConfirm">确认收货</button>
     </view>
   </view>
 </template>
@@ -105,7 +105,7 @@ import SvgIcon from '@/components/svg-icon.vue';
 import type { OrderVO } from '@/api/types/order';
 
 const STATUS_MAP: Record<number, string> = {
-  0: '待付款', 10: '待发货', 20: '待发货', 30: '配送中', 31: '待自提', 40: '已完成', 50: '已取消', 60: '售后中',
+  0: '待付款', 1: '待接单', 2: '备货中', 3: '配送中', 4: '待自提', 5: '已完成', 6: '已取消', 7: '退款中', 8: '已退款',
 };
 function statusText(s?: number) { return STATUS_MAP[s ?? -1] || '未知'; }
 
