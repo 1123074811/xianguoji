@@ -12,7 +12,8 @@ function injectPrivateInfos(): Plugin {
       const appJsonPath = path.resolve(__dirname, 'dist/dev/mp-weixin/app.json');
       if (fs.existsSync(appJsonPath)) {
         const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
-        appJson.requiredPrivateInfos = ['chooseLocation', 'getLocation'];
+        appJson.requiredPrivateInfos = ['getLocation', 'chooseAddress'];
+        delete appJson.plugins;
         fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2), 'utf8');
       }
     },
@@ -31,9 +32,10 @@ export default defineConfig({
     preprocessorOptions: {
       scss: {
         additionalData: `
-          @import "@/styles/variables.scss";
-          @import "@/styles/mixins.scss";
+          @use "@/styles/variables.scss" as *;
+          @use "@/styles/mixins.scss" as *;
         `,
+        silenceDeprecations: ['global-builtin', 'import'],
       },
     },
   },
