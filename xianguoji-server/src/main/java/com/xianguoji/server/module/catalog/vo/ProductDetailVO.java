@@ -1,13 +1,17 @@
 package com.xianguoji.server.module.catalog.vo;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProductDetailVO {
 
     private Long id;
@@ -31,6 +35,8 @@ public class ProductDetailVO {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class SkuVO {
         private Long id;
         private String specName;
@@ -42,6 +48,8 @@ public class ProductDetailVO {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ReviewSummaryVO {
         private long totalCount;
         private Double avgRating;

@@ -1,13 +1,17 @@
 package com.xianguoji.server.module.order.vo;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderPreviewVO {
 
     private List<OrderItemPreview> items;
@@ -22,6 +26,8 @@ public class OrderPreviewVO {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class OrderItemPreview {
         private Long skuId;
         private String productName;
@@ -35,6 +41,8 @@ public class OrderPreviewVO {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class AddressVO {
         private Long id;
         private String consignee;
@@ -44,6 +52,8 @@ public class OrderPreviewVO {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class PickupPointVO {
         private Long id;
         private String name;

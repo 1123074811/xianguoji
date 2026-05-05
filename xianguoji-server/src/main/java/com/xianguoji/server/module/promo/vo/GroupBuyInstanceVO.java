@@ -1,13 +1,17 @@
 package com.xianguoji.server.module.promo.vo;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GroupBuyInstanceVO {
 
     private Long id;
@@ -23,6 +27,8 @@ public class GroupBuyInstanceVO {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ParticipantVO {
         private Long userId;
         private String nickname;
