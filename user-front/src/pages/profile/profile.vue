@@ -218,6 +218,8 @@ async function handleLogout() {
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #E8F5E9 0%, $color-bg-page 30%, $color-bg-page 100%);
+  box-sizing: border-box;
+  padding-bottom: calc(128rpx + env(safe-area-inset-bottom));
 }
 
 .header-nav {

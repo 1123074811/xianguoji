@@ -297,7 +297,7 @@ async function handleSubmit() {
 }
 
 .cart-list {
-  padding-bottom: 120rpx;
+  padding-bottom: calc(240rpx + env(safe-area-inset-bottom));
 }
 
 .cart-item {
@@ -458,7 +458,6 @@ async function handleSubmit() {
   padding: 0 $space-4;
   box-shadow: 0 -2rpx 16rpx rgba(0,0,0,0.04);
   z-index: 100;
-  @include safe-area-bottom;
 
   .left {
     display: flex;

@@ -172,6 +172,8 @@ function goToMessage() {
   display: flex;
   flex-direction: column;
   background-color: $color-bg-page;
+  box-sizing: border-box;
+  padding-bottom: calc(128rpx + env(safe-area-inset-bottom));
 }
 
 .header-sticky {
