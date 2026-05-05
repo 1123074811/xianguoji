@@ -43,7 +43,9 @@
       "Bash(npx vue-tsc *)",
       "Bash(curl -sI \"http://127.0.0.1:8080/static/seed/product/grape.jpg\")",
       "Bash(npm run *)",
-      "Bash(curl -sI http://127.0.0.1:8080/static/seed/product/grape.jpg)"
+      "Bash(curl -sI http://127.0.0.1:8080/static/seed/product/grape.jpg)",
+      "Bash(mvn -q -DskipTests clean compile)",
+      "Bash(awk '/CREATE TABLE `__TRACKED_VAR__`/,/ENGINE=/' database/schema.sql)"
     ]
   }
 }
