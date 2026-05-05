@@ -43,12 +43,18 @@
                 <p class="font-label-bold text-primary text-sm">{{ point.businessHours || '—' }}</p>
               </div>
               <div class="flex gap-1">
-                <button class="p-2 hover:bg-primary/10 rounded-lg transition-colors" @click="openEditModal(point)" title="编辑">
-                  <span class="material-symbols-outlined text-slate-400 hover:text-primary">edit</span>
-                </button>
-                <button class="p-2 hover:bg-error/10 rounded-lg transition-colors" @click="deletePickupPoint(point.id)" title="删除">
-                  <span class="material-symbols-outlined text-slate-400 hover:text-error">delete</span>
-                </button>
+                <Tooltip text="编辑自提点">
+                  <button class="p-2 hover:bg-primary/10 rounded-lg transition-colors" @click="openEditModal(point)">
+                    <span class="material-symbols-outlined text-slate-400 hover:text-primary">edit</span>
+                  </button>
+                </Tooltip>
+                <Popconfirm title="删除自提点" message="确定删除该自提点？此操作不可撤销。" type="danger" confirm-text="删除" @confirm="doDeletePickupPoint(point.id)">
+                  <Tooltip text="删除自提点">
+                    <button class="p-2 hover:bg-error/10 rounded-lg transition-colors">
+                      <span class="material-symbols-outlined text-slate-400 hover:text-error">delete</span>
+                    </button>
+                  </Tooltip>
+                </Popconfirm>
               </div>
             </div>
           </div>
@@ -202,7 +208,9 @@
             <td class="px-6 font-body-md text-body-md">{{ point.businessHours || '—' }}</td>
             <td class="px-6 font-body-md text-body-md">{{ point.sort }}</td>
             <td class="px-6 text-right">
-              <button @click="deletePickupPoint(point.id)" class="text-error hover:underline text-xs font-bold">删除</button>
+              <Popconfirm title="删除自提点" message="确定删除该自提点？此操作不可撤销。" type="danger" confirm-text="删除" @confirm="doDeletePickupPoint(point.id)">
+                <button class="text-error hover:underline text-xs font-bold">删除</button>
+              </Popconfirm>
             </td>
           </tr>
           <tr v-if="pickupPoints.length === 0">
@@ -292,6 +300,8 @@ import { adminShopApi } from '@/api/modules/shop'
 import type { AdminPickupPointVO, AdminDeliverySettingVO } from '@/api/types/shop'
 import { loadAmap, isAmapKeyConfigured } from '@/utils/amap'
 import { toast } from '@/utils/toast'
+import Tooltip from '@/components/Tooltip.vue'
+import Popconfirm from '@/components/Popconfirm.vue'
 
 const activeTab = ref<'pickup' | 'delivery'>('pickup')
 const pickupPoints = ref<AdminPickupPointVO[]>([])
@@ -530,8 +540,7 @@ async function saveDeliverySetting() {
   }
 }
 
-async function deletePickupPoint(id: number) {
-  if (!confirm('确定删除该自提点？')) return
+async function doDeletePickupPoint(id: number) {
   try {
     await adminShopApi.deletePickupPoint(id)
     await loadPickupPoints()

@@ -40,14 +40,14 @@
         </nav>
       </div>
       <div class="flex items-center gap-5">
-        <div class="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-xs font-bold">
-          <span class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></span>
-          店铺营业中
-        </div>
+        <button @click="toggleOpenStatus" class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer select-none" :class="isOpen ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'">
+          <span class="w-2 h-2 rounded-full" :class="isOpen ? 'bg-green-600 animate-pulse' : 'bg-slate-400'"></span>
+          {{ isOpen ? '营业中' : '已打烊' }}
+        </button>
         <div class="flex items-center gap-3">
-          <router-link to="/messages" class="text-slate-500 hover:text-primary transition-colors relative">
+          <router-link to="/messages" class="text-slate-500 hover:text-primary transition-colors relative" @click="resetUnread">
             <span class="material-symbols-outlined">notifications</span>
-            <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 rounded-full border-2 border-white text-white text-[10px] font-bold leading-none px-1">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
           </router-link>
           <router-link to="/messages" class="text-slate-500 hover:text-primary transition-colors">
             <span class="material-symbols-outlined">mail</span>
@@ -67,10 +67,40 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { adminShopApi } from '@/api/modules/shop'
+import { toast } from '@/utils/toast'
+import { useWebSocket } from '@/composables/useWebSocket'
 
 const route = useRoute()
 const router = useRouter()
+
+const { connected, lastMessage, unreadCount, resetUnread } = useWebSocket()
+
+const isOpen = ref(true)
+
+async function loadOpenStatus() {
+  try {
+    const shop = await adminShopApi.shopInfo()
+    isOpen.value = shop.isOpen === 1
+  } catch (e) {
+    console.warn('加载店铺状态失败', e)
+  }
+}
+
+async function toggleOpenStatus() {
+  const next = isOpen.value ? 0 : 1
+  isOpen.value = !isOpen.value
+  try {
+    await adminShopApi.updateOpenStatus(next)
+    toast.success(next === 1 ? '已开启营业' : '已暂停营业')
+  } catch (e) {
+    console.warn('切换营业状态失败', e)
+    isOpen.value = !isOpen.value
+    toast.error('切换营业状态失败')
+  }
+}
 
 const menus = [
   { name: '控制面板', path: '/dashboard', icon: 'dashboard' },
@@ -90,4 +120,17 @@ const isActive = (path: string) => {
 const handleLogout = () => {
   router.push('/login')
 }
+
+watch(lastMessage, (msg) => {
+  if (!msg) return
+  const typeMap: Record<string, 'success' | 'warning' | 'info'> = {
+    NEW_ORDER: 'success',
+    REFUND_APPLY: 'warning',
+    REMIND_SHIP: 'info',
+  }
+  const t = typeMap[msg.type] || 'info'
+  toast[t](msg.content, 5000)
+})
+
+onMounted(loadOpenStatus)
 </script>

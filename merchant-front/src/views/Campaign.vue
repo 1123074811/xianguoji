@@ -89,15 +89,25 @@
               </td>
               <td class="px-6 py-3 text-right">
                 <div class="flex items-center justify-end gap-2 text-slate-400">
-                  <button @click="editCoupon(coupon)" class="p-1 hover:text-primary transition-colors" title="编辑">
-                    <span class="material-symbols-outlined text-[20px]">edit</span>
-                  </button>
-                  <button @click="toggleCouponStatus(coupon)" class="p-1 hover:text-error transition-colors" :title="coupon.status === 1 ? '停用' : '启用'">
-                    <span class="material-symbols-outlined text-[20px]">{{ coupon.status === 1 ? 'pause_circle' : 'play_circle' }}</span>
-                  </button>
-                  <button @click="deleteCoupon(coupon)" class="p-1 hover:text-error transition-colors" title="删除">
-                    <span class="material-symbols-outlined text-[20px]">delete</span>
-                  </button>
+                  <Tooltip text="编辑优惠券">
+                    <button @click="editCoupon(coupon)" class="p-1 hover:text-primary transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                  </Tooltip>
+                  <Popconfirm :title="coupon.status === 1 ? '停用优惠券' : '启用优惠券'" :message="`确定要${coupon.status === 1 ? '停用' : '启用'}优惠券「${coupon.name}」吗？${coupon.status === 1 ? '停用后用户将无法领取。' : '启用后用户可正常领取。'}`" :type="coupon.status === 1 ? 'warning' : 'info'" :confirm-text="coupon.status === 1 ? '停用' : '启用'" @confirm="doToggleCouponStatus(coupon)">
+                    <Tooltip :text="coupon.status === 1 ? '停用后用户将无法领取' : '启用后用户可正常领取'">
+                      <button class="p-1 hover:text-error transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">{{ coupon.status === 1 ? 'pause_circle' : 'play_circle' }}</span>
+                      </button>
+                    </Tooltip>
+                  </Popconfirm>
+                  <Popconfirm title="删除优惠券" :message="`确定要删除优惠券「${coupon.name}」吗？此操作不可撤销。`" type="danger" confirm-text="删除" @confirm="doDeleteCoupon(coupon)">
+                    <Tooltip text="删除优惠券">
+                      <button class="p-1 hover:text-error transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                      </button>
+                    </Tooltip>
+                  </Popconfirm>
                 </div>
               </td>
             </tr>
@@ -133,6 +143,9 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { adminPromoApi } from '@/api/modules/promo'
 import type { AdminCouponVO } from '@/api/types/promo'
+import Tooltip from '@/components/Tooltip.vue'
+import Popconfirm from '@/components/Popconfirm.vue'
+import { toast } from '@/utils/toast'
 
 const router = useRouter()
 
@@ -251,38 +264,30 @@ const editCoupon = (coupon: AdminCouponVO) => {
 }
 
 // 切换优惠券状态
-const toggleCouponStatus = async (coupon: AdminCouponVO) => {
+const doToggleCouponStatus = async (coupon: AdminCouponVO) => {
   const newStatus = coupon.status === 1 ? 2 : 1
   const action = newStatus === 1 ? '启用' : '停用'
-  
-  if (!confirm(`确定要${action}优惠券"${coupon.name}"吗？`)) {
-    return
-  }
   
   try {
     await adminPromoApi.updateCoupon(coupon.id, { status: newStatus })
     coupon.status = newStatus
     updateStats()
-    // 显示成功提示（TODO: 添加toast组件）
-    console.log(`优惠券${action}成功`)
+    toast.success(`优惠券已${action}`)
   } catch (error) {
     console.error(`${action}优惠券失败:`, error)
-    // 显示错误提示
+    toast.error(`${action}失败，请稍后重试`)
   }
 }
 
 // 删除优惠券
-const deleteCoupon = async (coupon: AdminCouponVO) => {
-  if (!confirm(`确定要删除优惠券"${coupon.name}"吗？此操作不可撤销。`)) {
-    return
-  }
-  
+const doDeleteCoupon = async (coupon: AdminCouponVO) => {
   try {
     await adminPromoApi.deleteCoupon(coupon.id)
-    loadCoupons() // 重新加载列表
-    console.log('优惠券删除成功')
+    loadCoupons()
+    toast.success('优惠券已删除')
   } catch (error) {
     console.error('删除优惠券失败:', error)
+    toast.error('删除失败，请稍后重试')
   }
 }
 

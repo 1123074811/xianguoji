@@ -58,14 +58,43 @@
             </div>
 
             <div class="flex items-center gap-3 mt-3">
-              <button v-if="!review.merchantReply" class="text-primary text-xs font-bold flex items-center gap-1 hover:underline" @click="onReply(review)">
+              <button v-if="!review.merchantReply && replyingTo !== review.id" class="text-primary text-xs font-bold flex items-center gap-1 hover:underline" @click="startReply(review)">
                 <span class="material-symbols-outlined text-sm">reply</span>
                 回复
               </button>
-              <button class="text-slate-400 text-xs flex items-center gap-1 hover:text-error" @click="onToggleHidden(review)">
-                <span class="material-symbols-outlined text-sm">visibility_off</span>
-                隐藏
+              <button v-if="replyingTo === review.id" class="text-slate-400 text-xs flex items-center gap-1 hover:text-slate-600" @click="cancelReply">
+                <span class="material-symbols-outlined text-sm">close</span>
+                取消
               </button>
+              <Popconfirm title="隐藏评价" message="确定要隐藏该条评价吗？隐藏后用户端将不再展示。" type="warning" confirm-text="隐藏" @confirm="doToggleHidden(review)">
+                <button class="text-slate-400 text-xs flex items-center gap-1 hover:text-error">
+                  <span class="material-symbols-outlined text-sm">visibility_off</span>
+                  隐藏
+                </button>
+              </Popconfirm>
+            </div>
+
+            <!-- Inline Reply Input -->
+            <div v-if="replyingTo === review.id" class="mt-3 bg-slate-50 rounded-lg p-3 border border-slate-200">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="material-symbols-outlined text-primary text-sm">store</span>
+                <span class="text-xs font-bold text-primary">商家回复</span>
+                <span class="text-[10px] text-slate-400">回复 {{ review.userName || '匿名用户' }}</span>
+              </div>
+              <textarea
+                v-model="replyText"
+                :maxlength="200"
+                :placeholder="'请输入回复内容（不超过200字）'"
+                rows="3"
+                class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm resize-none transition-all"
+              ></textarea>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs text-slate-400">{{ replyText.length }}/200</span>
+                <div class="flex gap-2">
+                  <button @click="cancelReply" class="px-3 py-1.5 text-xs font-label-bold rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">取消</button>
+                  <button @click="submitReply(review)" :disabled="!replyText.trim()" class="px-4 py-1.5 text-xs font-label-bold rounded-lg text-white bg-primary hover:bg-primary-container transition-colors disabled:opacity-40 disabled:cursor-not-allowed">发送回复</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -87,10 +116,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { adminReviewApi } from '@/api/modules/review';
 import type { AdminReviewVO } from '@/api/types/review';
 import { resolveImageUrl } from '@/utils/image';
+import Popconfirm from '@/components/Popconfirm.vue';
+import { toast } from '@/utils/toast';
 
 const tabs: { label: string; value?: string }[] = [
   { label: '全部' },
@@ -105,6 +136,8 @@ const loading = ref(false);
 const total = ref(0);
 const page = ref(1);
 const size = ref(20);
+const replyingTo = ref<number | null>(null);
+const replyText = ref('');
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / size.value)));
 
@@ -132,17 +165,39 @@ function changeFilter(v?: string) {
   load();
 }
 
-async function onReply(review: AdminReviewVO) {
-  const text = prompt('请输入回复内容（不超过200字）');
-  if (!text) return;
-  await adminReviewApi.reply(review.id, text);
-  await load();
+function startReply(review: AdminReviewVO) {
+  replyingTo.value = review.id;
+  replyText.value = '';
 }
 
-async function onToggleHidden(review: AdminReviewVO) {
-  if (!confirm('确定要隐藏该条评价吗？')) return;
-  await adminReviewApi.toggleHidden(review.id, 1);
-  await load();
+function cancelReply() {
+  replyingTo.value = null;
+  replyText.value = '';
+}
+
+async function submitReply(review: AdminReviewVO) {
+  if (!replyText.value.trim()) return;
+  try {
+    await adminReviewApi.reply(review.id, replyText.value.trim());
+    replyingTo.value = null;
+    replyText.value = '';
+    await load();
+    toast.success('回复成功');
+  } catch (e) {
+    console.warn('回复失败', e);
+    toast.error('回复失败，请稍后重试');
+  }
+}
+
+async function doToggleHidden(review: AdminReviewVO) {
+  try {
+    await adminReviewApi.toggleHidden(review.id, 1);
+    await load();
+    toast.success('评价已隐藏');
+  } catch (e) {
+    console.warn('隐藏失败', e);
+    toast.error('操作失败，请稍后重试');
+  }
 }
 
 onMounted(load);

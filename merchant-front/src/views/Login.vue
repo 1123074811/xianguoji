@@ -82,7 +82,7 @@
                 <input class="w-full pl-10 pr-4 h-12 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all font-body-md text-body-md outline-none" id="captcha" placeholder="输入验证码" type="text" v-model="form.captcha" />
               </div>
               <div class="w-32 h-12 bg-surface-container rounded-lg border border-outline-variant overflow-hidden cursor-pointer flex items-center justify-center" @click="refreshCaptcha">
-                <img v-if="captchaImage" :src="captchaImage" alt="验证码" class="w-full h-full object-cover" />
+                <img v-if="captchaImage" :src="captchaImage" alt="验证码" class="w-full h-full object-contain" />
                 <span v-else class="text-xs text-slate-400 font-bold">点击获取</span>
               </div>
             </div>

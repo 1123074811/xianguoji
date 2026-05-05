@@ -114,9 +114,13 @@
     <div class="fixed bottom-0 right-0 left-60 h-20 bg-white border-t border-slate-200 px-gutter flex items-center justify-end gap-gutter z-50">
       <button class="px-6 py-2.5 rounded-lg border border-slate-200 text-slate-600 font-label-bold hover:bg-slate-50" @click="$router.push('/orders')">返回列表</button>
       <button v-if="order.status === 1" class="px-6 py-2.5 rounded-lg border border-primary text-primary font-label-bold hover:bg-primary/5" @click="onAccept">接单</button>
-      <button v-if="order.status === 1" class="px-6 py-2.5 rounded-lg border border-error text-error font-label-bold hover:bg-error/5" @click="onReject">拒单</button>
+      <PopInput v-if="order.status === 1" title="拒单原因" :message="`拒单 ${order.orderNo} 后金额将原路退回，请填写拒单原因。`" placeholder="请输入拒单原因" type="danger" confirm-text="确认拒单" placement="top" @confirm="onReject($event)">
+        <button class="px-6 py-2.5 rounded-lg border border-error text-error font-label-bold hover:bg-error/5">拒单</button>
+      </PopInput>
       <button v-if="order.status === 2" class="px-10 py-2.5 rounded-lg bg-primary text-white font-label-bold shadow-md hover:bg-primary-container" @click="onShip">标记发货</button>
-      <button v-if="order.deliveryType === 2 && order.status === 2" class="px-10 py-2.5 rounded-lg bg-primary text-white font-label-bold shadow-md" @click="onPickupVerify">核销自提码</button>
+      <PopInput v-if="order.deliveryType === 2 && order.status === 2" title="核销自提码" message="请输入用户出示的自提码进行核销。" placeholder="输入自提码" type="info" confirm-text="核销" placement="top" @confirm="onPickupVerify($event)">
+        <button class="px-10 py-2.5 rounded-lg bg-primary text-white font-label-bold shadow-md">核销自提码</button>
+      </PopInput>
     </div>
   </div>
   <div v-else class="text-center text-slate-400 py-20">{{ loadError ? '加载失败' : '加载中...' }}</div>
@@ -128,6 +132,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { adminOrderApi } from '@/api/modules/order';
 import type { AdminOrderVO } from '@/api/types/order';
 import { resolveImageUrl } from '@/utils/image';
+import PopInput from '@/components/PopInput.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -179,10 +184,8 @@ async function onAccept() {
   await adminOrderApi.accept(order.value.orderNo);
   await load();
 }
-async function onReject() {
+async function onReject(reason: string) {
   if (!order.value) return;
-  const reason = prompt('请输入拒单原因');
-  if (!reason) return;
   await adminOrderApi.reject(order.value.orderNo, reason);
   router.push('/orders');
 }
@@ -191,10 +194,8 @@ async function onShip() {
   await adminOrderApi.ship(order.value.orderNo, { deliveryType: order.value.deliveryType });
   await load();
 }
-async function onPickupVerify() {
+async function onPickupVerify(code: string) {
   if (!order.value) return;
-  const code = prompt('请输入用户出示的自提码');
-  if (!code) return;
   await adminOrderApi.pickupVerify(order.value.orderNo, code);
   await load();
 }

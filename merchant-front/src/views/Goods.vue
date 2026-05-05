@@ -63,7 +63,9 @@
               <td class="px-3 py-3">
                 <div class="font-label-bold text-on-surface flex items-center gap-2">
                   {{ product.name }}
-                  <span v-if="product.totalStock < 50" class="material-symbols-outlined text-error text-[16px]">warning</span>
+                  <Tooltip v-if="product.totalStock < 50" :text="`库存不足，当前仅 ${product.totalStock} 件，建议尽快补货`">
+                    <span class="material-symbols-outlined text-error text-[16px] cursor-help">warning</span>
+                  </Tooltip>
                 </div>
                 <div class="text-xs text-slate-400 font-body-sm">#{{ product.id }}</div>
                 <div v-if="product.subtitle" class="text-xs text-slate-500">{{ product.subtitle }}</div>
@@ -80,15 +82,25 @@
               </td>
               <td class="px-6 py-3 text-right">
                 <div class="flex items-center justify-end gap-2 text-slate-400">
-                  <button class="p-1 hover:text-primary" title="编辑" @click="$router.push('/goods/edit/' + product.id)">
-                    <span class="material-symbols-outlined text-[20px]">edit</span>
-                  </button>
-                  <button class="p-1 hover:text-primary" title="复制" @click="onCopy(product)">
-                    <span class="material-symbols-outlined text-[20px]">content_copy</span>
-                  </button>
-                  <button class="p-1 hover:text-error" title="移入回收站" @click="onDelete(product)">
-                    <span class="material-symbols-outlined text-[20px]">delete</span>
-                  </button>
+                  <Tooltip text="编辑商品">
+                    <button class="p-1 hover:text-primary" @click="$router.push('/goods/edit/' + product.id)">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                  </Tooltip>
+                  <Popconfirm title="复制商品" :message="`复制商品「${product.name}」为新商品？`" type="info" confirm-text="复制" @confirm="onCopy(product)">
+                    <Tooltip text="复制为新商品">
+                      <button class="p-1 hover:text-primary">
+                        <span class="material-symbols-outlined text-[20px]">content_copy</span>
+                      </button>
+                    </Tooltip>
+                  </Popconfirm>
+                  <Popconfirm title="移入回收站" :message="`确定要将「${product.name}」移入回收站吗？`" type="danger" confirm-text="移入回收站" @confirm="onDelete(product)">
+                    <Tooltip text="移入回收站">
+                      <button class="p-1 hover:text-error">
+                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                      </button>
+                    </Tooltip>
+                  </Popconfirm>
                 </div>
               </td>
             </tr>
@@ -132,6 +144,8 @@ import { adminCatalogApi } from '@/api/modules/catalog';
 import type { AdminProductVO, AdminCategoryVO } from '@/api/types/catalog';
 import { resolveImageUrl } from '@/utils/image';
 import { toast } from '@/utils/toast';
+import Tooltip from '@/components/Tooltip.vue';
+import Popconfirm from '@/components/Popconfirm.vue';
 
 /** status: 0=已下架 1=在售 2=回收站 */
 const tabs: { label: string; value?: number }[] = [
@@ -226,7 +240,6 @@ async function toggleStatus(p: AdminProductVO) {
 }
 
 async function onCopy(p: AdminProductVO) {
-  if (!confirm(`复制商品「${p.name}」？`)) return;
   try {
     await adminCatalogApi.copyProduct(p.id);
     await loadProducts();
@@ -238,7 +251,6 @@ async function onCopy(p: AdminProductVO) {
 }
 
 async function onDelete(p: AdminProductVO) {
-  if (!confirm(`确定要将「${p.name}」移入回收站吗？`)) return;
   try {
     await adminCatalogApi.deleteProduct(p.id);
     await loadProducts();

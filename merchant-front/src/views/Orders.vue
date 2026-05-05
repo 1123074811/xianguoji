@@ -89,16 +89,26 @@
               </td>
               <td class="px-stack-md py-3 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  <button v-if="order.status === 1" @click="acceptOrder(order)" class="p-1.5 text-primary hover:bg-primary-container/10 rounded-lg" title="接单">
-                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
-                  </button>
-                  <button v-if="order.status === 1" @click="rejectOrder(order)" class="p-1.5 text-error hover:bg-error-container/20 rounded-lg" title="拒单">
-                    <span class="material-symbols-outlined text-[20px]">cancel</span>
-                  </button>
+                  <Popconfirm v-if="order.status === 1" title="确认接单" :message="`确认接单 ${order.orderNo}？接单后需尽快备货发货。`" type="info" confirm-text="接单" @confirm="acceptOrder(order)">
+                    <Tooltip text="接单（确认有库存可发货）">
+                      <button class="p-1.5 text-primary hover:bg-primary-container/10 rounded-lg">
+                        <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                      </button>
+                    </Tooltip>
+                  </Popconfirm>
+                  <PopInput v-if="order.status === 1" title="拒单原因" :message="`拒单 ${order.orderNo} 后金额将原路退回，请填写拒单原因。`" placeholder="请输入拒单原因" type="danger" confirm-text="确认拒单" placement="bottom" @confirm="rejectOrder(order, $event)">
+                    <Tooltip text="拒单（订单将关闭，金额原路退回）">
+                      <button class="p-1.5 text-error hover:bg-error-container/20 rounded-lg">
+                        <span class="material-symbols-outlined text-[20px]">cancel</span>
+                      </button>
+                    </Tooltip>
+                  </PopInput>
                   <button v-if="order.status === 2" @click="shipOrder(order)" class="px-3 py-1 bg-primary text-white text-xs font-bold rounded hover:bg-primary-container">标记发货</button>
-                  <button @click="$router.push(`/orders/${order.orderNo}`)" class="p-1.5 text-on-surface-variant hover:bg-surface-variant rounded-lg" title="详情">
-                    <span class="material-symbols-outlined text-[20px]">visibility</span>
-                  </button>
+                  <Tooltip text="查看订单详情">
+                    <button @click="$router.push(`/orders/${order.orderNo}`)" class="p-1.5 text-on-surface-variant hover:bg-surface-variant rounded-lg">
+                      <span class="material-symbols-outlined text-[20px]">visibility</span>
+                    </button>
+                  </Tooltip>
                 </div>
               </td>
             </tr>
@@ -127,6 +137,9 @@
 import { ref, computed, onMounted } from 'vue';
 import { adminOrderApi } from '@/api/modules/order';
 import type { AdminOrderVO, AdminOrderItemVO } from '@/api/types/order';
+import Tooltip from '@/components/Tooltip.vue';
+import Popconfirm from '@/components/Popconfirm.vue';
+import PopInput from '@/components/PopInput.vue';
 
 const tabs: { label: string; value?: number }[] = [
   { label: '全部' },
@@ -209,13 +222,10 @@ function resetFilter() {
 }
 
 async function acceptOrder(order: AdminOrderVO) {
-  if (!confirm(`确认接单 ${order.orderNo}?`)) return;
   await adminOrderApi.accept(order.orderNo);
   await loadOrders();
 }
-async function rejectOrder(order: AdminOrderVO) {
-  const reason = prompt('请输入拒单原因');
-  if (!reason) return;
+async function rejectOrder(order: AdminOrderVO, reason: string) {
   await adminOrderApi.reject(order.orderNo, reason);
   await loadOrders();
 }

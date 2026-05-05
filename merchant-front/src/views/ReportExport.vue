@@ -120,8 +120,14 @@
               <td class="px-6 py-3 text-sm text-slate-500">{{ formatSize(report.fileSize) }}</td>
               <td class="px-6 py-3 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  <button @click="downloadHistory(report)" class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors" title="下载"><span class="material-symbols-outlined text-[18px]">download</span></button>
-                  <button @click="removeRecord(report.id)" class="p-1.5 text-slate-400 hover:text-error hover:bg-error/10 rounded-lg transition-colors" title="删除"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+                  <Tooltip text="下载报表文件">
+                    <button @click="downloadHistory(report)" class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">download</span></button>
+                  </Tooltip>
+                  <Popconfirm title="删除记录" message="确认删除此导出记录？此操作不可撤销。" type="danger" confirm-text="删除" @confirm="doRemoveRecord(report.id)">
+                    <Tooltip text="删除该条导出记录">
+                      <button class="p-1.5 text-slate-400 hover:text-error hover:bg-error/10 rounded-lg transition-colors"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+                    </Tooltip>
+                  </Popconfirm>
                 </div>
               </td>
             </tr>
@@ -139,6 +145,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { exportApi, type ReportExportRecordVO } from '@/api/modules/export'
+import Tooltip from '@/components/Tooltip.vue'
+import Popconfirm from '@/components/Popconfirm.vue'
 
 function todayStr(offset = 0) {
   const d = new Date()
@@ -255,8 +263,7 @@ async function downloadHistory(rec: ReportExportRecordVO) {
   }
 }
 
-async function removeRecord(id: number) {
-  if (!confirm('确认删除此记录？')) return
+async function doRemoveRecord(id: number) {
   try {
     await exportApi.remove(id)
     await loadHistory()
