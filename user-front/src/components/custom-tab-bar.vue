@@ -25,14 +25,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import SvgIcon from './svg-icon.vue';
 import { useCartStore } from '@/stores/cart';
+import { useUserStore } from '@/stores/user';
 
 const props = defineProps<{
   activePath: string
 }>();
 
 const cartStore = useCartStore();
+const userStore = useUserStore();
 
 const list = computed(() => [
   { pagePath: 'pages/index/index', text: '首页', icon: 'home' },
@@ -41,6 +44,12 @@ const list = computed(() => [
   { pagePath: 'pages/order/order', text: '订单', icon: 'receipt_long' },
   { pagePath: 'pages/profile/profile', text: '我的', icon: 'person' }
 ]);
+
+onShow(() => {
+  if (userStore.isLogin) {
+    cartStore.refreshCount();
+  }
+});
 
 function switchTab(path: string) {
   if (props.activePath === path) return;
