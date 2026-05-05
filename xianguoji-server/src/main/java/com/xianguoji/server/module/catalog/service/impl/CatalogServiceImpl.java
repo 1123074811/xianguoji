@@ -13,6 +13,8 @@ import com.xianguoji.server.module.catalog.vo.*;
 import com.xianguoji.server.module.review.entity.Review;
 import com.xianguoji.server.module.review.mapper.ReviewMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ public class CatalogServiceImpl implements CatalogService {
     private final ReviewMapper reviewMapper;
 
     @Override
+    @Cacheable(value = "category", key = "'tree'")
     public List<CategoryTreeVO> getCategoryTree() {
         List<Category> all = categoryMapper.selectList(
                 new LambdaQueryWrapper<Category>().eq(Category::getStatus, 1).orderByAsc(Category::getSort));
@@ -47,7 +50,7 @@ public class CatalogServiceImpl implements CatalogService {
                         .name(c.getName())
                         .icon(c.getIcon())
                         .sort(c.getSort())
-                        .children(childrenMap.getOrDefault(c.getId(), List.of()).stream()
+                        .children(childrenMap.getOrDefault(c.getId(), new ArrayList<>()).stream()
                                 .map(child -> CategoryTreeVO.builder()
                                         .id(child.getId())
                                         .name(child.getName())
@@ -55,12 +58,13 @@ public class CatalogServiceImpl implements CatalogService {
                                         .sort(child.getSort())
                                         .children(null)
                                         .build())
-                                .toList())
+                                .collect(Collectors.toCollection(ArrayList::new)))
                         .build())
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
+    @Cacheable(value = "banner", key = "'list'")
     public List<BannerVO> getBannerList() {
         List<Banner> list = bannerMapper.selectList(
                 new LambdaQueryWrapper<Banner>()
@@ -72,16 +76,17 @@ public class CatalogServiceImpl implements CatalogService {
                 .image(b.getImage())
                 .linkType(b.getLinkType())
                 .linkValue(b.getLinkValue())
-                .build()).toList();
+                .build()).collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
+    @Cacheable(value = "hotSearch", key = "'list'")
     public List<String> getHotSearchList() {
         List<HotSearch> list = hotSearchMapper.selectList(
                 new LambdaQueryWrapper<HotSearch>()
                         .eq(HotSearch::getStatus, 1)
                         .orderByAsc(HotSearch::getSort));
-        return list.stream().map(HotSearch::getKeyword).toList();
+        return list.stream().map(HotSearch::getKeyword).collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
@@ -133,6 +138,7 @@ public class CatalogServiceImpl implements CatalogService {
     }
 
     @Override
+    @Cacheable(value = "recommend", key = "'list'")
     public List<ProductVO> getRecommendProducts() {
         List<Product> list = productMapper.selectList(
                 new LambdaQueryWrapper<Product>()
@@ -140,11 +146,13 @@ public class CatalogServiceImpl implements CatalogService {
                         .eq(Product::getIsRecommend, 1)
                         .orderByDesc(Product::getCreatedAt)
                         .orderByDesc(Product::getSales));
-        return list.stream().map(this::toProductVO).toList();
+        return list.stream().map(this::toProductVO).collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
+    @Cacheable(value = "product", key = "#id")
     public ProductDetailVO getProductDetail(Long id) {
+        // 注：UV 记录由 Controller 在缓存外完成（缓存命中时不进入此方法）
         Product product = productMapper.selectById(id);
         if (product == null) throw new BizException(ResultCode.NOT_FOUND, "商品不存在");
 
@@ -160,9 +168,9 @@ public class CatalogServiceImpl implements CatalogService {
                         .orderByAsc(ProductImage::getSort));
 
         List<String> carouselImages = images.stream()
-                .filter(i -> i.getType() == 1).map(ProductImage::getUrl).toList();
+                .filter(i -> i.getType() == 1).map(ProductImage::getUrl).collect(Collectors.toCollection(ArrayList::new));
         List<String> detailImages = images.stream()
-                .filter(i -> i.getType() == 2).map(ProductImage::getUrl).toList();
+                .filter(i -> i.getType() == 2).map(ProductImage::getUrl).collect(Collectors.toCollection(ArrayList::new));
 
         // 评价摘要
         Long reviewCount = reviewMapper.selectCount(
@@ -199,7 +207,7 @@ public class CatalogServiceImpl implements CatalogService {
                         .originalPrice(s.getOriginalPrice())
                         .stock(s.getStock())
                         .isDefault(s.getIsDefault())
-                        .build()).toList())
+                        .build()).collect(Collectors.toCollection(ArrayList::new)))
                 .carouselImages(carouselImages)
                 .detailImages(detailImages)
                 .reviewSummary(reviewSummary)
