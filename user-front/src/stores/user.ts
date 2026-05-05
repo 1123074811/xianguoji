@@ -40,6 +40,12 @@ export const useUserStore = defineStore('user', () => {
     setUserInfo(vo.userInfo);
   }
 
+  async function wechatQuickLogin(jsCode: string) {
+    const vo = await authApi.wechatQuickLogin({ jsCode });
+    setToken(vo.token);
+    setUserInfo(vo.userInfo);
+  }
+
   async function fetchProfile() {
     const profile = await userApi.profile();
     setUserInfo({ ...userInfo.value, ...profile });
@@ -54,6 +60,7 @@ export const useUserStore = defineStore('user', () => {
     logout,
     smsLogin,
     wechatLogin,
+    wechatQuickLogin,
     fetchProfile,
   };
 });

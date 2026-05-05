@@ -5,24 +5,33 @@ export interface UserProfileVO {
   phone: string;
   gender: number;
   birthday: string;
+  tag: string;
   registerTime: string;
+  couponCount: number;
+  favoriteCount: number;
+  footprintCount: number;
+  groupBuyCount: number;
 }
 export interface AddressVO {
   id: number;
-  name: string;
+  consignee: string;
   phone: string;
   province: string;
   city: string;
   district: string;
   detail: string;
+  tag?: string;
   isDefault: 0 | 1;
+  longitude?: number;
+  latitude?: number;
 }
 export interface AddressDto {
-  name: string;
+  consignee: string;
   phone: string;
   province: string;
   city: string;
   district: string;
   detail: string;
+  tag?: string;
   isDefault?: 0 | 1;
 }

@@ -62,8 +62,8 @@ export function request<T = any>(opts: RequestOptions): Promise<T> {
             return reject(body);
           }
           if ((res.statusCode === 401) && !opts.anonymous) handleAuthFail();
-          !opts.silent && uni.showToast({ title: `网络异常 ${res.statusCode}`, icon: 'none' });
-          return reject(res);
+          !opts.silent && uni.showToast({ title: (body && body.msg) || `网络异常 ${res.statusCode}`, icon: 'none' });
+          return reject(body || res);
         }
         // 2. 业务码
         const body = res.data as R<T>;

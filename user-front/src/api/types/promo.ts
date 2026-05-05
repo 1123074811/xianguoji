@@ -8,6 +8,8 @@ export interface CouponVO {
   endTime: string;
   status: number;
   remaining: number;
+  perUserLimit: number;
+  userReceivedCount: number;
 }
 export interface UserCouponVO {
   id: number;
@@ -23,13 +25,16 @@ export interface UserCouponVO {
 export interface GroupBuyActivityVO {
   id: number;
   productId: number;
+  skuId: number;
   productName: string;
   mainImage: string;
   groupPrice: string;
   originalPrice: string;
   groupSize: number;
-  currentCount: number;
+  validHours: number;
   endTime: string;
+  totalJoinCount: number;
+  successCount: number;
   status: number;
 }
 export interface GroupBuyInstanceVO {

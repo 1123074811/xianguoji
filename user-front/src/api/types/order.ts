@@ -1,23 +1,34 @@
 export interface OrderPreviewVO {
   items: OrderPreviewItemVO[];
-  address: import('./user').AddressVO | null;
-  pickupPoint: import('./shop').PickupPointVO | null;
-  deliveryFee: string;
-  originalDeliveryFee: string;
+  goodsAmount: string;
   discountAmount: string;
-  totalAmount: string;
-  availableCoupons: import('./promo').UserCouponVO[];
+  couponAmount: string;
+  deliveryFee: string;
+  payAmount: string;
+  promotionTip: string;
+  address: PreviewAddressVO | null;
+  pickupPoint: PreviewPickupPointVO | null;
 }
 export interface OrderPreviewItemVO {
-  cartItemId: number;
-  productId: number;
   skuId: number;
   productName: string;
-  mainImage: string;
   specName: string;
+  image: string;
   price: string;
+  originalPrice: string;
   quantity: number;
   subtotal: string;
+}
+export interface PreviewAddressVO {
+  id: number;
+  consignee: string;
+  phone: string;
+  fullAddress: string;
+}
+export interface PreviewPickupPointVO {
+  id: number;
+  name: string;
+  address: string;
 }
 export interface OrderSubmitDto {
   addressId?: number;
@@ -32,41 +43,54 @@ export interface OrderSubmitDto {
   groupBuyInstanceId?: number;
 }
 export interface OrderVO {
+  id: number;
   orderNo: string;
   status: number;
-  statusText: string;
+  payStatus: number;
   deliveryType: 1 | 2;
-  totalAmount: string;
+  deliveryTime?: string;
+  consignee?: string;
+  consigneePhone?: string;
+  consigneeAddress?: string;
+  pickupCode?: string;
+  goodsAmount: string;
+  couponAmount: string;
   discountAmount: string;
   deliveryFee: string;
   payAmount: string;
-  createTime: string;
+  userRemark?: string;
+  cancelReason?: string;
   payTime?: string;
-  deliveryTime?: string;
-  finishTime?: string;
+  deliveredAt?: string;
+  finishedAt?: string;
+  createdAt: string;
   items: OrderItemVO[];
-  address?: import('./user').AddressVO;
-  pickupPoint?: import('./shop').PickupPointVO;
 }
 export interface OrderItemVO {
+  id: number;
   productId: number;
   skuId: number;
   productName: string;
-  mainImage: string;
   specName: string;
+  image: string;
   price: string;
+  originalPrice?: string;
   quantity: number;
   subtotal: string;
+  isReviewed: number;
 }
 export interface RefundVO {
+  id: number;
   refundNo: string;
   orderNo: string;
-  reason: string;
-  status: number;
-  statusText: string;
+  type: number;
   amount: string;
-  createTime: string;
+  reason: string;
   images: string[];
+  status: number;
+  rejectReason?: string;
+  handledAt?: string;
+  createdAt: string;
 }
 export interface RefundSubmitDto {
   orderNo: string;

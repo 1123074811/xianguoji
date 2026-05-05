@@ -20,6 +20,10 @@ export const reviewApi = {
   pendingReviews: () =>
     request<any[]>({ url: '/api/u/review/pending' }),
 
+  /** 我的评价列表 */
+  myReviews: (params?: { page?: number; size?: number }) =>
+    request<PageVO<ReviewVO>>({ url: '/api/u/review/my', params }),
+
   submit: (data: ReviewSubmitDto) =>
     request<void>({ url: '/api/u/review', method: 'POST', data }),
 };

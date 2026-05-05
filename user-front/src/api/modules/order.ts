@@ -5,7 +5,15 @@ import type {
 } from '@/api/types/order';
 
 export const orderApi = {
-  preview: (data: { cartItemIds?: number[]; groupBuyActivityId?: number }) =>
+  preview: (data: {
+    addressId?: number;
+    pickupPointId?: number;
+    deliveryType: number;
+    deliveryTime?: string;
+    cartItemIds?: number[];
+    userCouponId?: number;
+    userRemark?: string;
+  }) =>
     request<OrderPreviewVO>({ url: '/api/u/order/preview', method: 'POST', data }),
 
   submit: (data: OrderSubmitDto) =>

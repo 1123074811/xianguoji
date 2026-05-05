@@ -16,9 +16,11 @@ export interface ReviewVO {
 }
 export interface ReviewSummaryVO {
   totalCount: number;
-  avgRating: number;
+  avgRating: number | null;
+  goodCount: number;
+  middleCount: number;
+  badCount: number;
   withImageCount: number;
-  goodRate: number;
 }
 export interface ReviewSubmitDto {
   orderId: number;

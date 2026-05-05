@@ -12,6 +12,9 @@ export const authApi = {
   wechatLogin: (data: WechatLoginDto) =>
     request<LoginVO>({ url: '/api/pub/auth/login/wechat', method: 'POST', data, anonymous: true }),
 
+  wechatQuickLogin: (data: { jsCode: string }) =>
+    request<LoginVO>({ url: '/api/pub/auth/login/wechat/quick', method: 'POST', data, anonymous: true, silent: true }),
+
   logout: () =>
     request<void>({ url: '/api/u/auth/logout', method: 'POST' }),
 };

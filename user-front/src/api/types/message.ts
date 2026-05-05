@@ -9,14 +9,18 @@ export interface MessageVO {
 }
 export interface FeedbackVO {
   id: number;
+  type: string;
   content: string;
   images: string[];
+  contact?: string;
   replyContent?: string;
   replyTime?: string;
   status: number;
-  createTime: string;
+  createdAt: string;
 }
 export interface FeedbackSubmitDto {
+  type?: string;
   content: string;
   images?: string[];
+  contact?: string;
 }

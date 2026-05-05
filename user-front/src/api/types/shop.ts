@@ -2,28 +2,26 @@ export interface ShopVO {
   id: number;
   name: string;
   logo: string;
+  description: string;
   phone: string;
   address: string;
-  openTime: string;
-  closeTime: string;
-  isOpen: boolean;
-  notice: string;
+  businessHours: string;
+  isOpen: number;
+  autoAccept: number;
+  voiceNotify: number;
 }
 export interface PickupPointVO {
   id: number;
   name: string;
   address: string;
   phone: string;
-  openTime: string;
-  closeTime: string;
+  businessHours: string;
   latitude: number;
   longitude: number;
 }
 export interface DeliverySettingVO {
-  freeThreshold: string;
+  minOrderAmount: string;
   baseFee: string;
-  distanceFee: string;
-  maxDistance: number;
-  supportDelivery: boolean;
-  supportPickup: boolean;
+  freeAmount: string;
+  timeSlots: { label: string; start: string; end: string }[];
 }
