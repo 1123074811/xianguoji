@@ -39,11 +39,29 @@ public class LoginInterceptor implements HandlerInterceptor {
             adminRequired = hm.getBeanType().getAnnotation(AdminRequired.class);
         }
 
+        String token = extractToken(request);
+
+        // 公开接口：无注解但携带 token 时，仍设置 LoginContext 以便 uidOptional() 可用
         if (loginRequired == null && adminRequired == null) {
+            if (token != null && !token.isBlank()) {
+                try {
+                    Claims claims = jwtUtil.parse(token);
+                    if (!jwtBlacklistManager.isBlacklisted(token)) {
+                        String role = claims.get("role", String.class);
+                        if ("staff".equals(role)) {
+                            Long sid = claims.get("sid", Long.class);
+                            String staffRole = claims.get("staffRole", String.class);
+                            LoginContext.set(LoginUser.builder().sid(sid).role(role).staffRole(staffRole).build());
+                        } else {
+                            Long uid = claims.get("uid", Long.class);
+                            LoginContext.set(LoginUser.builder().uid(uid).role(role).build());
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
             return true;
         }
 
-        String token = extractToken(request);
         if (token == null || token.isBlank()) {
             throw new BizException(ResultCode.TOKEN_INVALID);
         }

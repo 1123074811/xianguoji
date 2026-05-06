@@ -3,8 +3,13 @@ package com.xianguoji.server.common.config;
 import com.xianguoji.server.common.security.LoginInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.core.Ordered;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -24,26 +29,43 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)
-                .addPathPatterns("/api/u/**", "/api/admin/**")
-                .excludePathPatterns("/api/pub/**");
+                .addPathPatterns("/api/**");
     }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        String[] origins;
+    /**
+     * 以 Servlet Filter 方式处理 CORS，优先级最高，
+     * 确保 OPTIONS 预检在 XssFilter / HotspotRateLimitFilter 之前完成，
+     * 避免 DispatcherServlet 层 addCorsMappings 被前置 Filter 短路导致 CORS 头缺失。
+     */
+    @Bean
+    public FilterRegistrationBean<CorsFilter> corsFilterRegistration() {
+        CorsConfiguration config = new CorsConfiguration();
         if (allowedOrigins != null && !allowedOrigins.isBlank()) {
-            origins = allowedOrigins.split(",");
+            for (String o : allowedOrigins.split(",")) {
+                config.addAllowedOriginPattern(o.trim());
+            }
         } else {
-            // 非 prod 环境允许 localhost
-            origins = new String[]{"http://localhost:*", "http://127.0.0.1:*"};
+            config.addAllowedOriginPattern("http://localhost:*");
+            config.addAllowedOriginPattern("http://127.0.0.1:*");
         }
-        registry.addMapping("/**")
-                .allowedOriginPatterns(origins)
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .exposedHeaders("X-Token-Renewal", "X-Trace-Id")
-                .allowCredentials(true)
-                .maxAge(3600);
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("DELETE");
+        config.addAllowedMethod("OPTIONS");
+        config.addAllowedHeader("*");
+        config.addExposedHeader("X-Token-Renewal");
+        config.addExposedHeader("X-Trace-Id");
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
+        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        bean.addUrlPatterns("/*");
+        return bean;
     }
 
     @Override
