@@ -20,7 +20,8 @@
           <text class="time">{{ coupon.time }}</text>
         </view>
         <view class="coupon-right">
-          <button v-if="currentTab === 0" class="action-btn" @tap="receiveCoupon(coupon)">领取</button>
+          <button v-if="currentTab === 0 && !coupon.claimed" class="action-btn" @tap="receiveCoupon(coupon)">领取</button>
+          <text v-else-if="currentTab === 0 && coupon.claimed" class="status-text claimed-text">已领取</text>
           <button v-else-if="currentTab === 1" class="action-btn use-btn" @tap="useCoupon">去使用</button>
           <text v-else class="status-text">已失效</text>
         </view>
@@ -51,12 +52,18 @@ type CouponItem = {
   title: string;
   time: string;
   status: number;
+  claimed?: boolean;
 };
 
 const currentTab = ref(0);
 const coupons = ref<CouponItem[]>([]);
 
-const filteredCoupons = computed(() => coupons.value);
+const filteredCoupons = computed(() => {
+  if (currentTab.value === 0) {
+    return coupons.value.filter(c => !c.claimed);
+  }
+  return coupons.value;
+});
 
 onMounted(loadCoupons);
 
@@ -83,7 +90,7 @@ async function receiveCoupon(coupon: CouponItem) {
   try {
     await promoApi.claimCoupon(coupon.couponId || coupon.id);
     uni.showToast({ title: '领取成功', icon: 'success' });
-    loadCoupons();
+    coupon.claimed = true;
   } catch (e) {
     console.warn('领取优惠券失败', e);
   }
@@ -98,6 +105,7 @@ function mapCoupon(coupon: CouponVO): CouponItem {
     title: coupon.name,
     time: buildTime(coupon.startTime, coupon.endTime),
     status: 0,
+    claimed: (coupon.userReceivedCount || 0) >= (coupon.perUserLimit || 1),
   };
 }
 
@@ -282,6 +290,12 @@ function goShopping() {
     .status-text {
       font-size: $font-sm;
       color: $color-text-secondary;
+
+      &.claimed-text {
+        font-size: $font-xs;
+        color: $color-primary;
+        opacity: 0.6;
+      }
     }
   }
 }

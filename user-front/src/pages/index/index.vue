@@ -173,7 +173,10 @@ function formatExpire(endTime: string) {
   return `${m}.${day}`;
 }
 
+const claimedCouponIds = ref(new Set<number>());
+
 function isCouponClaimed(coupon: CouponVO) {
+  if (claimedCouponIds.value.has(coupon.id)) return true;
   return (coupon.userReceivedCount || 0) >= (coupon.perUserLimit || 1);
 }
 
@@ -181,7 +184,8 @@ async function claimCoupon(coupon: CouponVO) {
   try {
     await promoApi.claimCoupon(coupon.id);
     uni.showToast({ title: `已领取 ¥${coupon.amount} 优惠券`, icon: 'success' });
-    await loadHomeData();
+    claimedCouponIds.value.add(coupon.id);
+    coupon.userReceivedCount = (coupon.userReceivedCount || 0) + 1;
   } catch (e) {
     console.warn('领券失败', e);
   }
