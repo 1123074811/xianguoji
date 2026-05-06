@@ -1,0 +1,51 @@
+{
+  "extends": [
+    "stylelint-config-standard-scss"
+  ],
+  "plugins": [
+    "stylelint-plugin-defensive-css"
+  ],
+  "rules": {
+    "selector-pseudo-class-no-vendor-prefix": null,
+    "value-no-vendor-prefix": null,
+    "property-no-vendor-prefix": null,
+    "at-rule-no-unknown": null,
+    "defensive-css/no-accidental-hover": true,
+    "defensive-css/no-fixed-sizes": null,
+    "defensive-css/require-flex-wrap": [true, { "severity": "warning" }],
+    "defensive-css/require-overscroll-behavior": null,
+    "defensive-css/require-scrollbar-gutter": null,
+    "defensive-css/require-dynamic-viewport-height": null,
+    "selector-class-pattern": null,
+    "custom-property-pattern": null,
+    "no-descending-specificity": null,
+    "rule-empty-line-before": null,
+    "scss/dollar-variable-pattern": null,
+    "scss/dollar-variable-empty-line-before": null,
+    "declaration-empty-line-before": null,
+    "unit-no-unknown": [true, { "ignoreUnits": ["rpx"] }],
+    "declaration-property-value-no-unknown": null,
+    "declaration-block-single-line-max-declarations": null,
+    "color-hex-length": null,
+    "shorthand-property-no-redundant-values": null,
+    "block-no-empty": null,
+    "comment-empty-line-before": null,
+    "selector-type-no-unknown": [true, { "ignoreTypes": ["scroll-view", "image", "view", "text", "navigator", "swiper", "swiper-item"] }],
+    "selector-pseudo-class-no-unknown": [true, { "ignorePseudoClasses": ["deep", "global", "slotted"] }],
+    "scss/double-slash-comment-empty-line-before": null,
+    "color-function-alias-notation": null,
+    "color-function-notation": null,
+    "alpha-value-notation": null,
+    "at-rule-empty-line-before": null,
+    "scss/load-partial-extension": null,
+    "function-no-unknown": [true, { "ignoreFunctions": ["constant", "env"] }],
+    "declaration-block-no-redundant-longhand-properties": null,
+    "value-keyword-case": null
+  },
+  "overrides": [
+    {
+      "files": ["**/*.vue"],
+      "customSyntax": "postcss-html"
+    }
+  ]
+}

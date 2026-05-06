@@ -7,7 +7,9 @@
     "dev:mp-weixin": "uni -p mp-weixin",
     "build:mp-weixin": "uni build -p mp-weixin",
     "dev:h5": "uni -p h5",
-    "build:h5": "uni build -p h5"
+    "build:h5": "uni build -p h5",
+    "lint:css": "stylelint \"src/**/*.vue\" --allow-empty-input 2>&1 | findstr /V \"Unknown rule\"",
+    "lint:css:fix": "stylelint \"src/**/*.vue\" --allow-empty-input --fix"
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-alpha-3080220230511001",
@@ -28,7 +30,14 @@
     "@dcloudio/vite-plugin-uni": "3.0.0-alpha-3080220230511001",
     "@material-symbols/svg-400": "^0.44.4",
     "@types/node": "^18.16.16",
+    "postcss-html": "^1.8.1",
     "sass": "^1.62.1",
+    "stylelint": "^17.11.0",
+    "stylelint-config-recommended-vue": "^1.6.1",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "stylelint-config-standard-vue": "^1.0.0",
+    "stylelint-plugin-defensive-css": "^2.9.1",
+    "stylelint-scss": "^7.0.0",
     "typescript": "^5.0.4",
     "vite": "^4.3.9"
   }

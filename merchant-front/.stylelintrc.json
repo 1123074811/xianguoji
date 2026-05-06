@@ -1,0 +1,33 @@
+{
+  "extends": [
+    "stylelint-config-standard",
+    "stylelint-config-recommended-vue"
+  ],
+  "plugins": [
+    "stylelint-plugin-defensive-css"
+  ],
+  "rules": {
+    "at-rule-no-unknown": [
+      true,
+      {
+        "ignoreAtRules": ["tailwind", "apply", "layer", "variants", "responsive", "screen"]
+      }
+    ],
+    "defensive-css/no-accidental-hover": true,
+    "defensive-css/no-fixed-sizes": true,
+    "defensive-css/require-flex-wrap": true,
+    "selector-class-pattern": null,
+    "custom-property-pattern": null,
+    "no-descending-specificity": null,
+    "declaration-block-no-duplicate-properties": null,
+    "import-notation": null,
+    "rule-empty-line-before": null,
+    "declaration-empty-line-before": null
+  },
+  "overrides": [
+    {
+      "files": ["**/*.vue"],
+      "customSyntax": "postcss-html"
+    }
+  ]
+}
