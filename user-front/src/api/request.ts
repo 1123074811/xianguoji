@@ -63,10 +63,17 @@ function b64decode(input: string): string {
   let output = '';
   let i = 0;
   while (i < clean.length) {
-    const e1 = B64_CHARS.indexOf(clean.charAt(i++));
-    const e2 = B64_CHARS.indexOf(clean.charAt(i++));
-    const e3 = B64_CHARS.indexOf(clean.charAt(i++));
-    const e4 = B64_CHARS.indexOf(clean.charAt(i++));
+    const ch1 = clean.charAt(i++);
+    const ch2 = clean.charAt(i++);
+    const ch3 = clean.charAt(i++);
+    const ch4 = clean.charAt(i++);
+    const e1 = B64_CHARS.indexOf(ch1);
+    const e2 = B64_CHARS.indexOf(ch2);
+    const e3 = ch3 === '=' ? 64 : B64_CHARS.indexOf(ch3);
+    const e4 = ch4 === '=' ? 64 : B64_CHARS.indexOf(ch4);
+    if (e1 < 0 || e2 < 0 || e3 < 0 || e4 < 0) {
+      throw new Error('Invalid base64');
+    }
     const c1 = (e1 << 2) | (e2 >> 4);
     const c2 = ((e2 & 15) << 4) | (e3 >> 2);
     const c3 = ((e3 & 3) << 6) | e4;
@@ -87,6 +94,10 @@ function encryptToken(token: string): string {
   return b64encode(result);
 }
 
+function isHeaderSafeToken(token: string): boolean {
+  return !!token && !/[\u0000-\u001F\u007F]/.test(token);
+}
+
 function decryptToken(encrypted: string): string {
   if (!encrypted) return '';
   try {
@@ -96,9 +107,12 @@ function decryptToken(encrypted: string): string {
     for (let i = 0; i < decoded.length; i++) {
       result += String.fromCharCode(decoded.charCodeAt(i) ^ mask.charCodeAt(i % mask.length));
     }
+    if (!isHeaderSafeToken(result) && isHeaderSafeToken(encrypted)) {
+      return encrypted;
+    }
     return result;
   } catch {
-    return encrypted; // fallback
+    return isHeaderSafeToken(encrypted) ? encrypted : '';
   }
 }
 

@@ -22,12 +22,12 @@ export const useUserStore = defineStore('user', () => {
 
   // F-3: token 加密后存储
   function setToken(t: string) {
-    token.value = t;
+    token.value = typeof t === 'string' ? t.trim() : '';
     uni.setStorageSync('token', encryptToken(t));
   }
 
   function setRefreshToken(t: string) {
-    refreshToken.value = t;
+    refreshToken.value = typeof t === 'string' ? t.trim() : '';
     uni.setStorageSync('refreshToken', encryptToken(t));
   }
 
