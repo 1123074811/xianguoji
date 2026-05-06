@@ -1,0 +1,43 @@
+# P2-5: CI/CD Pipeline
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build & Test
+        working-directory: xianguoji-server
+        run: mvn -B verify
+
+      - name: OWASP Dependency Check
+        working-directory: xianguoji-server
+        run: mvn -B dependency-check:check -DskipTests
+        continue-on-error: true
+
+      - name: Upload Dependency Check Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: xianguoji-server/target/dependency-check-report.html
+
+      - name: Build Docker Image
+        if: github.ref == 'refs/heads/main'
+        working-directory: xianguoji-server
+        run: |
+          docker build -t xianguoji-server:${{ github.sha }} .
