@@ -257,14 +257,10 @@ async function handleSubmit() {
 
   .img-item {
     position: relative;
-    // 微信小程序不支持 aspect-ratio
-    height: 0;
-    padding-bottom: 100%;
+    width: 100%;
+    aspect-ratio: 1;
 
     .img {
-      position: absolute;
-      top: 0;
-      left: 0;
       width: 100%;
       height: 100%;
       border-radius: $radius-sm;
@@ -286,10 +282,8 @@ async function handleSubmit() {
   }
 
   .add-btn {
-    // 微信小程序不支持 aspect-ratio
-    height: 0;
-    padding-bottom: 100%;
-    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
     border: 2rpx dashed $color-divider;
     border-radius: $radius-sm;
     display: flex;
