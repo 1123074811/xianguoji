@@ -30,7 +30,7 @@
 
     <scroll-view scroll-y class="main-scroll" show-scrollbar="false" @scrolltolower="loadMore">
       <view class="order-list">
-        <view v-for="order in filteredOrders" :key="order.orderNo" class="order-card card">
+        <view v-for="order in filteredOrders" :key="order.orderNo" class="order-card card" @tap="goToDetail(order)">
           <view class="card-header">
             <text class="order-no">订单号: {{ order.orderNo }}</text>
             <text class="status">{{ statusText(order.status) }}</text>
@@ -53,10 +53,10 @@
               <text class="count">共 {{ order.items.length }} 件商品 实付</text>
               <text class="price">¥{{ order.payAmount }}</text>
             </view>
-            <view class="actions">
-              <button 
-                v-for="btn in getOrderButtons(order)" 
-                :key="btn.text" 
+            <view class="actions" @tap.stop>
+              <button
+                v-for="btn in getOrderButtons(order)"
+                :key="btn.text"
                 class="action-btn"
                 :class="{ primary: btn.primary }"
                 @tap="handleAction(order, btn)"
@@ -182,12 +182,16 @@ function goToSearch() {
   uni.navigateTo({ url: '/pagesA/search/index' });
 }
 
+function goToDetail(order: OrderVO) {
+  uni.navigateTo({ url: `/pagesB/order-detail/index?orderNo=${order.orderNo}` });
+}
+
 function getOrderButtons(order: OrderVO) {
   const btns: { text: string; primary: boolean }[] = [];
   switch (order.status) {
-    case 0: btns.push({ text: '取消订单', primary: false }, { text: '立即支付', primary: true }); break;
-    case 1: case 2: btns.push({ text: '提醒发货', primary: true }); break;
-    case 3: btns.push({ text: '查看物流', primary: false }, { text: '确认收货', primary: true }); break;
+    case 0: btns.push({ text: '查看详情', primary: false }, { text: '取消订单', primary: false }, { text: '立即支付', primary: true }); break;
+    case 1: case 2: btns.push({ text: '查看详情', primary: false }, { text: '提醒发货', primary: true }); break;
+    case 3: btns.push({ text: '查看详情', primary: false }, { text: '查看物流', primary: false }, { text: '确认收货', primary: true }); break;
     case 5: btns.push({ text: '查看详情', primary: false }, { text: '去评价', primary: true }, { text: '再次购买', primary: false }); break;
     default: btns.push({ text: '查看详情', primary: false });
   }
