@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Set;
+
 /**
  * 微信小程序工具类：调用 code2Session 获取 openid / session_key / unionid
  */
@@ -25,6 +27,11 @@ public class WechatUtil {
     private static final String CODE2SESSION_URL =
             "https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code";
 
+    // S-5: SSRF 白名单 —— 微信接口仅允许此前缀
+    private static final Set<String> WECHAT_ALLOWED_PREFIXES = Set.of(
+            "https://api.weixin.qq.com/"
+    );
+
     /**
      * 调用微信 code2Session 接口
      *
@@ -33,6 +40,10 @@ public class WechatUtil {
      */
     public JSONObject code2Session(String jsCode) {
         String url = String.format(CODE2SESSION_URL, appid, secret, jsCode);
+
+        // S-5: SSRF 防御 —— 校验 URL 白名单
+        UrlSecurityUtil.validateUrlPrefix(url, WECHAT_ALLOWED_PREFIXES);
+
         String body = HttpUtil.get(url, 5000);
         log.debug("[WechatUtil] code2Session response: {}", body);
 

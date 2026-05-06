@@ -1,6 +1,7 @@
 package com.xianguoji.server.module.order.controller;
 
 import com.xianguoji.server.common.annotation.AdminRequired;
+import com.xianguoji.server.common.annotation.Idempotent;
 import com.xianguoji.server.common.annotation.LoginRequired;
 import com.xianguoji.server.common.result.PageVO;
 import com.xianguoji.server.common.result.R;
@@ -35,6 +36,7 @@ public class OrderController {
     @Operation(summary = "提交订单")
     @PostMapping("/api/u/order/submit")
     @LoginRequired
+    @Idempotent(key = "order:submit", ttl = 3)
     public R<Map<String, String>> submit(@Valid @RequestBody OrderSubmitDto dto) {
         String orderNo = orderService.submit(LoginContext.uid(), dto);
         return R.ok(Map.of("orderNo", orderNo));
@@ -43,6 +45,7 @@ public class OrderController {
     @Operation(summary = "发起支付")
     @PostMapping("/api/u/order/{orderNo}/pay")
     @LoginRequired
+    @Idempotent(key = "order:pay", ttl = 5, requestParam = "orderNo")
     public R<Object> pay(@PathVariable String orderNo) {
         return R.ok(orderService.pay(LoginContext.uid(), orderNo));
     }

@@ -4,6 +4,7 @@ import com.xianguoji.server.common.annotation.Idempotent;
 import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.ResultCode;
 import com.xianguoji.server.common.security.LoginContext;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -12,6 +13,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.concurrent.TimeUnit;
 
@@ -49,6 +52,15 @@ public class IdempotentAspect {
                 ? sig.getDeclaringType().getSimpleName() + ":" + sig.getName()
                 : idempotent.key();
         StringBuilder sb = new StringBuilder(KEY_PREFIX).append(prefix);
+
+        // S-13: 从请求参数提取唯一标识
+        if (!idempotent.requestParam().isEmpty()) {
+            String paramValue = getRequestParam(idempotent.requestParam());
+            if (paramValue != null && !paramValue.isBlank()) {
+                sb.append(":").append(idempotent.requestParam()).append("=").append(paramValue);
+            }
+        }
+
         if (idempotent.userScope()) {
             Long uid = LoginContext.uid();
             if (uid != null) {
@@ -56,5 +68,18 @@ public class IdempotentAspect {
             }
         }
         return sb.toString();
+    }
+
+    private String getRequestParam(String paramName) {
+        ServletRequestAttributes attrs =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attrs == null) return null;
+        HttpServletRequest request = attrs.getRequest();
+        String value = request.getParameter(paramName);
+        if (value == null) {
+            // 尝试从 header 取
+            value = request.getHeader(paramName);
+        }
+        return value;
     }
 }

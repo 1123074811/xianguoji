@@ -24,6 +24,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 @EnableCaching
 @Configuration
@@ -47,18 +48,32 @@ public class CacheConfig implements CachingConfigurer {
                 .serializeValuesWith(SerializationPair.fromSerializer(jsonSerializer))
                 .computePrefixWith(name -> "xgj:cache:" + name + ":");
 
+        // 空值缓存：防穿透，60s TTL
+        RedisCacheConfiguration nullValueCfg = defaultCfg
+                .entryTtl(Duration.ofSeconds(60));
+
         Map<String, RedisCacheConfiguration> perCache = new HashMap<>();
-        perCache.put("shop", defaultCfg.entryTtl(Duration.ofHours(2)));
-        perCache.put("category", defaultCfg.entryTtl(Duration.ofHours(6)));
-        perCache.put("product", defaultCfg.entryTtl(Duration.ofMinutes(10)));
-        perCache.put("banner", defaultCfg.entryTtl(Duration.ofMinutes(30)));
-        perCache.put("hotSearch", defaultCfg.entryTtl(Duration.ofHours(1)));
-        perCache.put("recommend", defaultCfg.entryTtl(Duration.ofMinutes(5)));
+        perCache.put("shop", withJitter(defaultCfg, Duration.ofHours(2)));
+        perCache.put("category", withJitter(defaultCfg, Duration.ofHours(6)));
+        perCache.put("product", withJitter(defaultCfg, Duration.ofMinutes(10)));
+        perCache.put("banner", withJitter(defaultCfg, Duration.ofMinutes(30)));
+        perCache.put("hotSearch", withJitter(defaultCfg, Duration.ofHours(1)));
+        perCache.put("recommend", withJitter(defaultCfg, Duration.ofMinutes(5)));
+        // 空值缓存区域
+        perCache.put("nullValues", nullValueCfg);
 
         return RedisCacheManager.builder(cf)
                 .cacheDefaults(defaultCfg)
                 .withInitialCacheConfigurations(perCache)
                 .build();
+    }
+
+    /**
+     * 为 TTL 添加 ±60s 抖动，防止缓存雪崩
+     */
+    private RedisCacheConfiguration withJitter(RedisCacheConfiguration base, Duration ttl) {
+        long jitterSeconds = ThreadLocalRandom.current().nextLong(-60, 60);
+        return base.entryTtl(ttl.plusSeconds(jitterSeconds));
     }
 
     @Bean

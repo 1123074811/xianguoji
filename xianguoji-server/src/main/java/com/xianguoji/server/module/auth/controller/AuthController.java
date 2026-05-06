@@ -3,6 +3,7 @@ package com.xianguoji.server.module.auth.controller;
 import com.xianguoji.server.common.annotation.AdminRequired;
 import com.xianguoji.server.common.annotation.LoginRequired;
 import com.xianguoji.server.common.result.R;
+import com.xianguoji.server.common.result.ResultCode;
 import com.xianguoji.server.common.security.JwtBlacklistManager;
 import com.xianguoji.server.common.security.JwtUtil;
 import com.xianguoji.server.common.security.LoginContext;
@@ -19,6 +20,7 @@ import com.xianguoji.server.module.staff.mapper.StaffMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Map;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -35,8 +37,8 @@ public class AuthController {
 
     @Operation(summary = "发送验证码")
     @PostMapping("/api/pub/auth/sms/send")
-    public R<Void> sendSmsCode(@Valid @RequestBody SmsSendDto dto) {
-        authService.sendSmsCode(dto);
+    public R<Void> sendSmsCode(@Valid @RequestBody SmsSendDto dto, HttpServletRequest request) {
+        authService.sendSmsCode(dto, request);
         return R.ok();
     }
 
@@ -58,6 +60,16 @@ public class AuthController {
         return R.ok(authService.quickWechatLogin(dto));
     }
 
+    @Operation(summary = "刷新token（用refresh token换发新access+refresh）")
+    @PostMapping("/api/pub/auth/refresh")
+    public R<LoginVO> refreshToken(@RequestBody Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return R.fail(ResultCode.PARAM_ERROR.getCode(), "refreshToken不能为空");
+        }
+        return R.ok(authService.refreshToken(refreshToken));
+    }
+
     @Operation(summary = "用户退出登录")
     @PostMapping("/api/u/auth/logout")
     @LoginRequired
@@ -73,8 +85,8 @@ public class AuthController {
 
     @Operation(summary = "商家账号密码登录")
     @PostMapping("/api/pub/admin/login")
-    public R<LoginVO> adminLogin(@Valid @RequestBody AdminLoginDto dto) {
-        return R.ok(authService.adminLogin(dto));
+    public R<LoginVO> adminLogin(@Valid @RequestBody AdminLoginDto dto, HttpServletRequest request) {
+        return R.ok(authService.adminLogin(dto, request));
     }
 
     @Operation(summary = "商家重置密码")

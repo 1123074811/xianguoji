@@ -15,6 +15,9 @@ public class LoginVO {
 
     private String token;
     private LocalDateTime expireAt;
+    /** S-7: refresh token（长有效期，仅用于 /api/auth/refresh） */
+    private String refreshToken;
+    private LocalDateTime refreshExpireAt;
     private UserInfoVO userInfo;
 
     @Data

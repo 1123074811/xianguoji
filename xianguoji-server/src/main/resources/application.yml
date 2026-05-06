@@ -2,23 +2,29 @@ server:
   port: 8080
   servlet:
     context-path: /
+  tomcat:
+    connection-timeout: 10s
+    max-swallow-size: 10MB
+    threads:
+      max: 200
+      min-spare: 20
 
 spring:
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
   servlet:
     multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
-  jackson:
-    time-zone: GMT+8
-    date-format: yyyy-MM-dd HH:mm:ss
+      max-file-size: 10MB
+      max-request-size: 10MB
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/xianguoji?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: ${MYSQL_USER:root}
-    password: ${MYSQL_PASSWORD:CHANGE_ME}
+    password: ${MYSQL_PASSWORD}
     druid:
       initial-size: 5
       min-idle: 5
@@ -26,13 +32,13 @@ spring:
       stat-view-servlet:
         enabled: true
         login-username: ${DRUID_USER:druid}
-        login-password: ${DRUID_PASSWORD:CHANGE_ME}
+        login-password: ${DRUID_PASSWORD}
   data:
     redis:
       host: 127.0.0.1
       port: 6379
       database: 0
-      password: ${REDIS_PASSWORD:CHANGE_ME}
+      password: ${REDIS_PASSWORD}
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
@@ -49,9 +55,16 @@ xianguoji:
   cache:
     enabled: true
   jwt:
-    secret: ${JWT_SECRET:CHANGE_ME_TO_32_BYTES_MIN}
-    user-ttl-hours: 168
-    admin-ttl-hours: 12
+    active-kid: ${JWT_ACTIVE_KID:v1}
+    secrets:
+      v1: ${JWT_SECRET_V1:CHANGE_ME_TO_32_BYTES_MIN}
+      v2: ${JWT_SECRET_V2:}
+    user-access-ttl-minutes: 120
+    user-refresh-ttl-hours: 168
+    admin-access-ttl-minutes: 30
+    admin-refresh-ttl-hours: 12
+    # 兼容旧配置
+    secret: ${JWT_SECRET:}
   upload:
     base-dir: D:/xianguoji/upload
     domain: http://127.0.0.1:8080/static
@@ -65,11 +78,17 @@ xianguoji:
   sms:
     provider: mock
   wechat:
-    appid: ${WECHAT_APPID:CHANGE_ME}
-    secret: ${WECHAT_SECRET:CHANGE_ME}
+    appid: ${WECHAT_APPID}
+    secret: ${WECHAT_SECRET}
     pay:
-      mch-id: <your-mchid>
-      api-key-v3: <your-apikey>
+      mch-id: ${WECHAT_PAY_MCH_ID:}
+      api-key-v3: ${WECHAT_PAY_API_KEY_V3:}
+  # P2-6: 安全配置命名空间
+  security:
+    alert-webhook: ${SECURITY_ALERT_WEBHOOK:}
+    upload-max-size-mb: ${UPLOAD_MAX_SIZE_MB:10}
+    brute-force-max-attempts: ${BRUTE_FORCE_MAX_ATTEMPTS:5}
+    brute-force-lock-minutes: ${BRUTE_FORCE_LOCK_MINUTES:15}
 
 logging:
   level:

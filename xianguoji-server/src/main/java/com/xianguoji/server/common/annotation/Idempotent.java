@@ -22,6 +22,9 @@ public @interface Idempotent {
     /** 是否以用户维度隔离（默认 true，按 uid 区分） */
     boolean userScope() default true;
 
+    /** S-13: 从请求参数中提取唯一标识的字段名（如 requestId、outTradeNo），为空则不提取 */
+    String requestParam() default "";
+
     /** 提示信息 */
     String message() default "操作过于频繁，请稍后再试";
 }

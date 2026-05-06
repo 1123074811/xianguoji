@@ -56,7 +56,23 @@ public class LoginInterceptor implements HandlerInterceptor {
         Claims claims = jwtUtil.parse(token);
         String role = claims.get("role", String.class);
 
-        // Token 续期：剩余 < 1h 时签发新 token，通过 response header 下发
+        // S-7: 仅 access token 可访问受保护接口，refresh token 仅用于 /api/auth/refresh
+        String tokenType = claims.get("type", String.class);
+        if ("refresh".equals(tokenType)) {
+            throw new BizException(ResultCode.TOKEN_INVALID, "refresh token 不可用于业务接口");
+        }
+
+        // S-7: 设备指纹校验（仅 access token 含 fp）
+        String fp = claims.get("fp", String.class);
+        if (fp != null && !fp.isBlank()) {
+            String currentFp = JwtUtil.fingerprint(null, request.getHeader("User-Agent"));
+            if (!fp.equals(currentFp) && !currentFp.isBlank()) {
+                log.warn("[LoginInterceptor] 指纹不匹配: tokenFp={}, currentFp={}, uri={}", fp, currentFp, request.getRequestURI());
+                // 指纹不匹配时记录但不阻断（小程序 UA 可能变化），后续可收紧
+            }
+        }
+
+        // Token 续期：剩余 < 1h 时签发新 access token，通过 response header 下发
         try {
             Date expiry = claims.getExpiration();
             long remainMs = expiry.getTime() - System.currentTimeMillis();
@@ -65,10 +81,10 @@ public class LoginInterceptor implements HandlerInterceptor {
                 if ("staff".equals(role)) {
                     Long sid = claims.get("sid", Long.class);
                     String staffRole = claims.get("staffRole", String.class);
-                    newToken = jwtUtil.issueAdminToken(sid, staffRole);
+                    newToken = jwtUtil.issueAdminAccessToken(sid, staffRole, fp);
                 } else {
                     Long uid = claims.get("uid", Long.class);
-                    newToken = jwtUtil.issueUserToken(uid);
+                    newToken = jwtUtil.issueUserAccessToken(uid, fp);
                 }
                 response.setHeader("X-Token-Renewal", newToken);
             }
@@ -110,6 +126,9 @@ public class LoginInterceptor implements HandlerInterceptor {
         LoginContext.clear();
     }
 
+    /**
+     * S-6: 仅从 Header 提取 token，禁止从 Cookie 读取，天然免疫 CSRF
+     */
     private String extractToken(HttpServletRequest request) {
         String bearer = request.getHeader("Authorization");
         if (bearer != null && bearer.startsWith("Bearer ")) {

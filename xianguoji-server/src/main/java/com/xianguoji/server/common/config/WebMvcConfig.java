@@ -18,6 +18,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Value("${xianguoji.upload.base-dir:D:/xianguoji/upload}")
     private String uploadBaseDir;
 
+    @Value("${xianguoji.security.cors.allowed-origins:}")
+    private String allowedOrigins;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)
@@ -27,11 +30,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        String[] origins;
+        if (allowedOrigins != null && !allowedOrigins.isBlank()) {
+            origins = allowedOrigins.split(",");
+        } else {
+            // 非 prod 环境允许 localhost
+            origins = new String[]{"http://localhost:*", "http://127.0.0.1:*"};
+        }
         registry.addMapping("/**")
-                .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
+                .allowedOriginPatterns(origins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                .exposedHeaders("X-Token-Renewal")
+                .exposedHeaders("X-Token-Renewal", "X-Trace-Id")
                 .allowCredentials(true)
                 .maxAge(3600);
     }

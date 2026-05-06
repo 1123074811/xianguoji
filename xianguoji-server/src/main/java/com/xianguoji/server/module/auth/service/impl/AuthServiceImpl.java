@@ -7,8 +7,13 @@ import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.ResultCode;
 import com.xianguoji.server.common.security.JwtBlacklistManager;
 import com.xianguoji.server.common.security.JwtUtil;
+import com.xianguoji.server.common.security.LoginAttemptManager;
+import com.xianguoji.server.common.security.SmsRateLimiter;
+import com.xianguoji.server.common.util.IpUtil;
 import com.xianguoji.server.common.util.SmsUtil;
 import com.xianguoji.server.common.util.WechatUtil;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import com.xianguoji.server.module.auth.dto.AdminLoginDto;
 import com.xianguoji.server.module.auth.dto.AdminResetPasswordDto;
 import com.xianguoji.server.module.auth.dto.SmsLoginDto;
@@ -43,6 +48,8 @@ public class AuthServiceImpl implements AuthService {
     private final JwtBlacklistManager jwtBlacklistManager;
     private final SmsUtil smsUtil;
     private final WechatUtil wechatUtil;
+    private final LoginAttemptManager loginAttemptManager;
+    private final SmsRateLimiter smsRateLimiter;
 
     private static final String SMS_CODE_PREFIX = "sms:code:";
     private static final String SMS_LIMIT_PREFIX = "sms:limit:";
@@ -60,28 +67,18 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @RateLimit(key = "sms", limit = 5, period = 60)
-    public void sendSmsCode(SmsSendDto dto) {
+    public void sendSmsCode(SmsSendDto dto, HttpServletRequest request) {
         String phone = dto.getPhone();
+        String ip = IpUtil.getClientIp(request);
 
-        // 60秒内不可重复发送
-        String limitKey = SMS_LIMIT_PREFIX + phone + ":sec";
-        if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(limitKey))) {
-            throw new BizException(ResultCode.RATE_LIMITED, "发送太频繁，请60秒后重试");
-        }
-
-        // 每日上限
-        String dayKey = SMS_LIMIT_PREFIX + phone + ":day";
-        Long count = stringRedisTemplate.opsForValue().increment(dayKey);
-        if (count != null && count == 1) {
-            stringRedisTemplate.expire(dayKey, 1, TimeUnit.DAYS);
-        }
-        if (count != null && count > DAILY_LIMIT) {
-            throw new BizException(ResultCode.RATE_LIMITED, "今日发送次数已达上限");
-        }
+        // S-4: 统一短信频控（手机号60s/天10次 + IP 60s 5次）
+        smsRateLimiter.check(phone, ip);
 
         String code = "mock".equals(smsProvider) ? DEV_FIXED_CODE : RandomUtil.randomNumbers(4);
         stringRedisTemplate.opsForValue().set(SMS_CODE_PREFIX + phone, code, CODE_TTL_MINUTES, TimeUnit.MINUTES);
-        stringRedisTemplate.opsForValue().set(limitKey, "1", 60, TimeUnit.SECONDS);
+
+        // S-4: 发送成功后标记60s冷却
+        smsRateLimiter.markSent(phone);
 
         smsUtil.send(phone, code);
     }
@@ -119,15 +116,19 @@ public class AuthServiceImpl implements AuthService {
         }
         userMapper.updateById(user);
 
-        String token = jwtUtil.issueUserToken(user.getId());
-        LocalDateTime expireAt = LocalDateTime.now().plusHours(168);
+        String accessToken = jwtUtil.issueUserAccessToken(user.getId(), "");
+        String refreshToken = jwtUtil.issueUserRefreshToken(user.getId());
+        LocalDateTime accessExpireAt = LocalDateTime.now().plusMinutes(jwtUtil.getUserAccessTtlMinutes());
+        LocalDateTime refreshExpireAt = LocalDateTime.now().plusHours(jwtUtil.getUserRefreshTtlHours());
 
         // P2-8: 注册活跃 token
-        jwtBlacklistManager.registerActiveToken(token, user.getId(), 168 * 3600_000L);
+        jwtBlacklistManager.registerActiveToken(accessToken, user.getId(), (long) jwtUtil.getUserAccessTtlMinutes() * 60_000);
 
         return LoginVO.builder()
-                .token(token)
-                .expireAt(expireAt)
+                .token(accessToken)
+                .expireAt(accessExpireAt)
+                .refreshToken(refreshToken)
+                .refreshExpireAt(refreshExpireAt)
                 .userInfo(LoginVO.UserInfoVO.builder()
                         .id(user.getId())
                         .nickname(user.getNickname())
@@ -162,15 +163,19 @@ public class AuthServiceImpl implements AuthService {
         }
         userMapper.updateById(user);
 
-        String token = jwtUtil.issueUserToken(user.getId());
-        LocalDateTime expireAt = LocalDateTime.now().plusHours(168);
+        String accessToken = jwtUtil.issueUserAccessToken(user.getId(), "");
+        String refreshToken = jwtUtil.issueUserRefreshToken(user.getId());
+        LocalDateTime accessExpireAt = LocalDateTime.now().plusMinutes(jwtUtil.getUserAccessTtlMinutes());
+        LocalDateTime refreshExpireAt = LocalDateTime.now().plusHours(jwtUtil.getUserRefreshTtlHours());
 
         // P2-8: 注册活跃 token
-        jwtBlacklistManager.registerActiveToken(token, user.getId(), 168 * 3600_000L);
+        jwtBlacklistManager.registerActiveToken(accessToken, user.getId(), (long) jwtUtil.getUserAccessTtlMinutes() * 60_000);
 
         return LoginVO.builder()
-                .token(token)
-                .expireAt(expireAt)
+                .token(accessToken)
+                .expireAt(accessExpireAt)
+                .refreshToken(refreshToken)
+                .refreshExpireAt(refreshExpireAt)
                 .userInfo(LoginVO.UserInfoVO.builder()
                         .id(user.getId())
                         .nickname(user.getNickname())
@@ -223,16 +228,20 @@ public class AuthServiceImpl implements AuthService {
         }
         userMapper.updateById(user);
 
-        // 4. 签发 JWT
-        String token = jwtUtil.issueUserToken(user.getId());
-        LocalDateTime expireAt = LocalDateTime.now().plusHours(168);
+        // 4. 签发 JWT（双 token）
+        String accessToken = jwtUtil.issueUserAccessToken(user.getId(), "");
+        String refreshToken = jwtUtil.issueUserRefreshToken(user.getId());
+        LocalDateTime accessExpireAt = LocalDateTime.now().plusMinutes(jwtUtil.getUserAccessTtlMinutes());
+        LocalDateTime refreshExpireAt = LocalDateTime.now().plusHours(jwtUtil.getUserRefreshTtlHours());
 
         // P2-8: 注册活跃 token
-        jwtBlacklistManager.registerActiveToken(token, user.getId(), 168 * 3600_000L);
+        jwtBlacklistManager.registerActiveToken(accessToken, user.getId(), (long) jwtUtil.getUserAccessTtlMinutes() * 60_000);
 
         return LoginVO.builder()
-                .token(token)
-                .expireAt(expireAt)
+                .token(accessToken)
+                .expireAt(accessExpireAt)
+                .refreshToken(refreshToken)
+                .refreshExpireAt(refreshExpireAt)
                 .userInfo(LoginVO.UserInfoVO.builder()
                         .id(user.getId())
                         .nickname(user.getNickname())
@@ -245,7 +254,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginVO adminLogin(AdminLoginDto dto) {
+    public LoginVO adminLogin(AdminLoginDto dto, HttpServletRequest request) {
+        String ip = IpUtil.getClientIp(request);
+        String account = dto.getUsername();
+
+        // S-4: 检查账户/IP是否已被锁定
+        loginAttemptManager.checkLocked(account, ip);
+
         // 校验图形验证码
         String redisCode = stringRedisTemplate.opsForValue().get(CAPTCHA_PREFIX + dto.getCaptchaKey());
         if (redisCode == null || !redisCode.equals(dto.getCaptchaCode().toLowerCase())) {
@@ -255,27 +270,36 @@ public class AuthServiceImpl implements AuthService {
 
         Staff staff = staffMapper.selectOne(new LambdaQueryWrapper<Staff>().eq(Staff::getUsername, dto.getUsername()));
         if (staff == null) {
+            loginAttemptManager.recordFail(account, ip);
             throw new BizException(ResultCode.BIZ_ERROR, "账号或密码错误");
         }
         if (staff.getStatus() == 0) {
             throw new BizException(ResultCode.ACCESS_DENIED, "账号已被禁用");
         }
         if (!passwordEncoder.matches(dto.getPassword(), staff.getPasswordHash())) {
+            loginAttemptManager.recordFail(account, ip);
             throw new BizException(ResultCode.BIZ_ERROR, "账号或密码错误");
         }
+
+        // S-4: 登录成功，重置失败计数
+        loginAttemptManager.reset(account, ip);
 
         staff.setLastLoginAt(LocalDateTime.now());
         staffMapper.updateById(staff);
 
-        String token = jwtUtil.issueAdminToken(staff.getId(), staff.getRole());
-        LocalDateTime expireAt = LocalDateTime.now().plusHours(12);
+        String accessToken = jwtUtil.issueAdminAccessToken(staff.getId(), staff.getRole(), "");
+        String refreshToken = jwtUtil.issueAdminRefreshToken(staff.getId(), staff.getRole());
+        LocalDateTime accessExpireAt = LocalDateTime.now().plusMinutes(jwtUtil.getAdminAccessTtlMinutes());
+        LocalDateTime refreshExpireAt = LocalDateTime.now().plusHours(jwtUtil.getAdminRefreshTtlHours());
 
         // P2-8: 注册活跃 token
-        jwtBlacklistManager.registerActiveToken(token, staff.getId(), 12 * 3600_000L);
+        jwtBlacklistManager.registerActiveToken(accessToken, staff.getId(), (long) jwtUtil.getAdminAccessTtlMinutes() * 60_000);
 
         return LoginVO.builder()
-                .token(token)
-                .expireAt(expireAt)
+                .token(accessToken)
+                .expireAt(accessExpireAt)
+                .refreshToken(refreshToken)
+                .refreshExpireAt(refreshExpireAt)
                 .userInfo(LoginVO.UserInfoVO.builder()
                         .id(staff.getId())
                         .nickname(staff.getName())
@@ -305,8 +329,66 @@ public class AuthServiceImpl implements AuthService {
         }
         stringRedisTemplate.delete(SMS_CODE_PREFIX + dto.getPhone());
 
-        staff.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
+        // P0-3: 密码强度校验（≥8位，含大小写+数字）
+        String pwd = dto.getNewPassword();
+        if (pwd == null || pwd.length() < 8
+                || !pwd.matches(".*[A-Z].*") || !pwd.matches(".*[a-z].*") || !pwd.matches(".*\\d.*")) {
+            throw new BizException(ResultCode.PARAM_ERROR, "密码需≥8位且包含大小写字母和数字");
+        }
+        staff.setPasswordHash(passwordEncoder.encode(pwd));
         staffMapper.updateById(staff);
+    }
+
+    @Override
+    public LoginVO refreshToken(String refreshToken) {
+        // 1. 解析 refresh token
+        Claims claims = jwtUtil.parse(refreshToken);
+
+        // 2. 必须是 refresh 类型
+        String tokenType = claims.get("type", String.class);
+        if (!"refresh".equals(tokenType)) {
+            throw new BizException(ResultCode.TOKEN_INVALID, "仅 refresh token 可用于续签");
+        }
+
+        // 3. 检查黑名单
+        if (jwtBlacklistManager.isBlacklisted(refreshToken)) {
+            throw new BizException(ResultCode.TOKEN_INVALID, "refresh token 已失效");
+        }
+
+        // 4. 旋转：将旧 refresh token 加入黑名单
+        long remainMs = claims.getExpiration().getTime() - System.currentTimeMillis();
+        jwtBlacklistManager.blacklist(refreshToken, remainMs);
+
+        // 5. 签发新的 access + refresh
+        String role = claims.get("role", String.class);
+        String newAccessToken;
+        String newRefreshToken;
+        LocalDateTime accessExpireAt;
+        LocalDateTime refreshExpireAt;
+
+        if ("staff".equals(role)) {
+            Long sid = claims.get("sid", Long.class);
+            String staffRole = claims.get("staffRole", String.class);
+            newAccessToken = jwtUtil.issueAdminAccessToken(sid, staffRole, "");
+            newRefreshToken = jwtUtil.issueAdminRefreshToken(sid, staffRole);
+            accessExpireAt = LocalDateTime.now().plusMinutes(jwtUtil.getAdminAccessTtlMinutes());
+            refreshExpireAt = LocalDateTime.now().plusHours(jwtUtil.getAdminRefreshTtlHours());
+            jwtBlacklistManager.registerActiveToken(newAccessToken, sid, (long) jwtUtil.getAdminAccessTtlMinutes() * 60_000);
+        } else {
+            Long uid = claims.get("uid", Long.class);
+            newAccessToken = jwtUtil.issueUserAccessToken(uid, "");
+            newRefreshToken = jwtUtil.issueUserRefreshToken(uid);
+            accessExpireAt = LocalDateTime.now().plusMinutes(jwtUtil.getUserAccessTtlMinutes());
+            refreshExpireAt = LocalDateTime.now().plusHours(jwtUtil.getUserRefreshTtlHours());
+            jwtBlacklistManager.registerActiveToken(newAccessToken, uid, (long) jwtUtil.getUserAccessTtlMinutes() * 60_000);
+        }
+
+        return LoginVO.builder()
+                .token(newAccessToken)
+                .expireAt(accessExpireAt)
+                .refreshToken(newRefreshToken)
+                .refreshExpireAt(refreshExpireAt)
+                .build();
     }
 
     private String maskPhone(String phone) {
