@@ -60,7 +60,7 @@
 
       <!-- 提交按钮 -->
       <view class="submit-box">
-        <button class="submit-btn" :class="{ disabled: !canSubmit }" :disabled="!canSubmit" @tap="handleSubmit">提交反馈</button>
+        <view class="submit-btn" :class="{ disabled: !canSubmit }" hover-class="row-active" @tap="handleSubmit">提交反馈</view>
         <text class="hint">我们会在 1-3 个工作日内回复</text>
       </view>
     </scroll-view>
@@ -68,9 +68,13 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed } from 'vue';
+import { reactive, computed, ref } from 'vue';
 import { messageApi } from '@/api/modules/message';
+import { useUserStore } from '@/stores/user';
 import SvgIcon from '@/components/svg-icon.vue';
+
+const BASE_URL = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8080';
+const uploading = ref(false);
 
 const types = [
   { id: 'bug', name: '功能异常', icon: 'edit' },
@@ -93,10 +97,51 @@ const canSubmit = computed(() => form.content.trim().length >= 5);
 function chooseImage() {
   uni.chooseImage({
     count: 6 - form.images.length,
-    success: (res) => {
+    success: async (res) => {
       const paths = (res.tempFilePaths || []) as string[];
-      form.images.push(...paths);
+      uploading.value = true;
+      try {
+        for (const path of paths) {
+          const url = await uploadImage(path);
+          form.images.push(url);
+        }
+      } catch (e) {
+        uni.showToast({ title: '图片上传失败', icon: 'none' });
+      } finally {
+        uploading.value = false;
+      }
     }
+  });
+}
+
+function uploadImage(filePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const userStore = useUserStore();
+    uni.uploadFile({
+      url: BASE_URL + '/api/u/file/upload',
+      filePath,
+      name: 'file',
+      header: {
+        Authorization: `Bearer ${userStore.token}`
+      },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          try {
+            const data = JSON.parse(res.data);
+            if (data.code === 0 && data.data) {
+              resolve(data.data);
+            } else {
+              reject(new Error(data.msg || '上传失败'));
+            }
+          } catch {
+            reject(new Error('解析失败'));
+          }
+        } else {
+          reject(new Error('HTTP ' + res.statusCode));
+        }
+      },
+      fail: reject
+    });
   });
 }
 
@@ -107,6 +152,10 @@ function removeImage(i: number) {
 async function handleSubmit() {
   if (!canSubmit.value) {
     uni.showToast({ title: '请填写至少 5 个字的描述', icon: 'none' });
+    return;
+  }
+  if (uploading.value) {
+    uni.showToast({ title: '图片上传中，请稍候', icon: 'none' });
     return;
   }
   uni.showLoading({ title: '提交中...' });
@@ -282,9 +331,7 @@ async function handleSubmit() {
     align-items: center;
     justify-content: center;
 
-    &::after { border: none; }
-
-    &.disabled, &[disabled] {
+    &.disabled {
       background-color: $color-divider;
       color: $color-text-placeholder;
     }
