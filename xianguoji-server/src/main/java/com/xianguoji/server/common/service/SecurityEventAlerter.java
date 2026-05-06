@@ -11,9 +11,10 @@ import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * S-17: 安全事件告警消费者
@@ -26,18 +27,43 @@ public class SecurityEventAlerter {
 
     private final StringRedisTemplate redis;
     private final String webhookUrl;
+    private final boolean streamAvailable;
 
     private static final String STREAM = "xgj:sec:events";
     private static final String GROUP = "sec-alerter";
+    private static final Pattern REDIS_VER = Pattern.compile("redis_version:(\\d+)\\.(\\d+)");
 
     public SecurityEventAlerter(StringRedisTemplate redis,
                                 @Value("${xianguoji.security.alert-webhook:}") String webhookUrl) {
         this.redis = redis;
         this.webhookUrl = webhookUrl;
+        this.streamAvailable = checkStreamSupport();
+        if (!streamAvailable) {
+            log.warn("[S-17] Redis < 5.0，Stream 不可用，安全事件告警已禁用");
+            return;
+        }
         // 创建消费者组（幂等）
         try {
             redis.opsForStream().createGroup(STREAM, GROUP);
         } catch (Exception ignored) {}
+    }
+
+    private boolean checkStreamSupport() {
+        try {
+            String info = redis.execute((org.springframework.data.redis.core.RedisCallback<String>) con -> {
+                Object result = con.serverCommands().info("server");
+                return result == null ? "" : result.toString();
+            });
+            Matcher m = REDIS_VER.matcher(info);
+            if (m.find()) {
+                int major = Integer.parseInt(m.group(1));
+                int minor = Integer.parseInt(m.group(2));
+                return major > 5 || (major == 5 && minor >= 0);
+            }
+        } catch (Exception e) {
+            log.warn("[S-17] 无法检测 Redis 版本: {}", e.getMessage());
+        }
+        return false;
     }
 
     /**
@@ -45,6 +71,7 @@ public class SecurityEventAlerter {
      */
     @Scheduled(fixedDelay = 10_000, initialDelay = 30_000)
     public void poll() {
+        if (!streamAvailable) return;
         try {
             List<MapRecord<String, Object, Object>> records =
                     redis.opsForStream().read(Consumer.from(GROUP, "alerter"),
