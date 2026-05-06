@@ -25,12 +25,16 @@ export interface CouponCreateDto {
 export interface AdminGroupBuyVO {
   id: number;
   productId: number;
-  productName: string;
-  mainImage: string;
+  skuId: number;
+  productName?: string;
+  mainImage?: string;
   groupPrice: string;
-  originalPrice: string;
+  originalPrice?: string;
   groupSize: number;
+  validHours: number;
   startTime: string;
   endTime: string;
+  totalJoinCount?: number;
+  successCount?: number;
   status: number;
 }

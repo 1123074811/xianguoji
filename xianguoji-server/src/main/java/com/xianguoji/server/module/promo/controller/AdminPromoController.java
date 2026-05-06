@@ -14,6 +14,7 @@ import com.xianguoji.server.module.promo.mapper.CouponMapper;
 import com.xianguoji.server.module.promo.mapper.GroupBuyActivityMapper;
 import com.xianguoji.server.module.promo.mapper.PromotionRuleMapper;
 import com.xianguoji.server.module.promo.mapper.UserCouponMapper;
+import com.xianguoji.server.module.promo.service.GroupBuyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class AdminPromoController {
     private final PromotionRuleMapper promotionRuleMapper;
     private final GroupBuyActivityMapper groupBuyActivityMapper;
     private final UserCouponMapper userCouponMapper;
+    private final GroupBuyService groupBuyService;
     private final WsNotificationService wsNotificationService;
 
     // ===== 优惠券统计 =====
@@ -173,6 +175,25 @@ public class AdminPromoController {
     }
 
     // ===== 拼团 =====
+    @Operation(summary = "拼团数据看板")
+    @GetMapping("/group-buy/stats")
+    @AdminRequired
+    public R<java.util.Map<String, Object>> groupBuyStats() {
+        return R.ok(groupBuyService.getStats());
+    }
+
+    @Operation(summary = "查询商品对应的拼团活动")
+    @GetMapping("/group-buy/by-product/{productId}")
+    @AdminRequired
+    public R<GroupBuyActivity> groupBuyByProduct(@PathVariable Long productId) {
+        GroupBuyActivity activity = groupBuyActivityMapper.selectOne(
+                new LambdaQueryWrapper<GroupBuyActivity>()
+                        .eq(GroupBuyActivity::getProductId, productId)
+                        .orderByDesc(GroupBuyActivity::getCreatedAt)
+                        .last("LIMIT 1"));
+        return R.ok(activity);
+    }
+
     @Operation(summary = "拼团活动列表")
     @GetMapping("/group-buy/list")
     @AdminRequired

@@ -18,6 +18,7 @@ public class GroupBuyInstance {
     private Integer status;
     private LocalDateTime expireAt;
     private LocalDateTime successAt;
+    private String shareCode;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)

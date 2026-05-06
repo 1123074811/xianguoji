@@ -3,12 +3,14 @@ package com.xianguoji.server.module.promo.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xianguoji.server.common.enums.OrderStatus;
 import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.PageVO;
 import com.xianguoji.server.common.result.ResultCode;
 import com.xianguoji.server.common.util.OrderNoUtil;
 import com.xianguoji.server.common.util.PickupCodeUtil;
 import com.xianguoji.server.common.util.StockRedisHelper;
+import com.xianguoji.server.common.websocket.WsNotificationService;
 import com.xianguoji.server.module.catalog.entity.Product;
 import com.xianguoji.server.module.catalog.entity.ProductSku;
 import com.xianguoji.server.module.catalog.mapper.ProductMapper;
@@ -40,13 +42,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class GroupBuyServiceImpl implements GroupBuyService {
+
+    private static final String SHARE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final SecureRandom RNG = new SecureRandom();
 
     private final GroupBuyActivityMapper activityMapper;
     private final GroupBuyInstanceMapper instanceMapper;
@@ -59,6 +67,7 @@ public class GroupBuyServiceImpl implements GroupBuyService {
     private final UserMapper userMapper;
     private final UserAddressMapper addressMapper;
     private final StockRedisHelper stockRedisHelper;
+    private final WsNotificationService wsNotificationService;
 
     @Override
     public PageVO<GroupBuyActivityVO> getGroupBuyPage(Integer page, Integer size) {
@@ -81,19 +90,16 @@ public class GroupBuyServiceImpl implements GroupBuyService {
             throw new BizException(ResultCode.GROUP_BUY_ENDED, "拼团活动已结束");
         }
 
-        // Redis 预扣库存（拼团场景）
         ProductSku sku = skuMapper.selectById(activity.getSkuId());
         if (sku == null) throw new BizException(ResultCode.NOT_FOUND, "SKU不存在");
         boolean redisPreDeducted = false;
         if (stockRedisHelper.getStock(activity.getSkuId()) >= 0) {
-            // Redis key 存在，走预扣路径
             if (!stockRedisHelper.deduct(activity.getSkuId(), 1)) {
                 throw new BizException(ResultCode.STOCK_NOT_ENOUGH);
             }
             redisPreDeducted = true;
         }
 
-        // DB 乐观锁兜底
         int rows = skuMapper.update(null, new LambdaUpdateWrapper<ProductSku>()
                 .eq(ProductSku::getId, activity.getSkuId())
                 .ge(ProductSku::getStock, 1)
@@ -103,7 +109,6 @@ public class GroupBuyServiceImpl implements GroupBuyService {
             throw new BizException(ResultCode.STOCK_NOT_ENOUGH);
         }
 
-        // 创建拼团实例
         GroupBuyInstance instance = new GroupBuyInstance();
         instance.setActivityId(activity.getId());
         instance.setLeaderId(uid);
@@ -111,9 +116,9 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         instance.setTargetSize(activity.getGroupSize());
         instance.setStatus(1);
         instance.setExpireAt(LocalDateTime.now().plusHours(activity.getValidHours()));
+        instance.setShareCode(generateUniqueShareCode());
         instanceMapper.insert(instance);
 
-        // 团长参与记录
         GroupBuyParticipant participant = new GroupBuyParticipant();
         participant.setInstanceId(instance.getId());
         participant.setUserId(uid);
@@ -121,14 +126,22 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         participant.setJoinedAt(LocalDateTime.now());
         participantMapper.insert(participant);
 
-        // 创建订单
         String orderNo = createGroupBuyOrder(uid, activity, instance.getId(), dto);
         participant.setOrderId(getOrderId(orderNo));
         participantMapper.updateById(participant);
 
-        // 更新活动参团人次
         activity.setTotalJoinCount(activity.getTotalJoinCount() + 1);
         activityMapper.updateById(activity);
+
+        // WS通知商家
+        Product product = productMapper.selectById(activity.getProductId());
+        String pname = product != null ? product.getName() : ("#" + activity.getProductId());
+        try {
+            wsNotificationService.notifyGroupBuyEvent("LAUNCH", instance.getId(), pname,
+                    instance.getCurrentSize(), instance.getTargetSize());
+        } catch (RuntimeException e) {
+            log.warn("拼团开团通知推送失败 instanceId={}", instance.getId(), e);
+        }
 
         return instance.getId();
     }
@@ -144,7 +157,6 @@ public class GroupBuyServiceImpl implements GroupBuyService {
             throw new BizException(ResultCode.GROUP_BUY_ENDED, "拼团已过期");
         }
 
-        // 检查是否已参团
         Long existing = participantMapper.selectCount(
                 new LambdaQueryWrapper<GroupBuyParticipant>()
                         .eq(GroupBuyParticipant::getInstanceId, instanceId)
@@ -153,7 +165,6 @@ public class GroupBuyServiceImpl implements GroupBuyService {
 
         GroupBuyActivity activity = activityMapper.selectById(instance.getActivityId());
 
-        // Redis 预扣库存（拼团场景）
         boolean redisPreDeducted = false;
         if (stockRedisHelper.getStock(activity.getSkuId()) >= 0) {
             if (!stockRedisHelper.deduct(activity.getSkuId(), 1)) {
@@ -162,7 +173,6 @@ public class GroupBuyServiceImpl implements GroupBuyService {
             redisPreDeducted = true;
         }
 
-        // DB 乐观锁兜底
         int stockRows = skuMapper.update(null, new LambdaUpdateWrapper<ProductSku>()
                 .eq(ProductSku::getId, activity.getSkuId())
                 .ge(ProductSku::getStock, 1)
@@ -172,7 +182,6 @@ public class GroupBuyServiceImpl implements GroupBuyService {
             throw new BizException(ResultCode.STOCK_NOT_ENOUGH);
         }
 
-        // 参团记录
         GroupBuyParticipant participant = new GroupBuyParticipant();
         participant.setInstanceId(instanceId);
         participant.setUserId(uid);
@@ -180,7 +189,6 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         participant.setJoinedAt(LocalDateTime.now());
         participantMapper.insert(participant);
 
-        // 原子自增 currentSize，防止并发超员
         int instanceRows = instanceMapper.update(null, new LambdaUpdateWrapper<GroupBuyInstance>()
                 .eq(GroupBuyInstance::getId, instanceId)
                 .eq(GroupBuyInstance::getStatus, 1)
@@ -190,25 +198,37 @@ public class GroupBuyServiceImpl implements GroupBuyService {
             throw new BizException(ResultCode.GROUP_BUY_ENDED, "拼团已满或已结束");
         }
 
-        // 重新查 currentSize 判断是否成团
         GroupBuyInstance fresh = instanceMapper.selectById(instanceId);
+        boolean justSucceeded = false;
         if (fresh.getCurrentSize().equals(fresh.getTargetSize())) {
-            instanceMapper.update(null, new LambdaUpdateWrapper<GroupBuyInstance>()
+            int settleRows = instanceMapper.update(null, new LambdaUpdateWrapper<GroupBuyInstance>()
                     .eq(GroupBuyInstance::getId, instanceId)
                     .eq(GroupBuyInstance::getStatus, 1)
                     .set(GroupBuyInstance::getStatus, 2)
                     .set(GroupBuyInstance::getSuccessAt, LocalDateTime.now()));
-            activity.setSuccessCount(activity.getSuccessCount() + 1);
-            activityMapper.updateById(activity);
+            if (settleRows > 0) {
+                justSucceeded = true;
+                activity.setSuccessCount(activity.getSuccessCount() + 1);
+                activityMapper.updateById(activity);
+            }
         }
 
-        // 创建订单
         String orderNo = createGroupBuyOrder(uid, activity, instanceId, dto);
         participant.setOrderId(getOrderId(orderNo));
         participantMapper.updateById(participant);
 
         activity.setTotalJoinCount(activity.getTotalJoinCount() + 1);
         activityMapper.updateById(activity);
+
+        // WS推送
+        Product product = productMapper.selectById(activity.getProductId());
+        String pname = product != null ? product.getName() : ("#" + activity.getProductId());
+        try {
+            wsNotificationService.notifyGroupBuyEvent(justSucceeded ? "SUCCESS" : "JOIN",
+                    instanceId, pname, fresh.getCurrentSize(), fresh.getTargetSize());
+        } catch (RuntimeException e) {
+            log.warn("拼团参团通知推送失败 instanceId={}", instanceId, e);
+        }
 
         return instanceId;
     }
@@ -217,11 +237,189 @@ public class GroupBuyServiceImpl implements GroupBuyService {
     public GroupBuyInstanceVO getInstanceDetail(Long instanceId) {
         GroupBuyInstance instance = instanceMapper.selectById(instanceId);
         if (instance == null) throw new BizException(ResultCode.NOT_FOUND);
+        return toInstanceVO(instance);
+    }
 
+    @Override
+    public GroupBuyInstanceVO getInstanceByShareCode(String shareCode) {
+        if (shareCode == null || shareCode.isBlank()) throw new BizException(ResultCode.NOT_FOUND);
+        GroupBuyInstance instance = instanceMapper.selectOne(
+                new LambdaQueryWrapper<GroupBuyInstance>()
+                        .eq(GroupBuyInstance::getShareCode, shareCode.toUpperCase())
+                        .last("LIMIT 1"));
+        if (instance == null) throw new BizException(ResultCode.NOT_FOUND, "拼团不存在");
+        return toInstanceVO(instance);
+    }
+
+    @Override
+    public GroupBuyActivityVO getActivityByProduct(Long productId) {
+        GroupBuyActivity activity = activityMapper.selectOne(
+                new LambdaQueryWrapper<GroupBuyActivity>()
+                        .eq(GroupBuyActivity::getProductId, productId)
+                        .eq(GroupBuyActivity::getStatus, 1)
+                        .ge(GroupBuyActivity::getEndTime, LocalDateTime.now())
+                        .orderByDesc(GroupBuyActivity::getCreatedAt)
+                        .last("LIMIT 1"));
+        return activity == null ? null : toActivityVO(activity);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void scanExpiredInstances() {
+        List<GroupBuyInstance> expired = instanceMapper.selectList(
+                new LambdaQueryWrapper<GroupBuyInstance>()
+                        .eq(GroupBuyInstance::getStatus, 1)
+                        .lt(GroupBuyInstance::getExpireAt, LocalDateTime.now()));
+
+        for (GroupBuyInstance inst : expired) {
+            // 仅当仍为"拼团中"时才能转为失败
+            int rows = instanceMapper.update(null, new LambdaUpdateWrapper<GroupBuyInstance>()
+                    .eq(GroupBuyInstance::getId, inst.getId())
+                    .eq(GroupBuyInstance::getStatus, 1)
+                    .set(GroupBuyInstance::getStatus, 3));
+            if (rows == 0) continue;
+
+            handleInstanceFailure(inst);
+        }
+    }
+
+    /**
+     * 拼团失败：取消所有未支付订单 / 已支付订单转入退款中，回补库存。
+     */
+    private void handleInstanceFailure(GroupBuyInstance inst) {
+        List<Order> orders = orderMapper.selectList(
+                new LambdaQueryWrapper<Order>().eq(Order::getGroupBuyInstanceId, inst.getId()));
+
+        for (Order order : orders) {
+            // 已是终态的不处理
+            Integer st = order.getStatus();
+            if (st == null) continue;
+            if (st == OrderStatus.CANCELLED.getCode()
+                    || st == OrderStatus.REFUNDED.getCode()
+                    || st == OrderStatus.COMPLETED.getCode()) {
+                continue;
+            }
+
+            boolean alreadyPaid = order.getPayStatus() != null && order.getPayStatus() == 1;
+            int targetStatus = alreadyPaid
+                    ? OrderStatus.REFUNDING.getCode()
+                    : OrderStatus.CANCELLED.getCode();
+            String reason = alreadyPaid ? "拼团失败，自动发起退款" : "拼团失败，自动取消";
+
+            int upd = orderMapper.update(null, new LambdaUpdateWrapper<Order>()
+                    .eq(Order::getId, order.getId())
+                    .ne(Order::getStatus, OrderStatus.CANCELLED.getCode())
+                    .ne(Order::getStatus, OrderStatus.REFUNDED.getCode())
+                    .ne(Order::getStatus, OrderStatus.COMPLETED.getCode())
+                    .set(Order::getStatus, targetStatus)
+                    .set(Order::getCancelReason, reason));
+            if (upd == 0) continue;
+
+            statusLogMapper.insert(new OrderStatusLog() {{
+                setOrderId(order.getId());
+                setFromStatus(st);
+                setToStatus(targetStatus);
+                setOperatorType(3);
+                setRemark(reason);
+            }});
+
+            // 仅未支付：回补库存
+            if (!alreadyPaid) {
+                List<OrderItem> items = orderItemMapper.selectList(
+                        new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, order.getId()));
+                for (OrderItem oi : items) {
+                    skuMapper.update(null, new LambdaUpdateWrapper<ProductSku>()
+                            .eq(ProductSku::getId, oi.getSkuId())
+                            .setSql("stock = stock + " + oi.getQuantity()
+                                    + ", sales = GREATEST(sales - " + oi.getQuantity() + ", 0)"));
+                    stockRedisHelper.rollback(oi.getSkuId(), oi.getQuantity());
+                }
+            }
+        }
+
+        log.info("拼团实例{}失败，已处理 {} 笔关联订单", inst.getId(), orders.size());
+
+        // WS 通知商家
+        try {
+            GroupBuyActivity activity = activityMapper.selectById(inst.getActivityId());
+            String pname = "#" + inst.getActivityId();
+            if (activity != null) {
+                Product product = productMapper.selectById(activity.getProductId());
+                if (product != null) pname = product.getName();
+            }
+            wsNotificationService.notifyGroupBuyEvent("FAIL", inst.getId(), pname,
+                    inst.getCurrentSize(), inst.getTargetSize());
+        } catch (RuntimeException e) {
+            log.warn("拼团失败通知推送失败 instanceId={}", inst.getId(), e);
+        }
+    }
+
+    @Override
+    public Map<String, Object> getStats() {
+        List<GroupBuyActivity> all = activityMapper.selectList(null);
+        long activeCount = all.stream().filter(a -> a.getStatus() != null && a.getStatus() == 1).count();
+        long totalJoin = all.stream().mapToInt(a -> a.getTotalJoinCount() == null ? 0 : a.getTotalJoinCount()).sum();
+        long totalSuccess = all.stream().mapToInt(a -> a.getSuccessCount() == null ? 0 : a.getSuccessCount()).sum();
+
+        long instanceTotal = instanceMapper.selectCount(null);
+        long instanceSuccess = instanceMapper.selectCount(new LambdaQueryWrapper<GroupBuyInstance>().eq(GroupBuyInstance::getStatus, 2));
+        long instanceFailed = instanceMapper.selectCount(new LambdaQueryWrapper<GroupBuyInstance>().eq(GroupBuyInstance::getStatus, 3));
+        long instanceOngoing = instanceMapper.selectCount(new LambdaQueryWrapper<GroupBuyInstance>().eq(GroupBuyInstance::getStatus, 1));
+
+        // 成团率（实例维度）
+        String successRate = instanceTotal > 0
+                ? String.format("%.1f", instanceSuccess * 100.0 / instanceTotal) + "%"
+                : "0%";
+
+        // 营收：成团实例的 group_price * target_size
+        BigDecimal revenue = BigDecimal.ZERO;
+        List<GroupBuyInstance> successInstances = instanceMapper.selectList(
+                new LambdaQueryWrapper<GroupBuyInstance>().eq(GroupBuyInstance::getStatus, 2));
+        for (GroupBuyInstance ins : successInstances) {
+            GroupBuyActivity a = activityMapper.selectById(ins.getActivityId());
+            if (a != null && a.getGroupPrice() != null && ins.getTargetSize() != null) {
+                revenue = revenue.add(a.getGroupPrice().multiply(BigDecimal.valueOf(ins.getTargetSize())));
+            }
+        }
+
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("activeActivityCount", activeCount);
+        stats.put("totalActivity", all.size());
+        stats.put("instanceTotal", instanceTotal);
+        stats.put("instanceOngoing", instanceOngoing);
+        stats.put("instanceSuccess", instanceSuccess);
+        stats.put("instanceFailed", instanceFailed);
+        stats.put("totalJoinCount", totalJoin);
+        stats.put("totalSuccessGroups", totalSuccess);
+        stats.put("successRate", successRate);
+        stats.put("revenue", revenue);
+        return stats;
+    }
+
+    private String generateUniqueShareCode() {
+        for (int attempt = 0; attempt < 8; attempt++) {
+            String code = randomShareCode();
+            Long exists = instanceMapper.selectCount(
+                    new LambdaQueryWrapper<GroupBuyInstance>().eq(GroupBuyInstance::getShareCode, code));
+            if (exists == null || exists == 0) return code;
+        }
+        // 兜底：加入时间戳
+        return randomShareCode() + Long.toString(System.currentTimeMillis() % 1000);
+    }
+
+    private String randomShareCode() {
+        StringBuilder sb = new StringBuilder(8);
+        for (int i = 0; i < 8; i++) {
+            sb.append(SHARE_CODE_ALPHABET.charAt(RNG.nextInt(SHARE_CODE_ALPHABET.length())));
+        }
+        return sb.toString();
+    }
+
+    private GroupBuyInstanceVO toInstanceVO(GroupBuyInstance instance) {
         User leader = userMapper.selectById(instance.getLeaderId());
         List<GroupBuyParticipant> participants = participantMapper.selectList(
                 new LambdaQueryWrapper<GroupBuyParticipant>()
-                        .eq(GroupBuyParticipant::getInstanceId, instanceId)
+                        .eq(GroupBuyParticipant::getInstanceId, instance.getId())
                         .orderByDesc(GroupBuyParticipant::getIsLeader));
 
         List<GroupBuyInstanceVO.ParticipantVO> pVOs = participants.stream().map(p -> {
@@ -235,6 +433,9 @@ public class GroupBuyServiceImpl implements GroupBuyService {
                     .build();
         }).toList();
 
+        GroupBuyActivity activity = activityMapper.selectById(instance.getActivityId());
+        Product product = activity != null ? productMapper.selectById(activity.getProductId()) : null;
+
         return GroupBuyInstanceVO.builder()
                 .id(instance.getId())
                 .activityId(instance.getActivityId())
@@ -245,89 +446,35 @@ public class GroupBuyServiceImpl implements GroupBuyService {
                 .targetSize(instance.getTargetSize())
                 .status(instance.getStatus())
                 .expireAt(instance.getExpireAt())
+                .successAt(instance.getSuccessAt())
+                .shareCode(instance.getShareCode())
+                .productId(activity != null ? activity.getProductId() : null)
+                .skuId(activity != null ? activity.getSkuId() : null)
+                .productName(product != null ? product.getName() : "")
+                .mainImage(product != null ? product.getMainImage() : "")
+                .groupPrice(activity != null && activity.getGroupPrice() != null
+                        ? activity.getGroupPrice().toPlainString() : null)
+                .groupSize(activity != null ? activity.getGroupSize() : instance.getTargetSize())
                 .participants(pVOs)
                 .build();
     }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void scanExpiredInstances() {
-        List<GroupBuyInstance> expired = instanceMapper.selectList(
-                new LambdaQueryWrapper<GroupBuyInstance>()
-                        .eq(GroupBuyInstance::getStatus, 1)
-                        .lt(GroupBuyInstance::getExpireAt, LocalDateTime.now()));
-
-        for (GroupBuyInstance inst : expired) {
-            inst.setStatus(3); // 已失败
-            instanceMapper.updateById(inst);
-            log.info("拼团实例{}已过期，标记为失败", inst.getId());
-            // TODO: 退款处理
-        }
-    }
-
     private String createGroupBuyOrder(Long uid, GroupBuyActivity activity, Long instanceId,
                                         GroupBuyLaunchDto dto) {
-        Product product = productMapper.selectById(activity.getProductId());
-        ProductSku sku = skuMapper.selectById(activity.getSkuId());
-
-        String orderNo = OrderNoUtil.gen();
-        BigDecimal payAmount = activity.getGroupPrice();
-
-        Order order = new Order();
-        order.setOrderNo(orderNo);
-        order.setUserId(uid);
-        order.setStatus(0);
-        order.setPayStatus(0);
-        order.setDeliveryType(dto.getDeliveryType() != null ? dto.getDeliveryType() : 1);
-        order.setDeliveryTime(dto.getDeliveryTime());
-        order.setGoodsAmount(activity.getGroupPrice());
-        order.setPayAmount(payAmount);
-        order.setGroupBuyInstanceId(instanceId);
-        order.setPayMethod(dto.getPayMethod());
-        order.setUserRemark(dto.getUserRemark());
-
-        if (order.getDeliveryType() == 2) {
-            order.setPickupPointId(dto.getPickupPointId());
-            order.setPickupCode(PickupCodeUtil.gen());
-        } else if (dto.getAddressId() != null) {
-            UserAddress addr = addressMapper.selectById(dto.getAddressId());
-            if (addr != null) {
-                order.setAddressId(addr.getId());
-                order.setConsignee(addr.getConsignee());
-                order.setConsigneePhone(addr.getPhone());
-                order.setConsigneeAddress(addr.getProvince() + addr.getCity() + addr.getDistrict() + addr.getDetail());
-            }
-        }
-
-        orderMapper.insert(order);
-
-        OrderItem oi = new OrderItem();
-        oi.setOrderId(order.getId());
-        oi.setProductId(product.getId());
-        oi.setSkuId(sku.getId());
-        oi.setProductName(product.getName());
-        oi.setSpecName(sku.getSpecName());
-        oi.setImage(product.getMainImage());
-        oi.setPrice(activity.getGroupPrice());
-        oi.setOriginalPrice(sku.getOriginalPrice());
-        oi.setQuantity(1);
-        oi.setSubtotal(activity.getGroupPrice());
-        oi.setIsReviewed(0);
-        orderItemMapper.insert(oi);
-
-        OrderStatusLog slog = new OrderStatusLog();
-        slog.setOrderId(order.getId());
-        slog.setToStatus(0);
-        slog.setOperatorType(1);
-        slog.setOperatorId(uid);
-        slog.setRemark("拼团下单");
-        statusLogMapper.insert(slog);
-
-        return orderNo;
+        return persistGroupBuyOrder(uid, activity, instanceId, dto.getDeliveryType(), dto.getDeliveryTime(),
+                dto.getAddressId(), dto.getPickupPointId(), dto.getPayMethod(), dto.getUserRemark(), "拼团下单");
     }
 
     private String createGroupBuyOrder(Long uid, GroupBuyActivity activity, Long instanceId,
                                         GroupBuyJoinDto dto) {
+        return persistGroupBuyOrder(uid, activity, instanceId, dto.getDeliveryType(), dto.getDeliveryTime(),
+                dto.getAddressId(), dto.getPickupPointId(), dto.getPayMethod(), dto.getUserRemark(), "参团下单");
+    }
+
+    private String persistGroupBuyOrder(Long uid, GroupBuyActivity activity, Long instanceId,
+                                        Integer deliveryType, String deliveryTime, Long addressId,
+                                        Long pickupPointId, String payMethod, String userRemark,
+                                        String logRemark) {
         Product product = productMapper.selectById(activity.getProductId());
         ProductSku sku = skuMapper.selectById(activity.getSkuId());
 
@@ -339,19 +486,19 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         order.setUserId(uid);
         order.setStatus(0);
         order.setPayStatus(0);
-        order.setDeliveryType(dto.getDeliveryType() != null ? dto.getDeliveryType() : 1);
-        order.setDeliveryTime(dto.getDeliveryTime());
+        order.setDeliveryType(deliveryType != null ? deliveryType : 1);
+        order.setDeliveryTime(deliveryTime);
         order.setGoodsAmount(activity.getGroupPrice());
         order.setPayAmount(payAmount);
         order.setGroupBuyInstanceId(instanceId);
-        order.setPayMethod(dto.getPayMethod());
-        order.setUserRemark(dto.getUserRemark());
+        order.setPayMethod(payMethod);
+        order.setUserRemark(userRemark);
 
         if (order.getDeliveryType() == 2) {
-            order.setPickupPointId(dto.getPickupPointId());
+            order.setPickupPointId(pickupPointId);
             order.setPickupCode(PickupCodeUtil.gen());
-        } else if (dto.getAddressId() != null) {
-            UserAddress addr = addressMapper.selectById(dto.getAddressId());
+        } else if (addressId != null) {
+            UserAddress addr = addressMapper.selectById(addressId);
             if (addr != null) {
                 order.setAddressId(addr.getId());
                 order.setConsignee(addr.getConsignee());
@@ -381,7 +528,7 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         slog.setToStatus(0);
         slog.setOperatorType(1);
         slog.setOperatorId(uid);
-        slog.setRemark("参团下单");
+        slog.setRemark(logRemark);
         statusLogMapper.insert(slog);
 
         return orderNo;

@@ -8,6 +8,13 @@
     </view>
 
     <scroll-view scroll-y class="main-scroll">
+      <!-- Group-Buy Banner -->
+      <view v-if="isGroupBuyMode" class="gb-banner card">
+        <text class="title">{{ groupBuyInstance ? '参团下单' : '发起拼团' }}</text>
+        <text class="desc" v-if="groupBuyActivity">{{ groupBuyActivity.groupSize }}人成团 · 拼团价 ¥{{ groupBuyActivity.groupPrice }}</text>
+        <text class="desc" v-if="groupBuyInstance">还差 {{ Math.max(0, (groupBuyInstance.targetSize || 0) - (groupBuyInstance.currentSize || 0)) }} 人成团</text>
+      </view>
+
       <!-- Delivery Method -->
       <view class="delivery-method">
         <view 
@@ -222,7 +229,7 @@ import { promoApi } from '@/api/modules/promo';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { OrderPreviewVO } from '@/api/types/order';
-import type { UserCouponVO } from '@/api/types/promo';
+import type { UserCouponVO, GroupBuyActivityVO, GroupBuyInstanceVO } from '@/api/types/promo';
 
 const appStore = useAppStore();
 const shopOpen = computed(() => appStore.shopInfo?.isOpen === 1);
@@ -234,6 +241,9 @@ const usableCoupons = ref<UserCouponVO[]>([]);
 const couponPickerVisible = ref(false);
 const submitLoading = ref(false);
 const routeOptions = ref<Record<string, string>>({});
+const groupBuyActivity = ref<GroupBuyActivityVO | null>(null);
+const groupBuyInstance = ref<GroupBuyInstanceVO | null>(null);
+const isGroupBuyMode = computed(() => !!(groupBuyActivity.value || groupBuyInstance.value));
 
 const finalPrice = computed(() => {
   if (preview.value) return preview.value.payAmount;
@@ -262,6 +272,55 @@ async function loadPreview() {
     const pages = getCurrentPages();
     const page = pages[pages.length - 1] as any;
     routeOptions.value = page?.options || {};
+
+    // 拼团模式：跳过普通订单预览，构造简化预览
+    const gbActivityId = Number(routeOptions.value.groupBuyActivityId || 0);
+    const gbInstanceId = Number(routeOptions.value.groupBuyInstanceId || 0);
+    if (gbActivityId || gbInstanceId) {
+      let activityId = gbActivityId;
+      if (gbInstanceId) {
+        try {
+          groupBuyInstance.value = await promoApi.groupBuyDetail(gbInstanceId);
+          activityId = groupBuyInstance.value?.activityId || 0;
+        } catch (e) { console.warn('加载拼团实例失败', e); }
+      }
+      if (activityId) {
+        try {
+          // 通过 by-product 重新拿活动详情（含商品名/图）
+          if (groupBuyInstance.value?.productId) {
+            groupBuyActivity.value = await promoApi.groupBuyByProduct(groupBuyInstance.value.productId);
+          } else {
+            // 仅有 activityId 时，从已知信息构造，依赖后端提供的字段
+            const list = await promoApi.groupBuyPage({ page: 1, size: 50 });
+            groupBuyActivity.value = list.list.find(a => a.id === activityId) || null;
+          }
+        } catch (e) { console.warn('加载拼团活动失败', e); }
+      }
+      const ga = groupBuyActivity.value;
+      if (ga) {
+        preview.value = {
+          items: [{
+            skuId: ga.skuId,
+            productId: ga.productId,
+            productName: ga.productName,
+            specName: '',
+            image: ga.mainImage,
+            price: ga.groupPrice,
+            quantity: 1,
+            subtotal: ga.groupPrice,
+          }],
+          goodsAmount: ga.groupPrice,
+          deliveryFee: '0.00',
+          couponAmount: '0.00',
+          discountAmount: '0.00',
+          payAmount: ga.groupPrice,
+          address: preview.value?.address,
+          pickupPoint: preview.value?.pickupPoint,
+        } as any;
+      }
+      return;
+    }
+
     const cartItemIds = routeOptions.value.cartItemIds?.split(',').map(Number).filter(Boolean) || [];
     const data = await orderApi.preview({
       deliveryType: deliveryType.value,
@@ -369,6 +428,30 @@ async function submitOrder() {
   submitLoading.value = true;
   uni.showLoading({ title: '提交中' });
   try {
+    // 拼团：开团 / 参团
+    if (isGroupBuyMode.value) {
+      const orderDto = {
+        addressId: deliveryType.value === 1 ? preview.value?.address?.id : undefined,
+        pickupPointId: deliveryType.value === 2 ? preview.value?.pickupPoint?.id : undefined,
+        deliveryType: deliveryType.value,
+        userRemark: remark.value || undefined,
+        payMethod: 'wechat',
+      };
+      let instanceId: number;
+      if (groupBuyInstance.value) {
+        await promoApi.joinGroupBuy(groupBuyInstance.value.id, orderDto);
+        instanceId = groupBuyInstance.value.id;
+      } else if (groupBuyActivity.value) {
+        const res = await promoApi.launchGroupBuy({ activityId: groupBuyActivity.value.id, ...orderDto });
+        instanceId = res.instanceId;
+      } else {
+        throw new Error('拼团信息缺失');
+      }
+      uni.hideLoading();
+      uni.redirectTo({ url: `/pagesC/group-buy/detail?id=${instanceId}` });
+      return;
+    }
+
     const pages = getCurrentPages();
     const page = pages[pages.length - 1] as any;
     const cartItemIds = page?.options?.cartItemIds?.split(',').map(Number).filter(Boolean) || [];
@@ -473,6 +556,17 @@ async function submitOrder() {
       border-bottom-left-radius: $radius-sm;
     }
   }
+}
+
+.gb-banner {
+  margin: 0 $space-3 $space-3;
+  padding: $space-3 $space-4;
+  border-left: 6rpx solid $color-primary;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  .title { font-weight: bold; color: $color-primary; font-size: $font-base; }
+  .desc { font-size: $font-xs; color: $color-text-secondary; }
 }
 
 .card {

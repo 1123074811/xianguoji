@@ -31,12 +31,25 @@ public class GroupBuyController {
         return R.ok(groupBuyService.getGroupBuyPage(page, size));
     }
 
+    @Operation(summary = "查询商品的拼团活动")
+    @GetMapping("/api/pub/group-buy/by-product/{productId}")
+    public R<GroupBuyActivityVO> byProduct(@PathVariable Long productId) {
+        return R.ok(groupBuyService.getActivityByProduct(productId));
+    }
+
+    @Operation(summary = "通过分享码查询拼团详情")
+    @GetMapping("/api/pub/group-buy/share/{shareCode}")
+    public R<GroupBuyInstanceVO> byShareCode(@PathVariable String shareCode) {
+        return R.ok(groupBuyService.getInstanceByShareCode(shareCode));
+    }
+
     @Operation(summary = "开团")
     @PostMapping("/api/u/group-buy/launch")
     @LoginRequired
-    public R<Map<String, Long>> launch(@Valid @RequestBody GroupBuyLaunchDto dto) {
+    public R<Map<String, Object>> launch(@Valid @RequestBody GroupBuyLaunchDto dto) {
         Long instanceId = groupBuyService.launch(LoginContext.uid(), dto);
-        return R.ok(Map.of("instanceId", instanceId));
+        GroupBuyInstanceVO vo = groupBuyService.getInstanceDetail(instanceId);
+        return R.ok(Map.of("instanceId", instanceId, "shareCode", vo.getShareCode() == null ? "" : vo.getShareCode()));
     }
 
     @Operation(summary = "参团")

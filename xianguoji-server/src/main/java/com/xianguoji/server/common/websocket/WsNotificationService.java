@@ -89,6 +89,44 @@ public class WsNotificationService {
         broadcast(msg);
     }
 
+    public void notifyGroupBuyEvent(String event, Long instanceId, String productName,
+                                    Integer currentSize, Integer targetSize) {
+        String title;
+        String content;
+        switch (event == null ? "" : event) {
+            case "LAUNCH":
+                title = "新拼团开团";
+                content = "「" + productName + "」拼团已开团（" + currentSize + "/" + targetSize + "）";
+                break;
+            case "JOIN":
+                title = "拼团有人参团";
+                content = "「" + productName + "」拼团进度 " + currentSize + "/" + targetSize;
+                break;
+            case "SUCCESS":
+                title = "拼团成团";
+                content = "「" + productName + "」已成团，请尽快备货";
+                break;
+            case "FAIL":
+                title = "拼团失败";
+                content = "「" + productName + "」拼团失败，已自动取消订单";
+                break;
+            default:
+                title = "拼团消息";
+                content = "「" + productName + "」拼团状态变更";
+        }
+        AdminNotification notification = createNotification(4, title, content, "/campaign");
+        Map<String, Object> msg = new LinkedHashMap<>();
+        msg.put("type", "GROUP_BUY_" + (event == null ? "EVENT" : event));
+        msg.put("instanceId", instanceId);
+        msg.put("productName", productName);
+        msg.put("currentSize", currentSize);
+        msg.put("targetSize", targetSize);
+        msg.put("title", title);
+        msg.put("content", content);
+        fillNotificationPayload(msg, notification);
+        broadcast(msg);
+    }
+
     public void notifyMarketing(String title, String content, String linkUrl) {
         AdminNotification notification = createNotification(4, title, content, linkUrl);
         Map<String, Object> msg = new LinkedHashMap<>();

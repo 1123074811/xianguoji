@@ -118,7 +118,7 @@ public class AdminCatalogController {
     @PostMapping("/product")
     @AdminRequired
     @Transactional(rollbackFor = Exception.class)
-    public R<Void> addProduct(@RequestBody Map<String, Object> body) {
+    public R<Map<String, Long>> addProduct(@RequestBody Map<String, Object> body) {
         Product product = new Product();
         product.setName((String) body.get("name"));
         product.setSubtitle((String) body.get("subtitle"));
@@ -172,7 +172,7 @@ public class AdminCatalogController {
         // 同步冗余字段
         syncProductFields(product.getId());
         notifyIfStockWarn(product.getId());
-        return R.ok();
+        return R.ok(Map.of("id", product.getId()));
     }
 
     @CacheEvict(value = {"product", "recommend"}, allEntries = true)

@@ -112,6 +112,12 @@
           }
         },
         {
+          "path": "group-buy/detail",
+          "style": {
+            "navigationBarTitleText": "拼团详情"
+          }
+        },
+        {
           "path": "coupons/index",
           "style": {
             "navigationBarTitleText": "领券中心"

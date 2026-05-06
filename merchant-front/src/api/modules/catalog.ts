@@ -13,7 +13,7 @@ export const adminCatalogApi = {
     request<AdminProductDetailVO>({ url: `/api/pub/product/${id}` }),
 
   createProduct: (data: any) =>
-    request<void>({ url: '/api/admin/product', method: 'POST', data }),
+    request<{ id: number }>({ url: '/api/admin/product', method: 'POST', data }),
 
   updateProduct: (id: number, data: any) =>
     request<void>({ url: `/api/admin/product/${id}`, method: 'PUT', data }),

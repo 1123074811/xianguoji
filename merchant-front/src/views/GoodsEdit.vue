@@ -150,11 +150,11 @@
               <h3 class="font-label-bold text-label-bold text-slate-900 uppercase tracking-wide">拼团设置</h3>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
-              <input checked class="sr-only peer" type="checkbox" />
+              <input class="sr-only peer" type="checkbox" v-model="groupBuy.enabled" />
               <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
             </label>
           </div>
-          <div class="space-y-4">
+          <div class="space-y-4" v-if="groupBuy.enabled">
             <div>
               <label class="block text-xs font-bold text-slate-500 mb-1">最低成团人数</label>
               <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden">
@@ -166,8 +166,18 @@
             <div>
               <label class="block text-xs font-bold text-slate-500 mb-1">拼团折扣 (%)</label>
               <input class="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none" type="number" v-model.number="groupBuy.discountPercent" min="1" max="99" />
+              <p class="text-[10px] text-slate-400 mt-1">基于默认SKU销售价计算，预计拼团价 ¥{{ computedGroupPrice }}</p>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1">单团有效期（小时）</label>
+              <input class="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none" type="number" v-model.number="groupBuy.validHours" min="1" max="168" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1">活动结束时间</label>
+              <input class="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm outline-none" type="datetime-local" v-model="groupBuy.endTime" />
             </div>
           </div>
+          <p v-else class="text-xs text-slate-400">启用拼团后可邀请好友共同下单获得专属优惠价格</p>
         </section>
 
         <!-- Delivery Settings Module -->
@@ -247,6 +257,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { adminCatalogApi } from '@/api/modules/catalog'
+import { adminPromoApi } from '@/api/modules/promo'
 import { request } from '@/api/request'
 import { resolveImageUrl } from '@/utils/image'
 import type { AdminCategoryVO, AdminProductDetailVO } from '@/api/types/catalog'
@@ -276,7 +287,24 @@ const form = ref({
 
 const carouselImages = ref<string[]>([])
 const detailImages = ref<string[]>([])
-const groupBuy = reactive({ groupSize: 5, discountPercent: 15 })
+const groupBuy = reactive({
+  enabled: false,
+  activityId: 0 as number,
+  groupSize: 3,
+  discountPercent: 15,
+  validHours: 24,
+  endTime: '',
+  skuId: 0 as number,
+  loadedGroupPrice: '' as string,
+})
+
+const computedGroupPrice = computed(() => {
+  const defaultSku = skuList.value.find(s => s.isDefault === 1) || skuList.value[0]
+  const base = Number(defaultSku?.price || 0)
+  if (!base) return '0.00'
+  const ratio = (100 - Math.min(99, Math.max(1, groupBuy.discountPercent))) / 100
+  return (base * ratio).toFixed(2)
+})
 
 interface SkuItem {
   id?: number
@@ -357,8 +385,75 @@ async function loadProduct() {
     if (skuList.value.length === 0) {
       skuList.value.push({ specName: '', price: '', originalPrice: '', stock: 0, isDefault: 1 })
     }
+    await loadGroupBuy()
   } catch (e) { console.warn('加载商品失败', e) }
   finally { loading.value = false }
+}
+
+async function loadGroupBuy() {
+  if (!productId.value) return
+  try {
+    const activity = await adminPromoApi.groupBuyByProduct(productId.value)
+    if (!activity) return
+    groupBuy.activityId = activity.id
+    groupBuy.groupSize = activity.groupSize
+    groupBuy.validHours = activity.validHours
+    groupBuy.skuId = activity.skuId
+    groupBuy.loadedGroupPrice = String(activity.groupPrice || '')
+    groupBuy.endTime = activity.endTime ? activity.endTime.slice(0, 16) : ''
+    groupBuy.enabled = activity.status === 1
+    // 反推折扣（仅展示用）
+    const defaultSku = skuList.value.find(s => s.isDefault === 1) || skuList.value[0]
+    const base = Number(defaultSku?.price || 0)
+    const gp = Number(activity.groupPrice || 0)
+    if (base > 0 && gp > 0) {
+      groupBuy.discountPercent = Math.max(1, Math.min(99, Math.round((1 - gp / base) * 100)))
+    }
+  } catch (e) { console.warn('加载拼团活动失败', e) }
+}
+
+async function saveGroupBuy(savedProductId: number) {
+  if (!savedProductId) return
+  // 取默认SKU；若新增商品后端返回id，但skuList仍是本地数据 — 需先有id
+  const defaultSku = skuList.value.find(s => s.isDefault === 1 && s.id) || skuList.value.find(s => s.id)
+  const skuId = defaultSku?.id || groupBuy.skuId
+  // 关闭：若有已存活动则停用
+  if (!groupBuy.enabled) {
+    if (groupBuy.activityId) {
+      try {
+        await adminPromoApi.updateGroupBuy(groupBuy.activityId, { status: 0 })
+      } catch (e) { console.warn('停用拼团失败', e) }
+    }
+    return
+  }
+  if (!skuId) {
+    toast.error('请先保存SKU再启用拼团')
+    return
+  }
+  const groupPrice = computedGroupPrice.value
+  const now = new Date()
+  const startTime = now.toISOString().slice(0, 19).replace('T', ' ')
+  const endTime = groupBuy.endTime
+    ? groupBuy.endTime.replace('T', ' ') + ':00'
+    : new Date(now.getTime() + 7 * 24 * 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ')
+  const payload = {
+    productId: savedProductId,
+    skuId,
+    groupPrice,
+    groupSize: Math.max(2, groupBuy.groupSize),
+    validHours: Math.max(1, groupBuy.validHours),
+    startTime,
+    endTime,
+    status: 1,
+  }
+  try {
+    if (groupBuy.activityId) {
+      await adminPromoApi.updateGroupBuy(groupBuy.activityId, payload)
+    } else {
+      const res = await adminPromoApi.createGroupBuy(payload)
+      if (res?.id) groupBuy.activityId = res.id
+    }
+  } catch (e) { console.warn('保存拼团失败', e) }
 }
 
 // ---- 图片上传 ----
@@ -455,11 +550,14 @@ async function saveDraft() {
   saving.value = true
   try {
     const payload = buildPayload(0)
+    let savedId = productId.value
     if (isEdit.value) {
       await adminCatalogApi.updateProduct(productId.value, payload)
     } else {
-      await adminCatalogApi.createProduct(payload as any)
+      const res = await adminCatalogApi.createProduct(payload as any)
+      savedId = res?.id || 0
     }
+    if (savedId) await saveGroupBuy(savedId)
     toast.success('草稿已保存')
     router.push('/goods')
   } catch (e) {
@@ -472,11 +570,14 @@ async function publish() {
   saving.value = true
   try {
     const payload = buildPayload(1)
+    let savedId = productId.value
     if (isEdit.value) {
       await adminCatalogApi.updateProduct(productId.value, payload)
     } else {
-      await adminCatalogApi.createProduct(payload as any)
+      const res = await adminCatalogApi.createProduct(payload as any)
+      savedId = res?.id || 0
     }
+    if (savedId) await saveGroupBuy(savedId)
     toast.success(isEdit.value ? '商品已更新' : '商品已发布上架')
     router.push('/goods')
   } catch (e) {

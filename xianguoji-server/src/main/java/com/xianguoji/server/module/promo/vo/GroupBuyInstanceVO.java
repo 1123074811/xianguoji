@@ -23,6 +23,14 @@ public class GroupBuyInstanceVO {
     private Integer targetSize;
     private Integer status;
     private LocalDateTime expireAt;
+    private LocalDateTime successAt;
+    private String shareCode;
+    private Long productId;
+    private Long skuId;
+    private String productName;
+    private String mainImage;
+    private String groupPrice;
+    private Integer groupSize;
     private List<ParticipantVO> participants;
 
     @Data

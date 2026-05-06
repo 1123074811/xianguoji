@@ -5,6 +5,8 @@ import com.xianguoji.server.module.promo.dto.GroupBuyLaunchDto;
 import com.xianguoji.server.module.promo.vo.GroupBuyActivityVO;
 import com.xianguoji.server.module.promo.vo.GroupBuyInstanceVO;
 
+import java.util.Map;
+
 public interface GroupBuyService {
 
     PageVO<GroupBuyActivityVO> getGroupBuyPage(Integer page, Integer size);
@@ -15,5 +17,11 @@ public interface GroupBuyService {
 
     GroupBuyInstanceVO getInstanceDetail(Long instanceId);
 
+    GroupBuyInstanceVO getInstanceByShareCode(String shareCode);
+
+    GroupBuyActivityVO getActivityByProduct(Long productId);
+
     void scanExpiredInstances();
+
+    Map<String, Object> getStats();
 }

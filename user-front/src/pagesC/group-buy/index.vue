@@ -34,11 +34,24 @@
         </view>
       </view>
 
+      <!-- Quick Join by Share Code -->
+      <view class="card share-input-card">
+        <text class="label">已有分享码？</text>
+        <view class="row">
+          <input v-model="shareCodeInput" class="input" placeholder="输入8位分享码" maxlength="12" />
+          <button class="action-btn" @tap="goShareDetail">查看</button>
+        </view>
+      </view>
+
       <!-- Hot List -->
       <view class="list-section">
         <view class="section-header">
           <text class="title">热门拼团</text>
           <text class="more-btn">查看全部</text>
+        </view>
+
+        <view class="empty" v-if="!groupGoods.length">
+          <text>暂无在售拼团活动</text>
         </view>
 
         <view class="group-list">
@@ -49,7 +62,7 @@
                 <text class="name">{{ item.productName }}</text>
                 <view class="tags">
                   <text class="tag">{{ item.groupSize }}人团</text>
-                  <text class="sales">已拼 {{ item.totalJoinCount }} 件</text>
+                  <text class="sales">已拼 {{ item.totalJoinCount }} 件 · 已成 {{ item.successCount }} 团</text>
                 </view>
               </view>
               <view class="bottom">
@@ -57,7 +70,7 @@
                   <text class="price">¥{{ item.groupPrice }}</text>
                   <text class="original">¥{{ item.originalPrice }}</text>
                 </view>
-                <button class="join-btn" @tap="goGroupCheckout(item)">去参团</button>
+                <button class="join-btn" @tap="goGroupCheckout(item)">去开团</button>
               </view>
             </view>
           </view>
@@ -75,6 +88,7 @@ import SvgIcon from '@/components/svg-icon.vue';
 import type { GroupBuyActivityVO } from '@/api/types/promo';
 
 const groupGoods = ref<GroupBuyActivityVO[]>([]);
+const shareCodeInput = ref('');
 
 onMounted(async () => {
   try {
@@ -91,6 +105,20 @@ function goBack() {
 
 function goGroupCheckout(item: GroupBuyActivityVO) {
   uni.navigateTo({ url: `/pagesB/checkout/index?groupBuyActivityId=${item.id}` });
+}
+
+async function goShareDetail() {
+  const code = shareCodeInput.value.trim().toUpperCase();
+  if (!code) {
+    uni.showToast({ title: '请输入分享码', icon: 'none' });
+    return;
+  }
+  try {
+    const inst = await promoApi.groupBuyByShareCode(code);
+    uni.navigateTo({ url: `/pagesC/group-buy/detail?id=${inst.id}` });
+  } catch (e) {
+    uni.showToast({ title: '分享码无效或已过期', icon: 'none' });
+  }
 }
 </script>
 
@@ -189,6 +217,44 @@ function goGroupCheckout(item: GroupBuyActivityVO) {
     .title { font-size: $font-base; font-weight: bold; }
     .more-btn { font-size: $font-xs; color: $color-primary; }
   }
+}
+
+.share-input-card {
+  margin-bottom: $space-4;
+  padding: $space-3;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  .label { font-size: $font-xs; color: $color-text-secondary; }
+  .row { display: flex; gap: $space-2; align-items: center; }
+  .input {
+    flex: 1;
+    height: 64rpx;
+    padding: 0 $space-3;
+    border-radius: $radius-pill;
+    background: $color-bg-page;
+    font-size: $font-sm;
+    letter-spacing: 2rpx;
+    text-transform: uppercase;
+  }
+  .action-btn {
+    background: $color-primary;
+    color: #fff;
+    font-size: $font-xs;
+    padding: 0 $space-4;
+    height: 64rpx;
+    border-radius: $radius-pill;
+    display: flex;
+    align-items: center;
+    &::after { border: none; }
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: $space-6 0;
+  color: $color-text-placeholder;
+  font-size: $font-xs;
 }
 
 .group-list {

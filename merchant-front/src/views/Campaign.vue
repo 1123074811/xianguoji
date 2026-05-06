@@ -27,6 +27,39 @@
       </div>
     </div>
 
+    <!-- Group-Buy Stats -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-stack-md mb-stack-lg">
+      <div class="flex items-center justify-between mb-stack-sm">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">groups</span>
+          <h2 class="font-h3 text-h3 text-on-surface">拼团数据</h2>
+        </div>
+        <span class="text-xs text-slate-400">含全部活动维度统计</span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-gutter">
+        <div>
+          <div class="text-xs text-slate-500 mb-1">活跃活动</div>
+          <div class="text-lg font-bold">{{ groupBuyStats?.activeActivityCount ?? 0 }}<span class="text-xs text-slate-400 font-normal"> / {{ groupBuyStats?.totalActivity ?? 0 }}</span></div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 mb-1">进行中团</div>
+          <div class="text-lg font-bold">{{ groupBuyStats?.instanceOngoing ?? 0 }}</div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 mb-1">成团数</div>
+          <div class="text-lg font-bold text-green-600">{{ groupBuyStats?.instanceSuccess ?? 0 }}</div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 mb-1">成团率</div>
+          <div class="text-lg font-bold">{{ groupBuyStats?.successRate || '0%' }}</div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 mb-1">拼团营收</div>
+          <div class="text-lg font-bold text-primary">¥{{ groupBuyStats?.revenue ?? 0 }}</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Coupon List Card -->
     <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
       <!-- Tabs -->
@@ -141,7 +174,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { adminPromoApi, type CouponStatsVO } from '@/api/modules/promo'
+import { adminPromoApi, type CouponStatsVO, type GroupBuyStatsVO } from '@/api/modules/promo'
 import type { AdminCouponVO } from '@/api/types/promo'
 import Tooltip from '@/components/Tooltip.vue'
 import Popconfirm from '@/components/Popconfirm.vue'
@@ -160,6 +193,11 @@ const statusCounts = ref<Record<string, number>>({})
 
 // 统计数据
 const couponStats = ref<CouponStatsVO | null>(null)
+const groupBuyStats = ref<GroupBuyStatsVO | null>(null)
+const loadGroupBuyStats = async () => {
+  try { groupBuyStats.value = await adminPromoApi.groupBuyStats() }
+  catch (e) { console.warn('加载拼团统计失败', e) }
+}
 const stats = computed(() => [
   { label: '活跃优惠券', value: couponStats.value ? String(couponStats.value.activeCount) : '0', change: '+0 本周', changeColor: 'text-green-600', desc: '正在发放中', icon: 'confirmation_number', iconClass: 'text-primary bg-primary/10' },
   { label: '累计领取量', value: couponStats.value ? String(couponStats.value.totalReceived) : '0', change: '+0%', changeColor: 'text-green-600', desc: '较上月增长', icon: 'redeem', iconClass: 'text-tertiary bg-tertiary-fixed' },
@@ -215,6 +253,7 @@ const loadCoupons = async () => {
     // 加载统计数据和状态数量
     loadCouponStats()
     loadStatusCounts()
+    loadGroupBuyStats()
   } catch (error) {
     console.error('加载优惠券列表失败:', error)
     coupons.value = []

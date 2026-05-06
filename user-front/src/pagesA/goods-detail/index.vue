@@ -30,13 +30,14 @@
       <!-- Price & Buy Tabs -->
       <view class="price-section card-flat" v-if="goods">
         <view class="buy-tabs">
-          <view 
-            class="tab" 
+          <view
+            class="tab"
             :class="{ active: buyType === 'single' }"
             @tap="buyType = 'single'"
           >单独购买</view>
-          <view 
-            class="tab" 
+          <view
+            v-if="groupActivity"
+            class="tab"
             :class="{ active: buyType === 'group' }"
             @tap="buyType = 'group'"
           >发起拼团</view>
@@ -44,10 +45,12 @@
         <view class="price-row">
           <view class="left">
             <text class="currency">¥</text>
-            <text class="price">{{ activeSku ? activeSku.price : goods.minPrice }}</text>
-            <text class="original-price" v-if="activeSku && activeSku.originalPrice">¥{{ activeSku.originalPrice }}</text>
+            <text class="price">{{ buyType === 'group' && groupActivity ? groupActivity.groupPrice : (activeSku ? activeSku.price : goods.minPrice) }}</text>
+            <text class="original-price" v-if="buyType === 'group' && groupActivity">¥{{ activeSku?.price || goods.minPrice }}</text>
+            <text class="original-price" v-else-if="activeSku && activeSku.originalPrice">¥{{ activeSku.originalPrice }}</text>
           </view>
-          <text class="sales">月销 {{ goods.sales }}+</text>
+          <text v-if="buyType === 'group' && groupActivity" class="sales">{{ groupActivity.groupSize }}人成团 · 已拼{{ groupActivity.totalJoinCount }}件</text>
+          <text v-else class="sales">月销 {{ goods.sales }}+</text>
         </view>
       </view>
 
@@ -162,8 +165,10 @@
         </view>
       </view>
       <view class="action-btns">
-        <button class="add-cart" @tap="handleAddToCart">加入购物车</button>
-        <button class="buy-now" @tap="handleBuyNow">立即购买</button>
+        <button v-if="buyType === 'group' && groupActivity" class="add-cart" @tap="goGroupBuyZone">拼团专区</button>
+        <button v-else class="add-cart" @tap="handleAddToCart">加入购物车</button>
+        <button v-if="buyType === 'group' && groupActivity" class="buy-now" @tap="handleLaunchGroup">¥{{ groupActivity.groupPrice }} 发起拼团</button>
+        <button v-else class="buy-now" @tap="handleBuyNow">立即购买</button>
       </view>
     </view>
   </view>
@@ -176,11 +181,13 @@ import { catalogApi } from '@/api/modules/catalog';
 import { reviewApi } from '@/api/modules/review';
 import { shopApi } from '@/api/modules/shop';
 import { userApi } from '@/api/modules/user';
+import { promoApi } from '@/api/modules/promo';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { ProductDetailVO } from '@/api/types/catalog';
 import type { ReviewVO, ReviewSummaryVO } from '@/api/types/review';
 import type { DeliverySettingVO } from '@/api/types/shop';
+import type { GroupBuyActivityVO } from '@/api/types/promo';
 
 const cartStore = useCartStore();
 
@@ -191,6 +198,8 @@ const reviews = ref<ReviewVO[]>([]);
 const deliverySetting = ref<DeliverySettingVO | null>(null);
 const promotionTip = ref('');
 const isFavorite = ref(false);
+const groupActivity = ref<GroupBuyActivityVO | null>(null);
+const buyType = ref<'single' | 'group'>('single');
 
 const activeSkuId = ref(0);
 
@@ -214,15 +223,17 @@ async function loadDetail() {
     const defaultSku = detail.skuList.find(s => s.isDefault === 1) || detail.skuList[0];
     if (defaultSku) activeSkuId.value = defaultSku.id;
 
-    // 并行加载评价、配送设置
-    const [summary, reviewList, ds] = await Promise.all([
+    // 并行加载评价、配送设置、拼团活动
+    const [summary, reviewList, ds, gb] = await Promise.all([
       reviewApi.summary(productId.value).catch(() => null),
       reviewApi.productReviews(productId.value, { size: 3 }).catch(() => null),
       shopApi.deliverySetting().catch(() => null),
+      promoApi.groupBuyByProduct(productId.value).catch(() => null),
     ]);
     if (summary) reviewSummary.value = summary;
     if (reviewList) reviews.value = reviewList.list;
     if (ds) deliverySetting.value = ds;
+    if (gb) groupActivity.value = gb;
 
     // 生成满减提示：基于默认SKU价格和满减规则
     if (ds && ds.freeAmount && activeSku.value) {
@@ -315,6 +326,20 @@ async function handleBuyNow() {
   } catch (e) {
     console.warn('立即购买失败', e);
   }
+}
+
+function goGroupBuyZone() {
+  uni.navigateTo({ url: '/pagesC/group-buy/index' });
+}
+
+async function handleLaunchGroup() {
+  if (!groupActivity.value) {
+    return uni.showToast({ title: '当前商品暂无拼团', icon: 'none' });
+  }
+  // 跳转到结算页携带 groupBuyActivityId，由结算页发起 launchGroupBuy
+  uni.navigateTo({
+    url: `/pagesB/checkout/index?groupBuyActivityId=${groupActivity.value.id}`,
+  });
 }
 </script>
 
