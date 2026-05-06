@@ -12,7 +12,9 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -50,6 +52,24 @@ public class SalesRankService {
     public List<RankItem> getTopByDate(LocalDate date, int topN) {
         String key = KEY_PREFIX + date.format(F);
         return getTop(key, topN);
+    }
+
+    /**
+     * 获取当日所有商品的销量增量（用于实时合并 DB sales 展示）
+     */
+    public Map<Long, Integer> getTodaySalesDelta() {
+        String key = KEY_PREFIX + LocalDate.now().format(F);
+        Set<ZSetOperations.TypedTuple<String>> tuples =
+                stringRedisTemplate.opsForZSet().reverseRangeWithScores(key, 0, -1);
+        Map<Long, Integer> delta = new HashMap<>();
+        if (tuples != null) {
+            for (ZSetOperations.TypedTuple<String> t : tuples) {
+                if (t.getValue() != null && t.getScore() != null) {
+                    delta.put(Long.valueOf(t.getValue()), t.getScore().intValue());
+                }
+            }
+        }
+        return delta;
     }
 
     /**
