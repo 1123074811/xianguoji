@@ -20,6 +20,7 @@ import com.xianguoji.server.module.catalog.mapper.ProductMapper;
 import com.xianguoji.server.module.catalog.mapper.ProductSkuMapper;
 import com.xianguoji.server.common.cache.SalesRankService;
 import com.xianguoji.server.common.util.StockRedisHelper;
+import com.xianguoji.server.common.websocket.WsNotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ public class AdminCatalogController {
     private final HotSearchMapper hotSearchMapper;
     private final StockRedisHelper stockRedisHelper;
     private final SalesRankService salesRankService;
+    private final WsNotificationService wsNotificationService;
 
     // ===== 分类 =====
     @Operation(summary = "分类列表")
@@ -169,6 +171,7 @@ public class AdminCatalogController {
 
         // 同步冗余字段
         syncProductFields(product.getId());
+        notifyIfStockWarn(product.getId());
         return R.ok();
     }
 
@@ -235,6 +238,7 @@ public class AdminCatalogController {
                 }
             }
             syncProductFields(id);
+            notifyIfStockWarn(id);
         }
         return R.ok();
     }
@@ -356,5 +360,14 @@ public class AdminCatalogController {
         p.setMaxPrice(skuMapper.selectMaxPrice(productId));
         p.setTotalStock(skuMapper.selectTotalStock(productId));
         productMapper.updateById(p);
+    }
+
+    private void notifyIfStockWarn(Long productId) {
+        Product product = productMapper.selectById(productId);
+        if (product == null || product.getStatus() == null || product.getStatus() != 1) return;
+        if (product.getTotalStock() == null || product.getStockWarnThreshold() == null) return;
+        if (product.getTotalStock() <= product.getStockWarnThreshold()) {
+            wsNotificationService.notifyStockWarn(product.getId(), product.getName(), product.getTotalStock(), product.getStockWarnThreshold());
+        }
     }
 }

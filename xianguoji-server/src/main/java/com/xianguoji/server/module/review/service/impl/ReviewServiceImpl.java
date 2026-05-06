@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.PageVO;
 import com.xianguoji.server.common.result.ResultCode;
+import com.xianguoji.server.common.websocket.WsNotificationService;
 import com.xianguoji.server.module.order.entity.OrderItem;
 import com.xianguoji.server.module.order.mapper.OrderItemMapper;
 import com.xianguoji.server.module.review.dto.ReviewAddDto;
@@ -29,6 +30,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewMapper reviewMapper;
     private final OrderItemMapper orderItemMapper;
     private final UserMapper userMapper;
+    private final WsNotificationService wsNotificationService;
 
     @Override
     public List<OrderItem> getPendingReviews(Long uid) {
@@ -63,6 +65,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         oi.setIsReviewed(1);
         orderItemMapper.updateById(oi);
+        wsNotificationService.notifyReviewSubmitted(review.getId(), oi.getProductName(), review.getRating());
     }
 
     @Override

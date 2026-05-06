@@ -1,8 +1,12 @@
 package com.xianguoji.server.module.promo.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xianguoji.server.common.annotation.AdminRequired;
+import com.xianguoji.server.common.result.PageVO;
 import com.xianguoji.server.common.result.R;
+import com.xianguoji.server.common.websocket.WsNotificationService;
+import com.xianguoji.server.module.promo.dto.AdminPromoQry;
 import com.xianguoji.server.module.promo.entity.Coupon;
 import com.xianguoji.server.module.promo.entity.GroupBuyActivity;
 import com.xianguoji.server.module.promo.entity.PromotionRule;
@@ -27,6 +31,7 @@ public class AdminPromoController {
     private final PromotionRuleMapper promotionRuleMapper;
     private final GroupBuyActivityMapper groupBuyActivityMapper;
     private final UserCouponMapper userCouponMapper;
+    private final WsNotificationService wsNotificationService;
 
     // ===== 优惠券统计 =====
     @Operation(summary = "优惠券统计概览")
@@ -51,12 +56,34 @@ public class AdminPromoController {
         ));
     }
 
+    @Operation(summary = "优惠券各状态数量")
+    @GetMapping("/coupon/status-counts")
+    @AdminRequired
+    public R<java.util.Map<String, Long>> couponStatusCounts() {
+        long total = couponMapper.selectCount(null);
+        long active = couponMapper.selectCount(new LambdaQueryWrapper<Coupon>().eq(Coupon::getStatus, 1));
+        long expired = couponMapper.selectCount(new LambdaQueryWrapper<Coupon>().eq(Coupon::getStatus, 2));
+        long pending = couponMapper.selectCount(new LambdaQueryWrapper<Coupon>().eq(Coupon::getStatus, 3));
+        return R.ok(java.util.Map.of(
+                "total", total,
+                "1", active,
+                "2", expired,
+                "3", pending
+        ));
+    }
+
     // ===== 优惠券 =====
     @Operation(summary = "优惠券列表")
     @GetMapping("/coupon/list")
     @AdminRequired
-    public R<List<Coupon>> couponList() {
-        return R.ok(couponMapper.selectList(new LambdaQueryWrapper<Coupon>().orderByDesc(Coupon::getCreatedAt)));
+    public R<PageVO<Coupon>> couponList(AdminPromoQry qry) {
+        LambdaQueryWrapper<Coupon> wrapper = new LambdaQueryWrapper<Coupon>()
+                .orderByDesc(Coupon::getCreatedAt);
+        if (qry.getStatus() != null) {
+            wrapper.eq(Coupon::getStatus, qry.getStatus());
+        }
+        Page<Coupon> page = couponMapper.selectPage(new Page<>(qry.getPage(), qry.getSize()), wrapper);
+        return R.ok(new PageVO<>(page.getTotal(), page.getRecords(), qry.getPage(), qry.getSize()));
     }
 
     @Operation(summary = "新增优惠券")
@@ -64,6 +91,9 @@ public class AdminPromoController {
     @AdminRequired
     public R<Void> addCoupon(@RequestBody Coupon dto) {
         couponMapper.insert(dto);
+        if (dto.getStatus() != null && dto.getStatus() == 2) {
+            notifyCouponEnded(dto);
+        }
         return R.ok();
     }
 
@@ -71,8 +101,12 @@ public class AdminPromoController {
     @PutMapping("/coupon/{id}")
     @AdminRequired
     public R<Void> updateCoupon(@PathVariable Long id, @RequestBody Coupon dto) {
+        Coupon old = couponMapper.selectById(id);
         dto.setId(id);
         couponMapper.updateById(dto);
+        if (dto.getStatus() != null && dto.getStatus() == 2 && (old == null || old.getStatus() == null || old.getStatus() != 2)) {
+            notifyCouponEnded(resolveCoupon(id, old, dto));
+        }
         return R.ok();
     }
 
@@ -80,7 +114,11 @@ public class AdminPromoController {
     @DeleteMapping("/coupon/{id}")
     @AdminRequired
     public R<Void> deleteCoupon(@PathVariable Long id) {
+        Coupon old = couponMapper.selectById(id);
         couponMapper.deleteById(id);
+        if (old != null) {
+            wsNotificationService.notifyMarketing("优惠券已删除", "「" + old.getName() + "」优惠券已删除", "/campaign");
+        }
         return R.ok();
     }
 
@@ -88,8 +126,14 @@ public class AdminPromoController {
     @Operation(summary = "满减规则列表")
     @GetMapping("/promotion-rule/list")
     @AdminRequired
-    public R<List<PromotionRule>> ruleList() {
-        return R.ok(promotionRuleMapper.selectList(new LambdaQueryWrapper<PromotionRule>().orderByDesc(PromotionRule::getMinAmount)));
+    public R<PageVO<PromotionRule>> ruleList(AdminPromoQry qry) {
+        LambdaQueryWrapper<PromotionRule> wrapper = new LambdaQueryWrapper<PromotionRule>()
+                .orderByDesc(PromotionRule::getMinAmount);
+        if (qry.getStatus() != null) {
+            wrapper.eq(PromotionRule::getStatus, qry.getStatus());
+        }
+        Page<PromotionRule> page = promotionRuleMapper.selectPage(new Page<>(qry.getPage(), qry.getSize()), wrapper);
+        return R.ok(new PageVO<>(page.getTotal(), page.getRecords(), qry.getPage(), qry.getSize()));
     }
 
     @Operation(summary = "新增满减规则")
@@ -97,6 +141,9 @@ public class AdminPromoController {
     @AdminRequired
     public R<Void> addRule(@RequestBody PromotionRule dto) {
         promotionRuleMapper.insert(dto);
+        if (dto.getStatus() != null && dto.getStatus() == 0) {
+            notifyRuleEnded(dto);
+        }
         return R.ok();
     }
 
@@ -104,8 +151,12 @@ public class AdminPromoController {
     @PutMapping("/promotion-rule/{id}")
     @AdminRequired
     public R<Void> updateRule(@PathVariable Long id, @RequestBody PromotionRule dto) {
+        PromotionRule old = promotionRuleMapper.selectById(id);
         dto.setId(id);
         promotionRuleMapper.updateById(dto);
+        if (dto.getStatus() != null && dto.getStatus() == 0 && (old == null || old.getStatus() == null || old.getStatus() != 0)) {
+            notifyRuleEnded(resolveRule(id, old, dto));
+        }
         return R.ok();
     }
 
@@ -113,7 +164,11 @@ public class AdminPromoController {
     @DeleteMapping("/promotion-rule/{id}")
     @AdminRequired
     public R<Void> deleteRule(@PathVariable Long id) {
+        PromotionRule old = promotionRuleMapper.selectById(id);
         promotionRuleMapper.deleteById(id);
+        if (old != null) {
+            wsNotificationService.notifyMarketing("满减活动已删除", "「" + old.getName() + "」满减活动已删除", "/campaign");
+        }
         return R.ok();
     }
 
@@ -121,8 +176,14 @@ public class AdminPromoController {
     @Operation(summary = "拼团活动列表")
     @GetMapping("/group-buy/list")
     @AdminRequired
-    public R<List<GroupBuyActivity>> groupBuyList() {
-        return R.ok(groupBuyActivityMapper.selectList(new LambdaQueryWrapper<GroupBuyActivity>().orderByDesc(GroupBuyActivity::getCreatedAt)));
+    public R<PageVO<GroupBuyActivity>> groupBuyList(AdminPromoQry qry) {
+        LambdaQueryWrapper<GroupBuyActivity> wrapper = new LambdaQueryWrapper<GroupBuyActivity>()
+                .orderByDesc(GroupBuyActivity::getCreatedAt);
+        if (qry.getStatus() != null) {
+            wrapper.eq(GroupBuyActivity::getStatus, qry.getStatus());
+        }
+        Page<GroupBuyActivity> page = groupBuyActivityMapper.selectPage(new Page<>(qry.getPage(), qry.getSize()), wrapper);
+        return R.ok(new PageVO<>(page.getTotal(), page.getRecords(), qry.getPage(), qry.getSize()));
     }
 
     @Operation(summary = "新增拼团活动")
@@ -130,6 +191,9 @@ public class AdminPromoController {
     @AdminRequired
     public R<Void> addGroupBuy(@RequestBody GroupBuyActivity dto) {
         groupBuyActivityMapper.insert(dto);
+        if (dto.getStatus() != null && dto.getStatus() == 0) {
+            notifyGroupBuyEnded(dto);
+        }
         return R.ok();
     }
 
@@ -137,8 +201,12 @@ public class AdminPromoController {
     @PutMapping("/group-buy/{id}")
     @AdminRequired
     public R<Void> updateGroupBuy(@PathVariable Long id, @RequestBody GroupBuyActivity dto) {
+        GroupBuyActivity old = groupBuyActivityMapper.selectById(id);
         dto.setId(id);
         groupBuyActivityMapper.updateById(dto);
+        if (dto.getStatus() != null && dto.getStatus() == 0 && (old == null || old.getStatus() == null || old.getStatus() != 0)) {
+            notifyGroupBuyEnded(resolveGroupBuy(id, old, dto));
+        }
         return R.ok();
     }
 
@@ -146,7 +214,44 @@ public class AdminPromoController {
     @DeleteMapping("/group-buy/{id}")
     @AdminRequired
     public R<Void> deleteGroupBuy(@PathVariable Long id) {
+        GroupBuyActivity old = groupBuyActivityMapper.selectById(id);
         groupBuyActivityMapper.deleteById(id);
+        if (old != null) {
+            wsNotificationService.notifyMarketing("拼团活动已删除", "拼团活动 #" + old.getId() + " 已删除", "/campaign");
+        }
         return R.ok();
+    }
+
+    private Coupon resolveCoupon(Long id, Coupon old, Coupon dto) {
+        Coupon current = couponMapper.selectById(id);
+        if (current != null) return current;
+        if (old != null) return old;
+        return dto;
+    }
+
+    private PromotionRule resolveRule(Long id, PromotionRule old, PromotionRule dto) {
+        PromotionRule current = promotionRuleMapper.selectById(id);
+        if (current != null) return current;
+        if (old != null) return old;
+        return dto;
+    }
+
+    private GroupBuyActivity resolveGroupBuy(Long id, GroupBuyActivity old, GroupBuyActivity dto) {
+        GroupBuyActivity current = groupBuyActivityMapper.selectById(id);
+        if (current != null) return current;
+        if (old != null) return old;
+        return dto;
+    }
+
+    private void notifyCouponEnded(Coupon coupon) {
+        wsNotificationService.notifyMarketing("优惠券已结束", "「" + coupon.getName() + "」优惠券已结束", "/campaign");
+    }
+
+    private void notifyRuleEnded(PromotionRule rule) {
+        wsNotificationService.notifyMarketing("满减活动已停用", "「" + rule.getName() + "」满减活动已停用", "/campaign");
+    }
+
+    private void notifyGroupBuyEnded(GroupBuyActivity activity) {
+        wsNotificationService.notifyMarketing("拼团活动已结束", "拼团活动 #" + activity.getId() + " 已结束", "/campaign");
     }
 }

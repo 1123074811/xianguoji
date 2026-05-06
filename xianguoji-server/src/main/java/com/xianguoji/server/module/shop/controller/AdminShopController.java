@@ -2,6 +2,7 @@ package com.xianguoji.server.module.shop.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xianguoji.server.common.annotation.AdminRequired;
+import com.xianguoji.server.common.websocket.WsNotificationService;
 import com.xianguoji.server.common.result.R;
 import com.xianguoji.server.module.shop.entity.AdminNotification;
 import com.xianguoji.server.module.shop.entity.DeliverySetting;
@@ -35,6 +36,7 @@ public class AdminShopController {
     private final DeliverySettingMapper deliverySettingMapper;
     private final NotifySettingMapper notifySettingMapper;
     private final AdminNotificationMapper adminNotificationMapper;
+    private final WsNotificationService wsNotificationService;
 
     @Operation(summary = "获取店铺信息")
     @GetMapping("/shop/info")
@@ -188,5 +190,16 @@ public class AdminShopController {
     public R<Long> unreadCount() {
         return R.ok(adminNotificationMapper.selectCount(
                 new LambdaQueryWrapper<AdminNotification>().eq(AdminNotification::getIsRead, 0)));
+    }
+
+    @Operation(summary = "发布系统通知")
+    @PostMapping("/notification/system")
+    @AdminRequired
+    public R<Void> publishSystemNotification(@RequestBody Map<String, String> body) {
+        String title = body.getOrDefault("title", "系统通知");
+        String content = body.getOrDefault("content", "");
+        String linkUrl = body.get("linkUrl");
+        wsNotificationService.notifySystem(title, content, linkUrl);
+        return R.ok();
     }
 }

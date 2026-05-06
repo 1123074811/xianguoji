@@ -334,7 +334,10 @@ public class OrderServiceImpl implements OrderService {
         cartItems.stream()
                 .map(CartItem::getProductId)
                 .distinct()
-                .forEach(this::syncProductFields);
+                .forEach(productId -> {
+                    syncProductFields(productId);
+                    notifyIfStockWarn(productId);
+                });
 
         // 9. WebSocket通知商家端
         String dtLabel = dto.getDeliveryType() == 1 ? "配送" : "自提";
@@ -721,6 +724,15 @@ public class OrderServiceImpl implements OrderService {
         p.setMaxPrice(skuMapper.selectMaxPrice(productId));
         p.setTotalStock(skuMapper.selectTotalStock(productId));
         productMapper.updateById(p);
+    }
+
+    private void notifyIfStockWarn(Long productId) {
+        Product product = productMapper.selectById(productId);
+        if (product == null || product.getStatus() == null || product.getStatus() != 1) return;
+        if (product.getTotalStock() == null || product.getStockWarnThreshold() == null) return;
+        if (product.getTotalStock() <= product.getStockWarnThreshold()) {
+            wsNotificationService.notifyStockWarn(product.getId(), product.getName(), product.getTotalStock(), product.getStockWarnThreshold());
+        }
     }
 
     private void applyTabFilter(LambdaQueryWrapper<Order> wrapper, String tab) {
