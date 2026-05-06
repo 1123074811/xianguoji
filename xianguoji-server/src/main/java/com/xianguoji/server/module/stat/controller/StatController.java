@@ -2,6 +2,7 @@ package com.xianguoji.server.module.stat.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xianguoji.server.common.annotation.AdminRequired;
+import com.xianguoji.server.common.cache.SalesRankService;
 import com.xianguoji.server.common.result.R;
 import com.xianguoji.server.module.catalog.entity.Category;
 import com.xianguoji.server.module.catalog.entity.Product;
@@ -40,6 +41,7 @@ public class StatController {
     private final CategoryMapper categoryMapper;
     private final ReviewMapper reviewMapper;
     private final RefundMapper refundMapper;
+    private final SalesRankService salesRankService;
 
     @Operation(summary = "工作台四指标卡")
     @GetMapping("/dashboard")
@@ -100,6 +102,14 @@ public class StatController {
                         .eq(Product::getStatus, 1)
                         .orderByDesc(Product::getSales)
                         .last("LIMIT " + limit));
+        // 合并当日 Redis 销量增量
+        Map<Long, Integer> todayDelta = salesRankService.getTodaySalesDelta();
+        for (Product p : list) {
+            Integer delta = todayDelta.get(p.getId());
+            if (delta != null && delta != 0) {
+                p.setSales(p.getSales() + delta);
+            }
+        }
         return R.ok(list);
     }
 
@@ -241,9 +251,13 @@ public class StatController {
                         .eq(Product::getStatus, 1)
                         .orderByDesc(Product::getSales)
                         .last("LIMIT " + limit));
+        // 合并当日 Redis 销量增量
+        Map<Long, Integer> todayDelta = salesRankService.getTodaySalesDelta();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Product p : top) {
-            BigDecimal revenue = p.getMinPrice().multiply(BigDecimal.valueOf(p.getSales()));
+            Integer delta = todayDelta.get(p.getId());
+            int realSales = p.getSales() + (delta != null ? delta : 0);
+            BigDecimal revenue = p.getMinPrice().multiply(BigDecimal.valueOf(realSales));
             // 简化：利润率/退货率/趋势用稳定的派生值（基于id），后续可由真实成本/退款数据替换
             int margin = 22 + (int) (p.getId() % 25);
             double returnRate = Math.round(((p.getId() % 7) + 1) * 8.0) / 10.0;
@@ -252,7 +266,7 @@ public class StatController {
             row.put("id", p.getId());
             row.put("name", p.getName());
             row.put("revenue", revenue);
-            row.put("sales", p.getSales());
+            row.put("sales", realSales);
             row.put("margin", margin);
             row.put("returnRate", returnRate);
             row.put("trend", trend);

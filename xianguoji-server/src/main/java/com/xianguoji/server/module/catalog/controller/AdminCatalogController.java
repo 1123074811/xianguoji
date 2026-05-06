@@ -18,6 +18,7 @@ import com.xianguoji.server.module.catalog.mapper.HotSearchMapper;
 import com.xianguoji.server.module.catalog.mapper.ProductImageMapper;
 import com.xianguoji.server.module.catalog.mapper.ProductMapper;
 import com.xianguoji.server.module.catalog.mapper.ProductSkuMapper;
+import com.xianguoji.server.common.cache.SalesRankService;
 import com.xianguoji.server.common.util.StockRedisHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,6 +44,7 @@ public class AdminCatalogController {
     private final BannerMapper bannerMapper;
     private final HotSearchMapper hotSearchMapper;
     private final StockRedisHelper stockRedisHelper;
+    private final SalesRankService salesRankService;
 
     // ===== 分类 =====
     @Operation(summary = "分类列表")
@@ -99,6 +101,14 @@ public class AdminCatalogController {
         }
         wrapper.orderByDesc(Product::getCreatedAt);
         var p = productMapper.selectPage(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size), wrapper);
+        // 合并当日 Redis 销量增量，使商家端实时看到销量变化
+        Map<Long, Integer> todayDelta = salesRankService.getTodaySalesDelta();
+        for (Product prod : p.getRecords()) {
+            Integer delta = todayDelta.get(prod.getId());
+            if (delta != null && delta != 0) {
+                prod.setSales(prod.getSales() + delta);
+            }
+        }
         return R.ok(new PageVO<>(p.getTotal(), p.getRecords(), page, size));
     }
 
