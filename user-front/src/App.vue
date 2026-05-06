@@ -33,6 +33,8 @@ console.warn = (...args: any[]) => {
 
 onLaunch(() => {
   console.log("App Launch");
+  // F-10: 小程序版本更新检查
+  import('@/utils/verify').then(({ checkUpdate }) => checkUpdate());
 });
 onShow(() => {
   console.log("App Show");

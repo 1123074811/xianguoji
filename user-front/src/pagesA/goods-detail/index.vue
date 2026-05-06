@@ -232,9 +232,12 @@ async function loadDetail() {
 }
 
 onMounted(() => {
+  console.error('[DEBUG] onMounted fired');
   const pages = getCurrentPages();
   const page = pages[pages.length - 1] as any;
+  console.error('[DEBUG] page options=', JSON.stringify(page?.options));
   productId.value = Number(page?.options?.id || page?.options?.productId || 0);
+  console.error('[DEBUG] productId=', productId.value);
   if (productId.value) {
     loadDetail();
     recordFootprint();
@@ -242,10 +245,12 @@ onMounted(() => {
 });
 
 async function recordFootprint() {
+  console.log('[footprint] recordFootprint called, productId=', productId.value);
   try {
-    await userApi.addFootprint(productId.value);
-  } catch {
-    // 未登录时静默忽略
+    const res = await userApi.addFootprint(productId.value);
+    console.log('[footprint] success', res);
+  } catch (e: any) {
+    console.warn('[footprint] failed', e?.code, e?.msg || e?.errMsg || e);
   }
 }
 
