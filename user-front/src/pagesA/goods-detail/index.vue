@@ -156,6 +156,10 @@
           <text class="text">购物车</text>
           <view v-if="cartStore.totalCount > 0" class="badge">{{ cartStore.totalCount }}</view>
         </view>
+        <view class="nav-item" @tap="toggleFavorite">
+          <svg-icon :name="isFavorite ? 'favorite' : 'favorite_border'" :size="40" :color="isFavorite ? '#E53935' : '#757575'" />
+          <text class="text" :style="{ color: isFavorite ? '#E53935' : '' }">收藏</text>
+        </view>
       </view>
       <view class="action-btns">
         <button class="add-cart" @tap="handleAddToCart">加入购物车</button>
@@ -186,6 +190,7 @@ const reviewSummary = ref<ReviewSummaryVO | null>(null);
 const reviews = ref<ReviewVO[]>([]);
 const deliverySetting = ref<DeliverySettingVO | null>(null);
 const promotionTip = ref('');
+const isFavorite = ref(false);
 
 const activeSkuId = ref(0);
 
@@ -204,6 +209,7 @@ async function loadDetail() {
   try {
     const detail = await catalogApi.productDetail(productId.value);
     goods.value = detail;
+    isFavorite.value = detail.isFavorite;
     // 设置默认SKU
     const defaultSku = detail.skuList.find(s => s.isDefault === 1) || detail.skuList[0];
     if (defaultSku) activeSkuId.value = defaultSku.id;
@@ -275,6 +281,27 @@ async function handleAddToCart() {
     uni.showToast({ title: '已加入购物车', icon: 'success' });
   } catch (e) {
     console.warn('加车失败', e);
+  }
+}
+
+async function toggleFavorite() {
+  if (!productId.value) return;
+  try {
+    if (isFavorite.value) {
+      await userApi.removeFavorite(productId.value);
+      isFavorite.value = false;
+      uni.showToast({ title: '已取消收藏', icon: 'none' });
+    } else {
+      await userApi.addFavorite(productId.value);
+      isFavorite.value = true;
+      uni.showToast({ title: '已收藏', icon: 'success' });
+    }
+  } catch (e: any) {
+    if (e?.code === 401) {
+      uni.showToast({ title: '请先登录', icon: 'none' });
+    } else {
+      console.warn('收藏操作失败', e);
+    }
   }
 }
 
