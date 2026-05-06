@@ -36,7 +36,6 @@ public class OrderController {
     @Operation(summary = "提交订单")
     @PostMapping("/api/u/order/submit")
     @LoginRequired
-    @Idempotent(key = "order:submit", ttl = 3)
     public R<Map<String, String>> submit(@Valid @RequestBody OrderSubmitDto dto) {
         String orderNo = orderService.submit(LoginContext.uid(), dto);
         return R.ok(Map.of("orderNo", orderNo));
