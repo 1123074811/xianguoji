@@ -95,7 +95,7 @@ function onSwitch(key: keyof typeof settings, e: any) {
 }
 
 function goAccount() {
-  uni.showToast({ title: '账号详情见个人中心', icon: 'none' });
+  uni.navigateTo({ url: '/pagesC/profile-complete/index' });
 }
 
 function goAddress() {
@@ -140,7 +140,9 @@ function handleLogout() {
       if (res.confirm) {
         userStore.logout();
         uni.showToast({ title: '已退出登录', icon: 'success' });
-        setTimeout(() => uni.navigateBack(), 800);
+        setTimeout(() => {
+          uni.reLaunch({ url: '/pages/login/login' });
+        }, 800);
       }
     }
   });

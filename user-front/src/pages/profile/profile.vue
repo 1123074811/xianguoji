@@ -12,7 +12,7 @@
     <scroll-view scroll-y class="main-scroll">
       <!-- Profile Header -->
       <view class="profile-header">
-        <view class="user-info">
+        <view class="user-info" @tap="goEditProfile">
           <image :src="userStore.isLogin ? (userStore.userInfo?.avatar || '/static/images/default-avatar.png') : '/static/images/default-avatar.png'" mode="aspectFill" class="avatar" />
           <view class="info">
             <template v-if="userStore.isLogin">
@@ -150,6 +150,12 @@ function requireLogin(callback: () => void) {
 
 function goToLogin() {
   uni.navigateTo({ url: '/pages/login/login' });
+}
+
+function goEditProfile() {
+  requireLogin(() => {
+    uni.navigateTo({ url: '/pagesC/profile-complete/index' });
+  });
 }
 
 function goToOrders(id: string) {

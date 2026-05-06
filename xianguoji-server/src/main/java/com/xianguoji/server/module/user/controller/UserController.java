@@ -5,6 +5,7 @@ import com.xianguoji.server.common.result.R;
 import com.xianguoji.server.common.security.LoginContext;
 import com.xianguoji.server.module.user.dto.AddressAddDto;
 import com.xianguoji.server.module.user.dto.AddressUpdDto;
+import com.xianguoji.server.module.user.dto.BindPhoneDto;
 import com.xianguoji.server.module.user.dto.UserProfileUpdDto;
 import com.xianguoji.server.module.user.service.UserService;
 import com.xianguoji.server.module.user.vo.AddressVO;
@@ -37,6 +38,14 @@ public class UserController {
     @LoginRequired
     public R<Void> updateProfile(@Valid @RequestBody UserProfileUpdDto dto) {
         userService.updateProfile(LoginContext.uid(), dto);
+        return R.ok();
+    }
+
+    @Operation(summary = "微信手机号绑定")
+    @PostMapping("/user/bind-phone")
+    @LoginRequired
+    public R<Void> bindPhone(@Valid @RequestBody BindPhoneDto dto) {
+        userService.bindPhone(LoginContext.uid(), dto);
         return R.ok();
     }
 

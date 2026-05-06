@@ -9,6 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Set;
 
 /**
@@ -59,5 +64,46 @@ public class WechatUtil {
 
     public String getAppid() {
         return appid;
+    }
+
+    /**
+     * 解密微信小程序 getPhoneNumber 返回的加密数据，提取纯手机号
+     *
+     * @param sessionKey   code2Session 返回的 session_key
+     * @param encryptedData getPhoneNumber 回调的 encryptedData
+     * @param iv           getPhoneNumber 回调的 iv
+     * @return 纯手机号字符串（如 13800138000）
+     */
+    public String decryptPhoneNumber(String sessionKey, String encryptedData, String iv) {
+        try {
+            byte[] keyBytes = Base64.getDecoder().decode(sessionKey);
+            byte[] ivBytes = Base64.getDecoder().decode(iv);
+            byte[] encBytes = Base64.getDecoder().decode(encryptedData);
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE,
+                    new SecretKeySpec(keyBytes, "AES"),
+                    new IvParameterSpec(ivBytes));
+            byte[] plainBytes = cipher.doFinal(encBytes);
+            String plainText = new String(plainBytes, StandardCharsets.UTF_8);
+
+            JSONObject json = JSONUtil.parseObj(plainText);
+            // 校验 appid 一致性，防篡改
+            String watermarkAppid = json.getByPath("watermark.appid", String.class);
+            if (watermarkAppid == null || !watermarkAppid.equals(appid)) {
+                log.warn("[WechatUtil] decryptPhoneNumber watermark appid mismatch: expected={}, got={}", appid, watermarkAppid);
+                throw new BizException(ResultCode.BIZ_ERROR, "手机号解密校验失败");
+            }
+            String phone = json.getStr("phoneNumber");
+            if (phone == null || phone.isEmpty()) {
+                throw new BizException(ResultCode.BIZ_ERROR, "未获取到手机号");
+            }
+            return phone;
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("[WechatUtil] decryptPhoneNumber failed", e);
+            throw new BizException(ResultCode.BIZ_ERROR, "手机号解密失败");
+        }
     }
 }

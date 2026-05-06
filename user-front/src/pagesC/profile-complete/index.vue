@@ -17,7 +17,7 @@
       <text class="hint">点击更换头像</text>
     </view>
 
-    <!-- Nickname -->
+    <!-- Nickname & Phone -->
     <view class="form-section">
       <view class="form-item">
         <text class="label">昵称</text>
@@ -28,6 +28,20 @@
           placeholder="请输入昵称"
           @blur="onNicknameBlur"
         />
+      </view>
+      <view class="form-item">
+        <text class="label">手机号</text>
+        <template v-if="userStore.userInfo?.phone">
+          <text class="phone-value">{{ userStore.userInfo.phone }}</text>
+        </template>
+        <template v-else>
+          <!-- #ifdef MP-WEIXIN -->
+          <button class="bind-phone-btn" open-type="getPhoneNumber" @getphonenumber="onGetPhoneNumber">绑定手机号</button>
+          <!-- #endif -->
+          <!-- #ifndef MP-WEIXIN -->
+          <text class="phone-unbound">未绑定</text>
+          <!-- #endif -->
+        </template>
       </view>
     </view>
 
@@ -43,6 +57,7 @@
 import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { userApi } from '@/api/modules/user';
+import { authApi } from '@/api/modules/auth';
 import SvgIcon from '@/components/svg-icon.vue';
 
 const userStore = useUserStore();
@@ -90,6 +105,37 @@ async function handleSave() {
   } catch (e) {
     uni.hideLoading();
     console.warn('保存资料失败', e);
+  }
+}
+
+async function onGetPhoneNumber(e: any) {
+  const detail = e.detail;
+  if (detail.errMsg !== 'getPhoneNumber:ok' || !detail.encryptedData || !detail.iv) {
+    return uni.showToast({ title: '获取手机号失败', icon: 'none' });
+  }
+  uni.showLoading({ title: '绑定中...', mask: true });
+  try {
+    // 1. 获取 jsCode
+    const jsCode = await new Promise<string>((resolve, reject) => {
+      uni.login({
+        provider: 'weixin',
+        success: (r: any) => r.code ? resolve(r.code) : reject(new Error('无code')),
+        fail: reject,
+      });
+    });
+    // 2. 调用后端绑定接口
+    await userApi.bindPhone({
+      jsCode,
+      encryptedData: detail.encryptedData,
+      iv: detail.iv,
+    });
+    // 3. 刷新用户资料
+    await userStore.fetchProfile();
+    uni.hideLoading();
+    uni.showToast({ title: '绑定成功', icon: 'success' });
+  } catch (err: any) {
+    uni.hideLoading();
+    uni.showToast({ title: err?.message || '绑定失败', icon: 'none' });
   }
 }
 
@@ -203,6 +249,35 @@ function handleSkip() {
       flex: 1;
       font-size: $font-base;
       color: $color-text-primary;
+    }
+
+    .phone-value {
+      flex: 1;
+      font-size: $font-base;
+      color: $color-text-secondary;
+    }
+
+    .phone-unbound {
+      flex: 1;
+      font-size: $font-base;
+      color: $color-text-placeholder;
+    }
+
+    .bind-phone-btn {
+      flex: 1;
+      height: 64rpx;
+      line-height: 64rpx;
+      padding: 0 $space-4;
+      background-color: $color-primary;
+      color: #ffffff;
+      font-size: $font-sm;
+      border-radius: $radius-pill;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &::after { border: none; }
     }
   }
 }

@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.ResultCode;
+import com.xianguoji.server.common.util.WechatUtil;
 import com.xianguoji.server.module.promo.entity.GroupBuyParticipant;
 import com.xianguoji.server.module.promo.entity.UserCoupon;
 import com.xianguoji.server.module.promo.mapper.GroupBuyParticipantMapper;
 import com.xianguoji.server.module.promo.mapper.UserCouponMapper;
 import com.xianguoji.server.module.user.dto.AddressAddDto;
 import com.xianguoji.server.module.user.dto.AddressUpdDto;
+import com.xianguoji.server.module.user.dto.BindPhoneDto;
 import com.xianguoji.server.module.user.dto.UserProfileUpdDto;
 import com.xianguoji.server.module.user.entity.Favorite;
 import com.xianguoji.server.module.user.entity.Footprint;
@@ -23,11 +25,13 @@ import com.xianguoji.server.module.user.service.UserService;
 import com.xianguoji.server.module.user.vo.AddressVO;
 import com.xianguoji.server.module.user.vo.UserProfileVO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -38,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private final FavoriteMapper favoriteMapper;
     private final FootprintMapper footprintMapper;
     private final GroupBuyParticipantMapper groupBuyParticipantMapper;
+    private final WechatUtil wechatUtil;
 
     @Override
     public UserProfileVO getProfile(Long uid) {
@@ -78,6 +83,36 @@ public class UserServiceImpl implements UserService {
         user.setGender(dto.getGender());
         user.setBirthday(dto.getBirthday());
         userMapper.updateById(user);
+    }
+
+    @Override
+    public void bindPhone(Long uid, BindPhoneDto dto) {
+        User user = userMapper.selectById(uid);
+        if (user == null) throw new BizException(ResultCode.NOT_FOUND, "用户不存在");
+
+        // 1. 用 jsCode 换取 session_key
+        cn.hutool.json.JSONObject session = wechatUtil.code2Session(dto.getJsCode());
+        String sessionKey = session.getStr("session_key");
+        if (sessionKey == null || sessionKey.isEmpty()) {
+            throw new BizException(ResultCode.THIRD_PARTY_ERROR, "获取session_key失败");
+        }
+
+        // 2. 解密手机号
+        String phone = wechatUtil.decryptPhoneNumber(sessionKey, dto.getEncryptedData(), dto.getIv());
+
+        // 3. 检查手机号是否已被其他用户绑定
+        User existing = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getPhone, phone));
+        if (existing != null && !existing.getId().equals(uid)) {
+            throw new BizException(ResultCode.BIZ_ERROR, "该手机号已被其他账号绑定");
+        }
+
+        // 4. 绑定
+        User upd = new User();
+        upd.setId(uid);
+        upd.setPhone(phone);
+        userMapper.updateById(upd);
+        log.info("[bindPhone] uid={} phone={} 绑定成功", uid, maskPhone(phone));
     }
 
     @Override
