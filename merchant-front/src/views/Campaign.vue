@@ -156,6 +156,7 @@ const totalCount = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const currentStatus = ref<number | null>(null) // null表示全部，1=生效中，2=已过期，3=待生效
+const statusCounts = ref<Record<string, number>>({})
 
 // 统计数据
 const couponStats = ref<CouponStatsVO | null>(null)
@@ -168,10 +169,10 @@ const stats = computed(() => [
 
 // 标签页配置
 const couponTabs = computed(() => [
-  { label: '全部', status: null, count: totalCount.value },
-  { label: '生效中', status: 1, count: getStatusCount(1) },
-  { label: '已过期', status: 2, count: getStatusCount(2) },
-  { label: '待生效', status: 3, count: getStatusCount(3) }
+  { label: '全部', status: null, count: statusCounts.value['total'] || 0 },
+  { label: '生效中', status: 1, count: statusCounts.value['1'] || 0 },
+  { label: '已过期', status: 2, count: statusCounts.value['2'] || 0 },
+  { label: '待生效', status: 3, count: statusCounts.value['3'] || 0 }
 ])
 
 // 分页相关
@@ -186,9 +187,13 @@ const visiblePages = computed(() => {
   return pages
 })
 
-// 获取各状态的优惠券数量
-const getStatusCount = (status: number) => {
-  return coupons.value.filter(c => c.status === status).length
+// 加载各状态数量（独立于分页）
+const loadStatusCounts = async () => {
+  try {
+    statusCounts.value = await adminPromoApi.couponStatusCounts()
+  } catch (e) {
+    console.warn('加载状态数量失败', e)
+  }
 }
 
 // 加载优惠券列表
@@ -203,13 +208,13 @@ const loadCoupons = async () => {
       params.status = currentStatus.value
     }
     
-    // 注意：后端返回的是简单的列表，不是分页结构
     const data = await adminPromoApi.couponPage(params)
     coupons.value = data.list || data || []
     totalCount.value = data.total || coupons.value.length
     
-    // 加载统计数据
+    // 加载统计数据和状态数量
     loadCouponStats()
+    loadStatusCounts()
   } catch (error) {
     console.error('加载优惠券列表失败:', error)
     coupons.value = []
@@ -268,7 +273,8 @@ const doToggleCouponStatus = async (coupon: AdminCouponVO) => {
   try {
     await adminPromoApi.updateCoupon(coupon.id, { status: newStatus })
     coupon.status = newStatus
-    updateStats()
+    loadCouponStats()
+    loadStatusCounts()
     toast.success(`优惠券已${action}`)
   } catch (error) {
     console.error(`${action}优惠券失败:`, error)
@@ -319,7 +325,7 @@ const getValidityDisplay = (coupon: AdminCouponVO) => {
 }
 
 const getStatusText = (status: number) => {
-  const statusMap = {
+  const statusMap: Record<number, string> = {
     1: '生效中',
     2: '已过期', 
     3: '待生效'
@@ -328,7 +334,7 @@ const getStatusText = (status: number) => {
 }
 
 const getStatusClass = (status: number) => {
-  const classMap = {
+  const classMap: Record<number, string> = {
     1: 'bg-primary-fixed text-on-primary-fixed-variant border border-primary/20',
     2: 'bg-surface-variant text-on-surface-variant border border-outline-variant',
     3: 'bg-secondary-fixed text-on-secondary-fixed-variant border border-secondary/20'

@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { adminReviewApi } from '@/api/modules/review';
 import type { AdminReviewVO } from '@/api/types/review';
 import { resolveImageUrl } from '@/utils/image';

@@ -1,5 +1,7 @@
 import { ref, onUnmounted, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useAdminStore } from '@/stores/admin'
+import { useNotificationStore } from '@/stores/notification'
 
 export interface WsMessage {
   type: string
@@ -9,22 +11,28 @@ export interface WsMessage {
   payAmount?: string
   deliveryType?: string
   refundAmount?: string
+  notificationId?: number
+  notificationType?: number
+  linkUrl?: string
+  isRead?: number
+  createdAt?: string
 }
+
+const connected = ref(false)
+const lastMessage = ref<WsMessage | null>(null)
+
+let ws: WebSocket | null = null
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+let heartbeatTimer: ReturnType<typeof setInterval> | null = null
+let reconnectAttempts = 0
+const MAX_RECONNECT = 10
+const HEARTBEAT_INTERVAL = 30000
 
 export function useWebSocket() {
   const BASE_URL = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8080'
   const adminStore = useAdminStore()
-
-  const connected = ref(false)
-  const lastMessage = ref<WsMessage | null>(null)
-  const unreadCount = ref(0)
-
-  let ws: WebSocket | null = null
-  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
-  let heartbeatTimer: ReturnType<typeof setInterval> | null = null
-  let reconnectAttempts = 0
-  const MAX_RECONNECT = 10
-  const HEARTBEAT_INTERVAL = 30000
+  const notificationStore = useNotificationStore()
+  const { unreadCount } = storeToRefs(notificationStore)
 
   function connect() {
     if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
@@ -38,6 +46,7 @@ export function useWebSocket() {
     ws.onopen = () => {
       connected.value = true
       reconnectAttempts = 0
+      notificationStore.refreshUnreadCount().catch(() => undefined)
       startHeartbeat()
     }
 
@@ -45,7 +54,7 @@ export function useWebSocket() {
       try {
         const msg: WsMessage = JSON.parse(event.data)
         lastMessage.value = msg
-        unreadCount.value++
+        notificationStore.incrementUnreadCount()
       } catch {
         // ignore non-JSON
       }
@@ -106,15 +115,13 @@ export function useWebSocket() {
     }
   }
 
-  function resetUnread() {
-    unreadCount.value = 0
-  }
-
   // Auto-connect when logged in, disconnect when logged out
   watch(() => adminStore.isLogin, (isLogin) => {
     if (isLogin) {
+      notificationStore.refreshUnreadCount().catch(() => undefined)
       connect()
     } else {
+      notificationStore.clearUnreadCount()
       disconnect()
     }
   }, { immediate: true })
@@ -127,7 +134,7 @@ export function useWebSocket() {
     connected,
     lastMessage,
     unreadCount,
-    resetUnread,
+    refreshUnreadCount: notificationStore.refreshUnreadCount,
     connect,
     disconnect,
   }

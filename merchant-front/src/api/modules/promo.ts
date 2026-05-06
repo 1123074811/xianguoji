@@ -13,13 +13,16 @@ export const adminPromoApi = {
   couponStats: () =>
     request<CouponStatsVO>({ url: '/api/admin/coupon/stats' }),
 
+  couponStatusCounts: () =>
+    request<Record<string, number>>({ url: '/api/admin/coupon/status-counts' }),
+
   couponPage: (params: { page?: number; size?: number; status?: number }) =>
     request<PageVO<AdminCouponVO>>({ url: '/api/admin/coupon/list', params }),
 
   createCoupon: (data: CouponCreateDto) =>
     request<{ id: number }>({ url: '/api/admin/coupon', method: 'POST', data }),
 
-  updateCoupon: (id: number, data: Partial<CouponCreateDto>) =>
+  updateCoupon: (id: number, data: Partial<AdminCouponVO>) =>
     request<void>({ url: `/api/admin/coupon/${id}`, method: 'PUT', data }),
 
   deleteCoupon: (id: number) =>

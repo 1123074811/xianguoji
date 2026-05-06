@@ -116,7 +116,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { helpApi, type HelpFaqVO, type HelpGuideVO } from '@/api/modules/help'
 import { adminShopApi } from '@/api/modules/shop'
-import type { AdminShopVO } from '@/api/types/shop'
 
 const searchQuery = ref('')
 const activeSection = ref('')

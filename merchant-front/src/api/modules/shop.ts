@@ -41,6 +41,9 @@ export const adminShopApi = {
   notificationUnreadCount: () =>
     request<number>({ url: '/api/admin/notification/unread-count' }),
 
+  publishSystemNotification: (data: { title: string; content: string; linkUrl?: string }) =>
+    request<void>({ url: '/api/admin/notification/system', method: 'POST', data }),
+
   notifySettingList: () =>
     request<NotifySettingVO[]>({ url: '/api/admin/notify-setting/list' }),
 

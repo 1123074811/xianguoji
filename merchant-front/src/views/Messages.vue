@@ -65,11 +65,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { adminShopApi } from '@/api/modules/shop'
+import { useNotificationStore } from '@/stores/notification'
 import type { AdminNotificationVO } from '@/api/types/shop'
 
 const messages = ref<AdminNotificationVO[]>([])
 const loading = ref(false)
 const activeTab = ref<number | 0>(0)
+const notificationStore = useNotificationStore()
 
 const tabs = [
   { label: '全部', value: 0 },
@@ -121,6 +123,7 @@ async function loadList() {
   loading.value = true
   try {
     messages.value = await adminShopApi.notificationList()
+    await notificationStore.refreshUnreadCount()
   } catch (e) {
     console.warn('加载通知失败', e)
   } finally {
@@ -132,6 +135,7 @@ async function markAllRead() {
   try {
     await adminShopApi.markAllNotificationRead()
     messages.value.forEach(m => (m.isRead = 1))
+    notificationStore.clearUnreadCount()
   } catch (e) {
     console.warn('标记已读失败', e)
   }
@@ -142,6 +146,7 @@ async function onClickMessage(msg: AdminNotificationVO) {
   try {
     await adminShopApi.markNotificationRead(msg.id)
     msg.isRead = 1
+    notificationStore.decrementUnreadCount()
   } catch (e) {
     console.warn('标记已读失败', e)
   }

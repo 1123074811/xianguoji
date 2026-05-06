@@ -2,7 +2,6 @@ import { request } from '@/api/request';
 import type { PageVO } from '@/api/types/common';
 import type {
   AdminProductVO, AdminProductDetailVO, AdminCategoryVO, AdminBannerVO,
-  ProductCreateDto,
 } from '@/api/types/catalog';
 
 export const adminCatalogApi = {

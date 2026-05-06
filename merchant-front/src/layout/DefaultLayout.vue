@@ -45,7 +45,7 @@
           {{ isOpen ? '营业中' : '已打烊' }}
         </button>
         <div class="flex items-center gap-3">
-          <router-link to="/messages" class="text-slate-500 hover:text-primary transition-colors relative" @click="resetUnread">
+          <router-link to="/messages" class="text-slate-500 hover:text-primary transition-colors relative">
             <span class="material-symbols-outlined">notifications</span>
             <span v-if="unreadCount > 0" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 rounded-full border-2 border-white text-white text-[10px] font-bold leading-none px-1">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
           </router-link>
@@ -76,7 +76,7 @@ import { useWebSocket } from '@/composables/useWebSocket'
 const route = useRoute()
 const router = useRouter()
 
-const { connected, lastMessage, unreadCount, resetUnread } = useWebSocket()
+const { lastMessage, unreadCount } = useWebSocket()
 
 const isOpen = ref(true)
 
