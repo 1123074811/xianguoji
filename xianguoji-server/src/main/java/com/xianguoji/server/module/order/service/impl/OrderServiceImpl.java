@@ -36,6 +36,7 @@ import com.xianguoji.server.module.promo.entity.UserCoupon;
 import com.xianguoji.server.module.promo.mapper.CouponMapper;
 import com.xianguoji.server.module.promo.mapper.PromotionRuleMapper;
 import com.xianguoji.server.module.promo.mapper.UserCouponMapper;
+import com.xianguoji.server.module.promo.service.GroupBuyService;
 import com.xianguoji.server.module.promo.service.PromoService;
 import com.xianguoji.server.common.event.OrderCreatedEvent;
 import com.xianguoji.server.common.event.OrderPaidEvent;
@@ -81,6 +82,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserCouponMapper userCouponMapper;
     private final CouponMapper couponMapper;
     private final PromotionRuleMapper promotionRuleMapper;
+    private final GroupBuyService groupBuyService;
     private final PromoService promoService;
     private final ShopMapper shopMapper;
     private final WsNotificationService wsNotificationService;
@@ -784,6 +786,8 @@ public class OrderServiceImpl implements OrderService {
                 .payAmount(order.getPayAmount())
                 .userRemark(order.getUserRemark())
                 .cancelReason(order.getCancelReason())
+                .groupBuyInstanceId(order.getGroupBuyInstanceId())
+                .groupBuyInstance(order.getGroupBuyInstanceId() != null ? groupBuyService.getInstanceDetail(order.getGroupBuyInstanceId()) : null)
                 .payTime(order.getPayTime())
                 .deliveredAt(order.getDeliveredAt())
                 .finishedAt(order.getFinishedAt())

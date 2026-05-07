@@ -54,6 +54,7 @@ public class ScheduledTasks {
         List<Order> orders = orderMapper.selectList(
                 new LambdaQueryWrapper<Order>()
                         .eq(Order::getStatus, OrderStatus.PENDING_PAY.getCode())
+                        .eq(Order::getPayStatus, 0)
                         .lt(Order::getCreatedAt, threshold));
 
         for (Order order : orders) {

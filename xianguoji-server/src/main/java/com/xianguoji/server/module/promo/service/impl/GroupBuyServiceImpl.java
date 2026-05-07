@@ -90,8 +90,7 @@ public class GroupBuyServiceImpl implements GroupBuyService {
             throw new BizException(ResultCode.GROUP_BUY_ENDED, "拼团活动已结束");
         }
 
-        ProductSku sku = skuMapper.selectById(activity.getSkuId());
-        if (sku == null) throw new BizException(ResultCode.NOT_FOUND, "SKU不存在");
+        ProductSku sku = resolveActivitySku(activity);
         boolean redisPreDeducted = false;
         if (stockRedisHelper.getStock(activity.getSkuId()) >= 0) {
             if (!stockRedisHelper.deduct(activity.getSkuId(), 1)) {
@@ -156,6 +155,9 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         if (instance.getExpireAt().isBefore(LocalDateTime.now())) {
             throw new BizException(ResultCode.GROUP_BUY_ENDED, "拼团已过期");
         }
+        if (instance.getLeaderId().equals(uid)) {
+            throw new BizException(ResultCode.CONFLICT, "不能参加自己发起的拼团");
+        }
 
         Long existing = participantMapper.selectCount(
                 new LambdaQueryWrapper<GroupBuyParticipant>()
@@ -164,6 +166,7 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         if (existing > 0) throw new BizException(ResultCode.CONFLICT, "已参团");
 
         GroupBuyActivity activity = activityMapper.selectById(instance.getActivityId());
+        resolveActivitySku(activity);
 
         boolean redisPreDeducted = false;
         if (stockRedisHelper.getStock(activity.getSkuId()) >= 0) {
@@ -302,9 +305,9 @@ public class GroupBuyServiceImpl implements GroupBuyService {
 
             boolean alreadyPaid = order.getPayStatus() != null && order.getPayStatus() == 1;
             int targetStatus = alreadyPaid
-                    ? OrderStatus.REFUNDING.getCode()
+                    ? OrderStatus.REFUNDED.getCode()
                     : OrderStatus.CANCELLED.getCode();
-            String reason = alreadyPaid ? "拼团失败，自动发起退款" : "拼团失败，自动取消";
+            String reason = alreadyPaid ? "拼团失败，支付金额已原路退回" : "拼团失败，自动取消";
 
             int upd = orderMapper.update(null, new LambdaUpdateWrapper<Order>()
                     .eq(Order::getId, order.getId())
@@ -323,17 +326,14 @@ public class GroupBuyServiceImpl implements GroupBuyService {
                 setRemark(reason);
             }});
 
-            // 仅未支付：回补库存
-            if (!alreadyPaid) {
-                List<OrderItem> items = orderItemMapper.selectList(
-                        new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, order.getId()));
-                for (OrderItem oi : items) {
-                    skuMapper.update(null, new LambdaUpdateWrapper<ProductSku>()
-                            .eq(ProductSku::getId, oi.getSkuId())
-                            .setSql("stock = stock + " + oi.getQuantity()
-                                    + ", sales = GREATEST(sales - " + oi.getQuantity() + ", 0)"));
-                    stockRedisHelper.rollback(oi.getSkuId(), oi.getQuantity());
-                }
+            List<OrderItem> items = orderItemMapper.selectList(
+                    new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, order.getId()));
+            for (OrderItem oi : items) {
+                skuMapper.update(null, new LambdaUpdateWrapper<ProductSku>()
+                        .eq(ProductSku::getId, oi.getSkuId())
+                        .setSql("stock = stock + " + oi.getQuantity()
+                                + ", sales = GREATEST(sales - " + oi.getQuantity() + ", 0)"));
+                stockRedisHelper.rollback(oi.getSkuId(), oi.getQuantity());
             }
         }
 
@@ -476,7 +476,7 @@ public class GroupBuyServiceImpl implements GroupBuyService {
                                         Long pickupPointId, String payMethod, String userRemark,
                                         String logRemark) {
         Product product = productMapper.selectById(activity.getProductId());
-        ProductSku sku = skuMapper.selectById(activity.getSkuId());
+        ProductSku sku = resolveActivitySku(activity);
 
         String orderNo = OrderNoUtil.gen();
         BigDecimal payAmount = activity.getGroupPrice();
@@ -485,7 +485,9 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         order.setOrderNo(orderNo);
         order.setUserId(uid);
         order.setStatus(0);
-        order.setPayStatus(0);
+        order.setPayStatus(1);
+        order.setPayTime(LocalDateTime.now());
+        order.setPayTradeNo("MOCK_GROUP_PAY_" + orderNo);
         order.setDeliveryType(deliveryType != null ? deliveryType : 1);
         order.setDeliveryTime(deliveryTime);
         order.setGoodsAmount(activity.getGroupPrice());
@@ -528,7 +530,7 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         slog.setToStatus(0);
         slog.setOperatorType(1);
         slog.setOperatorId(uid);
-        slog.setRemark(logRemark);
+        slog.setRemark(logRemark + "（模拟支付成功）");
         statusLogMapper.insert(slog);
 
         return orderNo;
@@ -537,6 +539,23 @@ public class GroupBuyServiceImpl implements GroupBuyService {
     private Long getOrderId(String orderNo) {
         Order o = orderMapper.selectOne(new LambdaQueryWrapper<Order>().eq(Order::getOrderNo, orderNo));
         return o != null ? o.getId() : null;
+    }
+
+    private ProductSku resolveActivitySku(GroupBuyActivity activity) {
+        if (activity == null) throw new BizException(ResultCode.GROUP_BUY_ENDED, "拼团活动不存在或已结束");
+        ProductSku sku = activity.getSkuId() == null ? null : skuMapper.selectById(activity.getSkuId());
+        if (sku != null && sku.getStatus() != null && sku.getStatus() == 1) return sku;
+
+        sku = skuMapper.selectOne(new LambdaQueryWrapper<ProductSku>()
+                .eq(ProductSku::getProductId, activity.getProductId())
+                .eq(ProductSku::getStatus, 1)
+                .orderByDesc(ProductSku::getIsDefault)
+                .orderByAsc(ProductSku::getId)
+                .last("LIMIT 1"));
+        if (sku == null) throw new BizException(ResultCode.NOT_FOUND, "SKU不存在");
+        activity.setSkuId(sku.getId());
+        activityMapper.updateById(activity);
+        return sku;
     }
 
     private GroupBuyActivityVO toActivityVO(GroupBuyActivity a) {

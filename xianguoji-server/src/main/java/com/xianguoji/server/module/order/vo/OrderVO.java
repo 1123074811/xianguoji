@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.xianguoji.server.module.promo.vo.GroupBuyInstanceVO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -32,6 +33,8 @@ public class OrderVO {
     private BigDecimal payAmount;
     private String userRemark;
     private String cancelReason;
+    private Long groupBuyInstanceId;
+    private GroupBuyInstanceVO groupBuyInstance;
     private LocalDateTime payTime;
     private LocalDateTime deliveredAt;
     private LocalDateTime finishedAt;
