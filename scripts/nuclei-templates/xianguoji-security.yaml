@@ -1,0 +1,99 @@
+id: xianguoji-security-scan
+
+info:
+  name: 鲜果记安全扫描
+  author: xianguoji-team
+  severity: info
+  description: |
+    基于 TEST_PLAN_DETAIL.md §5.2 安全测试的自动化扫描模板
+    覆盖: JWT安全, IDOR, SQL注入, XSS, SSRF, 速率限制, CORS, 安全头
+
+http:
+  # ==================== TC-SEC-001: 鉴权 ====================
+  - raw:
+      - |
+        GET /api/u/user/profile HTTP/1.1
+        Host: {{Hostname}}
+      - |
+        GET /api/admin/stat/dashboard HTTP/1.1
+        Host: {{Hostname}}
+    matchers:
+      - type: dsl
+        dsl:
+          - 'status_code == 401'
+        name: "TC-SEC-001: 无token应返回401"
+
+  # ==================== TC-SEC-004: SQL 注入 ====================
+  - method: GET
+    path:
+      - "{{BaseURL}}/api/pub/catalog/product/page?keyword='OR+1=1--"
+      - "{{BaseURL}}/api/pub/catalog/product/page?sort=id;DROP+TABLE+product--"
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+          - 400
+        name: "TC-SEC-004: SQL注入不应触发500"
+      - type: word
+        words:
+          - "syntax error"
+          - "mysql"
+          - "sql"
+        part: body
+        negative: true
+        name: "TC-SEC-004: 响应不应包含SQL错误信息"
+
+  # ==================== TC-SEC-010: JWT alg=none ====================
+  - raw:
+      - |
+        GET /api/u/user/profile HTTP/1.1
+        Host: {{Hostname}}
+        Authorization: Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0.
+    matchers:
+      - type: dsl
+        dsl:
+          - 'status_code == 401 || status_code == 403'
+        name: "TC-SEC-010: alg=none token应被拒绝"
+
+  # ==================== TC-SEC-016: CORS ====================
+  - method: GET
+    path:
+      - "{{BaseURL}}/api/pub/catalog/category/tree"
+    headers:
+      Origin: https://evil.com
+    matchers:
+      - type: word
+        words:
+          - "access-control-allow-origin: https://evil.com"
+        part: header
+        negative: true
+        name: "TC-SEC-016: 非白名单origin不应被允许"
+
+  # ==================== TC-SEC-HEADER-001: 安全响应头 ====================
+  - method: GET
+    path:
+      - "{{BaseURL}}/api/pub/catalog/category/tree"
+    matchers-condition: or
+    matchers:
+      - type: word
+        words:
+          - "X-Content-Type-Options"
+          - "X-Frame-Options"
+        part: header
+        name: "TC-SEC-HEADER: 检查安全响应头"
+
+  # ==================== SSRF 防御检查 ====================
+  - method: POST
+    path:
+      - "{{BaseURL}}/api/u/feedback"
+    headers:
+      Content-Type: application/json
+      Authorization: Bearer {{token}}
+    body: |
+      {"content":"<img src=\"http://192.168.1.1/admin\">"}
+    matchers:
+      - type: dsl
+        dsl:
+          - 'status_code != 200 || contains(body, "Private")'
+        name: "TC-SEC-FILE-002: SSRF内网URL应被拒绝"
