@@ -33,6 +33,13 @@ public class MessageController {
         return R.ok(messageService.getMessagePage(LoginContext.uid(), type, page, size));
     }
 
+    @Operation(summary = "消息详情")
+    @GetMapping("/api/u/message/{id}")
+    @LoginRequired
+    public R<MessageVO> messageDetail(@PathVariable Long id) {
+        return R.ok(messageService.getMessage(LoginContext.uid(), id));
+    }
+
     @Operation(summary = "标记已读")
     @PutMapping("/api/u/message/{id}/read")
     @LoginRequired
@@ -44,8 +51,8 @@ public class MessageController {
     @Operation(summary = "全部已读")
     @PutMapping("/api/u/message/read-all")
     @LoginRequired
-    public R<Void> markAllRead() {
-        messageService.markAllRead(LoginContext.uid());
+    public R<Void> markAllRead(@RequestParam(required = false) Integer type) {
+        messageService.markAllRead(LoginContext.uid(), type);
         return R.ok();
     }
 
@@ -54,6 +61,13 @@ public class MessageController {
     @LoginRequired
     public R<Integer> unreadCount() {
         return R.ok(messageService.getUnreadCount(LoginContext.uid()));
+    }
+
+    @Operation(summary = "分类未读数")
+    @GetMapping("/api/u/message/unread-counts")
+    @LoginRequired
+    public R<Map<String, Integer>> unreadCounts() {
+        return R.ok(messageService.getUnreadCounts(LoginContext.uid()));
     }
 
     @Operation(summary = "提交反馈")

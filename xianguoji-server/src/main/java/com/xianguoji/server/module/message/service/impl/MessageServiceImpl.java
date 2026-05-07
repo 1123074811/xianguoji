@@ -18,7 +18,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,15 +34,33 @@ public class MessageServiceImpl implements MessageService {
     public PageVO<MessageVO> getMessagePage(Long uid, Integer type, Integer page, Integer size) {
         LambdaQueryWrapper<Message> wrapper = new LambdaQueryWrapper<Message>()
                 .and(w -> w.eq(Message::getUserId, uid).or().eq(Message::getUserId, 0));
-        if (type != null) wrapper.eq(Message::getType, type);
+        applyTypeFilter(wrapper, type);
         wrapper.orderByDesc(Message::getCreatedAt);
 
         Page<Message> p = messageMapper.selectPage(new Page<>(page, size), wrapper);
         List<MessageVO> voList = p.getRecords().stream().map(m -> MessageVO.builder()
                 .id(m.getId()).type(m.getType()).title(m.getTitle())
                 .content(m.getContent()).linkUrl(m.getLinkUrl())
-                .isRead(m.getIsRead()).createdAt(m.getCreatedAt()).build()).toList();
+                .isRead(m.getIsRead()).createdAt(m.getCreatedAt()).build()).collect(Collectors.toList());
         return new PageVO<>(p.getTotal(), voList, page, size);
+    }
+
+    @Override
+    public MessageVO getMessage(Long uid, Long id) {
+        Message msg = messageMapper.selectOne(new LambdaQueryWrapper<Message>()
+                .eq(Message::getId, id)
+                .and(w -> w.eq(Message::getUserId, uid).or().eq(Message::getUserId, 0))
+                .last("LIMIT 1"));
+        if (msg == null) throw new BizException(ResultCode.NOT_FOUND);
+        return MessageVO.builder()
+                .id(msg.getId())
+                .type(msg.getType())
+                .title(msg.getTitle())
+                .content(msg.getContent())
+                .linkUrl(msg.getLinkUrl())
+                .isRead(msg.getIsRead())
+                .createdAt(msg.getCreatedAt())
+                .build();
     }
 
     @Override
@@ -51,10 +72,12 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void markAllRead(Long uid) {
-        messageMapper.update(null, new LambdaUpdateWrapper<Message>()
-                .and(w -> w.eq(Message::getUserId, uid).or().eq(Message::getUserId, 0))
-                .set(Message::getIsRead, 1));
+    public void markAllRead(Long uid, Integer type) {
+        LambdaUpdateWrapper<Message> wrapper = new LambdaUpdateWrapper<Message>()
+                .and(w -> w.eq(Message::getUserId, uid).or().eq(Message::getUserId, 0));
+        applyTypeFilter(wrapper, type);
+        wrapper.set(Message::getIsRead, 1);
+        messageMapper.update(null, wrapper);
     }
 
     @Override
@@ -63,6 +86,17 @@ public class MessageServiceImpl implements MessageService {
                 new LambdaQueryWrapper<Message>()
                         .eq(Message::getIsRead, 0)
                         .and(w -> w.eq(Message::getUserId, uid).or().eq(Message::getUserId, 0))));
+    }
+
+    @Override
+    public Map<String, Integer> getUnreadCounts(Long uid) {
+        Map<String, Integer> counts = new HashMap<>();
+        counts.put("system", countUnreadByType(uid, 1));
+        counts.put("promotion", countUnreadByType(uid, 3));
+        counts.put("logistics", countUnreadByType(uid, 2));
+        counts.put("chat", countUnreadByType(uid, 6));
+        counts.put("all", getUnreadCount(uid));
+        return counts;
     }
 
     @Override
@@ -84,7 +118,7 @@ public class MessageServiceImpl implements MessageService {
         List<FeedbackVO> voList = p.getRecords().stream().map(f -> FeedbackVO.builder()
                 .id(f.getId()).userId(f.getUserId()).type(f.getType())
                 .content(f.getContent()).images(f.getImages()).contact(f.getContact())
-                .status(f.getStatus()).createdAt(f.getCreatedAt()).build()).toList();
+                .status(f.getStatus()).createdAt(f.getCreatedAt()).build()).collect(Collectors.toList());
         return new PageVO<>(p.getTotal(), voList, page, size);
     }
 
@@ -106,5 +140,31 @@ public class MessageServiceImpl implements MessageService {
         msg.setLinkUrl(linkUrl);
         msg.setIsRead(0);
         messageMapper.insert(msg);
+    }
+
+    private int countUnreadByType(Long uid, Integer type) {
+        LambdaQueryWrapper<Message> wrapper = new LambdaQueryWrapper<Message>()
+                .eq(Message::getIsRead, 0)
+                .and(w -> w.eq(Message::getUserId, uid).or().eq(Message::getUserId, 0));
+        applyTypeFilter(wrapper, type);
+        return Math.toIntExact(messageMapper.selectCount(wrapper));
+    }
+
+    private void applyTypeFilter(LambdaQueryWrapper<Message> wrapper, Integer type) {
+        if (type == null) return;
+        if (type == 2) {
+            wrapper.in(Message::getType, 2, 4);
+        } else {
+            wrapper.eq(Message::getType, type);
+        }
+    }
+
+    private void applyTypeFilter(LambdaUpdateWrapper<Message> wrapper, Integer type) {
+        if (type == null) return;
+        if (type == 2) {
+            wrapper.in(Message::getType, 2, 4);
+        } else {
+            wrapper.eq(Message::getType, type);
+        }
     }
 }
