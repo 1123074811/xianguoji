@@ -70,7 +70,7 @@
                   <text class="price">¥{{ item.groupPrice }}</text>
                   <text class="original">¥{{ item.originalPrice }}</text>
                 </view>
-                <button class="join-btn" @tap="goGroupCheckout(item)">去开团</button>
+                <button class="join-btn" @tap="goGroupDetail(item)">去开团</button>
               </view>
             </view>
           </view>
@@ -103,8 +103,8 @@ function goBack() {
   uni.navigateBack();
 }
 
-function goGroupCheckout(item: GroupBuyActivityVO) {
-  uni.navigateTo({ url: `/pagesB/checkout/index?groupBuyActivityId=${item.id}` });
+function goGroupDetail(item: GroupBuyActivityVO) {
+  uni.navigateTo({ url: `/pagesA/goods-detail/index?id=${item.productId}` });
 }
 
 async function goShareDetail() {

@@ -50,7 +50,7 @@
       <scroll-view scroll-x class="coupon-scroll">
         <view class="coupon-list">
           <view
-            v-for="(coupon, idx) in coupons"
+            v-for="(coupon, idx) in sortedCoupons"
             :key="coupon.id"
             class="coupon-card"
             :style="{ backgroundColor: couponBgColors[idx % couponBgColors.length] }"
@@ -77,6 +77,32 @@
           <svg-icon name="chevron-right" :size="24" color="#2E7D32" />
         </view>
       </view>
+      <scroll-view v-if="groupBuys.length" scroll-x class="group-buy-scroll">
+        <view class="group-buy-list">
+          <view
+            v-for="item in groupBuys"
+            :key="item.id"
+            class="group-buy-card"
+            @tap="goGroupDetail(item)"
+          >
+            <image class="group-buy-img" :src="resolveImageUrl(item.mainImage)" mode="aspectFill" />
+            <view class="group-buy-info">
+              <text class="group-buy-name">{{ item.productName }}</text>
+              <view class="group-buy-meta">
+                <text class="group-buy-tag">{{ item.groupSize }}人团</text>
+                <text class="group-buy-count">已拼{{ item.totalJoinCount }}件</text>
+              </view>
+              <view class="group-buy-bottom">
+                <view class="group-buy-price">
+                  <text class="group-buy-symbol">¥</text>
+                  <text>{{ formatAmount(item.groupPrice) }}</text>
+                </view>
+                <text class="group-buy-btn">去开团</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
       
       <!-- Recommended Products -->
       <view class="section-header">
@@ -111,7 +137,7 @@ import { catalogApi } from '@/api/modules/catalog';
 import { resolveImageUrl } from '@/utils/image';
 import { promoApi } from '@/api/modules/promo';
 import type { BannerVO, CategoryTreeVO, ProductVO } from '@/api/types/catalog';
-import type { CouponVO } from '@/api/types/promo';
+import type { CouponVO, GroupBuyActivityVO } from '@/api/types/promo';
 import { useAppStore } from '@/stores/app';
 
 const appStore = useAppStore();
@@ -126,6 +152,7 @@ onShow(() => {
 const shortcuts = ref<CategoryTreeVO[]>([]);
 const banners = ref<BannerVO[]>([]);
 const coupons = ref<CouponVO[]>([]);
+const groupBuys = ref<GroupBuyActivityVO[]>([]);
 const recommendedGoods = ref<ProductVO[]>([]);
 const loading = ref(false);
 const noMore = ref(false);
@@ -143,15 +170,17 @@ const couponTextColors = ['#BA1A1A', '#3E6A00', '#0D631B', '#BA1A1A'];
 
 async function loadHomeData() {
   try {
-    const [tree, bannerList, couponList, recList] = await Promise.all([
+    const [tree, bannerList, couponList, groupBuyPage, recList] = await Promise.all([
       catalogApi.categoryTree(),
       catalogApi.bannerList(),
       promoApi.couponList(),
+      promoApi.groupBuyPage({ page: 1, size: 6 }),
       catalogApi.recommend(),
     ]);
     shortcuts.value = tree.slice(0, 8);
     banners.value = bannerList;
     coupons.value = couponList;
+    groupBuys.value = groupBuyPage.list;
     recommendedGoods.value = recList;
   } catch (e) {
     console.warn('首页数据加载失败', e);
@@ -179,6 +208,10 @@ function isCouponClaimed(coupon: CouponVO) {
   if (claimedCouponIds.value.has(coupon.id)) return true;
   return (coupon.userReceivedCount || 0) >= (coupon.perUserLimit || 1);
 }
+
+const sortedCoupons = computed(() =>
+  [...coupons.value].sort((a, b) => Number(isCouponClaimed(a)) - Number(isCouponClaimed(b))),
+);
 
 async function claimCoupon(coupon: CouponVO) {
   try {
@@ -237,6 +270,10 @@ function handleBannerClick(banner: BannerVO) {
 
 function goToGroupBuy() {
   uni.navigateTo({ url: '/pagesC/group-buy/index' });
+}
+
+function goGroupDetail(item: GroupBuyActivityVO) {
+  uni.navigateTo({ url: `/pagesA/goods-detail/index?id=${item.productId}` });
 }
 </script>
 
@@ -501,6 +538,92 @@ function goToGroupBuy() {
       border-left: 4rpx dashed rgba(255,255,255,0.3);
       background-color: rgba(0,0,0,0.03);
     }
+  }
+}
+
+.group-buy-scroll {
+  white-space: nowrap;
+  padding: 0 $space-4 $space-2;
+
+  .group-buy-list {
+    display: inline-flex;
+    gap: $space-3;
+  }
+
+  .group-buy-card {
+    width: 360rpx;
+    background-color: #ffffff;
+    border-radius: $radius-md;
+    overflow: hidden;
+    box-shadow: $shadow-card;
+    flex-shrink: 0;
+  }
+
+  .group-buy-img {
+    width: 100%;
+    height: 200rpx;
+    display: block;
+  }
+
+  .group-buy-info {
+    padding: $space-3;
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+  }
+
+  .group-buy-name {
+    font-size: $font-sm;
+    font-weight: $weight-semibold;
+    color: $color-text-primary;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .group-buy-meta {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+  }
+
+  .group-buy-tag {
+    padding: 4rpx 10rpx;
+    border-radius: $radius-pill;
+    background-color: rgba($color-price, 0.1);
+    color: $color-price;
+    font-size: 20rpx;
+  }
+
+  .group-buy-count {
+    font-size: 20rpx;
+    color: $color-text-secondary;
+  }
+
+  .group-buy-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .group-buy-price {
+    display: flex;
+    align-items: baseline;
+    color: $color-price;
+    font-size: $font-md;
+    font-weight: $weight-semibold;
+  }
+
+  .group-buy-symbol {
+    font-size: $font-xs;
+  }
+
+  .group-buy-btn {
+    padding: 8rpx 18rpx;
+    border-radius: $radius-pill;
+    background-color: $color-primary;
+    color: #ffffff;
+    font-size: 22rpx;
   }
 }
 

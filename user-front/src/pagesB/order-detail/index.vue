@@ -21,6 +21,20 @@
             <text class="status-text">{{ statusText(order?.status) }}</text>
           </view>
         </view>
+        <view v-if="isGrouping" class="group-status">
+          <view class="avatar-stack">
+            <image
+              v-for="p in (order.groupBuyInstance?.participants || []).slice(0, 4)"
+              :key="p.userId"
+              :src="p.avatar ? resolveImageUrl(p.avatar) : '/static/images/default-avatar.png'"
+              mode="aspectFill"
+              class="group-avatar"
+            />
+          </view>
+          <text class="group-text">{{ order.groupBuyInstance?.currentSize || 0 }}/{{ order.groupBuyInstance?.targetSize || 0 }} 人已参团</text>
+          <text class="group-countdown">剩余 {{ groupCountdown }}</text>
+        </view>
+        <text v-else-if="order.groupBuyInstanceId && order.status === 8" class="refund-tip">拼团失败，支付金额已模拟原路退回</text>
       </view>
 
       <!-- Tracking (配送单时显示) -->
@@ -98,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { orderApi } from '@/api/modules/order';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
@@ -107,10 +121,28 @@ import type { OrderVO } from '@/api/types/order';
 const STATUS_MAP: Record<number, string> = {
   0: '待付款', 1: '待接单', 2: '备货中', 3: '配送中', 4: '待自提', 5: '已完成', 6: '已取消', 7: '退款中', 8: '已退款',
 };
-function statusText(s?: number) { return STATUS_MAP[s ?? -1] || '未知'; }
+function statusText(s?: number) {
+  if (order.value?.groupBuyInstanceId && s === 0) return '正在拼团';
+  return STATUS_MAP[s ?? -1] || '未知';
+}
 
 const order = ref<OrderVO | null>(null);
 const orderNo = ref('');
+const now = ref(Date.now());
+let timer: any = null;
+
+const isGrouping = computed(() => !!order.value?.groupBuyInstanceId && order.value?.groupBuyInstance?.status === 1 && order.value?.status === 0);
+
+const groupCountdown = computed(() => {
+  const expireAt = order.value?.groupBuyInstance?.expireAt;
+  if (!expireAt) return '--';
+  const diff = new Date(expireAt.replace(' ', 'T')).getTime() - now.value;
+  if (diff <= 0) return '等待退款';
+  const h = Math.floor(diff / 3600_000);
+  const m = Math.floor((diff % 3600_000) / 60_000);
+  if (h > 0) return `${h}时${m}分`;
+  return `${Math.max(1, m)}分`;
+});
 
 onMounted(async () => {
   const pages = getCurrentPages();
@@ -123,6 +155,11 @@ onMounted(async () => {
       console.warn('加载订单详情失败', e);
     }
   }
+  timer = setInterval(() => { now.value = Date.now(); }, 1000);
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
 });
 
 function goBack() {
@@ -431,3 +468,4 @@ async function handleRefund() {
   }
 }
 </style>
+

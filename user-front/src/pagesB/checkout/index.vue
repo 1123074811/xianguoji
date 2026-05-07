@@ -226,6 +226,7 @@ import { onShow } from '@dcloudio/uni-app';
 import { useAppStore } from '@/stores/app';
 import { orderApi } from '@/api/modules/order';
 import { promoApi } from '@/api/modules/promo';
+import { userApi } from '@/api/modules/user';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { OrderPreviewVO } from '@/api/types/order';
@@ -298,6 +299,7 @@ async function loadPreview() {
       }
       const ga = groupBuyActivity.value;
       if (ga) {
+        const address = preview.value?.address || await loadDefaultAddress();
         preview.value = {
           items: [{
             skuId: ga.skuId,
@@ -314,7 +316,7 @@ async function loadPreview() {
           couponAmount: '0.00',
           discountAmount: '0.00',
           payAmount: ga.groupPrice,
-          address: preview.value?.address,
+          address,
           pickupPoint: preview.value?.pickupPoint,
         } as any;
       }
@@ -344,6 +346,23 @@ async function loadPreview() {
     }
   } catch (e) {
     console.warn('加载订单预览失败', e);
+  }
+}
+
+async function loadDefaultAddress() {
+  try {
+    const addresses = await userApi.addressList();
+    const addr = addresses.find(a => a.isDefault === 1) || addresses[0];
+    if (!addr) return null;
+    return {
+      id: addr.id,
+      consignee: addr.consignee,
+      phone: addr.phone,
+      fullAddress: `${addr.province}${addr.city}${addr.district}${addr.detail}`,
+    };
+  } catch (e) {
+    console.warn('加载默认地址失败', e);
+    return null;
   }
 }
 

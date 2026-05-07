@@ -62,10 +62,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { promoApi } from '@/api/modules/promo';
+import { useUserStore } from '@/stores/user';
 import { resolveImageUrl } from '@/utils/image';
 import type { GroupBuyInstanceVO } from '@/api/types/promo';
 
 const instance = ref<GroupBuyInstanceVO | null>(null);
+const userStore = useUserStore();
 const now = ref(Date.now());
 const defaultAvatar = '/static/avatar-default.png';
 let timer: any = null;
@@ -78,7 +80,7 @@ const remaining = computed(() => {
 const emptySlots = computed(() => Math.max(0, remaining.value));
 
 const meIsParticipant = computed(() => {
-  const myId = uni.getStorageSync('userId');
+  const myId = userStore.userInfo?.id;
   if (!myId) return false;
   return (instance.value?.participants || []).some(p => String(p.userId) === String(myId));
 });

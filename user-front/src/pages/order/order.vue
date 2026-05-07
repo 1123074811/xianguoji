@@ -33,7 +33,7 @@
         <view v-for="order in filteredOrders" :key="order.orderNo" class="order-card card" @tap="goToDetail(order)">
           <view class="card-header">
             <text class="order-no">订单号: {{ order.orderNo }}</text>
-            <text class="status">{{ statusText(order.status) }}</text>
+            <text class="status">{{ statusText(order) }}</text>
           </view>
           
           <view class="goods-scroll">
@@ -46,6 +46,23 @@
                 class="goods-img" 
               />
             </scroll-view>
+          </view>
+
+          <view v-if="isGrouping(order)" class="grouping-card">
+            <view class="grouping-left">
+              <view class="avatar-stack">
+                <image
+                  v-for="p in (order.groupBuyInstance?.participants || []).slice(0, 4)"
+                  :key="p.userId"
+                  :src="p.avatar ? resolveImageUrl(p.avatar) : '/static/images/default-avatar.png'"
+                  mode="aspectFill"
+                  class="group-avatar"
+                />
+                <view v-for="i in groupEmptySlots(order)" :key="'empty-' + i" class="group-avatar empty-avatar">?</view>
+              </view>
+              <text class="grouping-text">{{ order.groupBuyInstance?.currentSize || 0 }}/{{ order.groupBuyInstance?.targetSize || 0 }} 人已参团</text>
+            </view>
+            <text class="grouping-countdown">剩余 {{ groupCountdown(order) }}</text>
           </view>
 
           <view class="card-footer">
@@ -80,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { orderApi } from '@/api/modules/order';
 import { resolveImageUrl } from '@/utils/image';
@@ -91,10 +108,18 @@ import type { OrderVO } from '@/api/types/order';
 const STATUS_MAP: Record<number, string> = {
   0: '待付款', 1: '待接单', 2: '备货中', 3: '配送中', 4: '待自提', 5: '已完成', 6: '已取消', 7: '退款中', 8: '已退款',
 };
-function statusText(s: number) { return STATUS_MAP[s] || '未知'; }
+function statusText(order: OrderVO) {
+  if (order.groupBuyInstanceId && order.status === 0) return '正在拼团';
+  return STATUS_MAP[order.status] || '未知';
+}
 
 onShow(async () => {
   uni.hideTabBar();
+  const storedTab = uni.getStorageSync('orderActiveTab');
+  if (storedTab && tabs.find(t => t.id === storedTab)) {
+    activeTabId.value = storedTab;
+    uni.removeStorageSync('orderActiveTab');
+  }
   await fetchOrders(true);
 });
 
@@ -103,7 +128,13 @@ const setTabHandler = (id: string) => {
   if (tabs.find(t => t.id === id)) activeTabId.value = id;
 };
 uni.$on('order:setTab', setTabHandler);
-onUnmounted(() => uni.$off('order:setTab', setTabHandler));
+onMounted(() => {
+  timer = setInterval(() => { now.value = Date.now(); }, 1000);
+});
+onUnmounted(() => {
+  uni.$off('order:setTab', setTabHandler);
+  if (timer) clearInterval(timer);
+});
 
 const tabs = [
   { id: 'all', name: '全部' },
@@ -111,6 +142,7 @@ const tabs = [
   { id: 'toship', name: '待发货/提' },
   { id: 'toreceive', name: '待收货' },
   { id: 'completed', name: '已完成' },
+  { id: 'groupbuy', name: '拼团中' },
   { id: 'aftersale', name: '退款/售后' }
 ];
 
@@ -125,14 +157,40 @@ const tabMap: Record<string, string | undefined> = {
 
 const activeTabId = ref('all');
 const orders = ref<OrderVO[]>([]);
+const now = ref(Date.now());
+let timer: any = null;
 const loading = ref(false);
 const noMore = ref(false);
 const currentPage = ref(1);
 const pageSize = 10;
 
 const filteredOrders = computed(() => {
+  if (activeTabId.value === 'groupbuy') {
+    return orders.value.filter(order => !!order.groupBuyInstanceId && order.status === 0);
+  }
   return orders.value;
 });
+
+function isGrouping(order: OrderVO) {
+  return !!order.groupBuyInstanceId && order.groupBuyInstance?.status === 1 && order.status === 0;
+}
+
+function groupEmptySlots(order: OrderVO) {
+  const current = order.groupBuyInstance?.currentSize || 0;
+  const target = order.groupBuyInstance?.targetSize || 0;
+  return Math.max(0, Math.min(4 - current, target - current));
+}
+
+function groupCountdown(order: OrderVO) {
+  const expireAt = order.groupBuyInstance?.expireAt;
+  if (!expireAt) return '--';
+  const diff = new Date(expireAt.replace(' ', 'T')).getTime() - now.value;
+  if (diff <= 0) return '等待退款';
+  const h = Math.floor(diff / 3600_000);
+  const m = Math.floor((diff % 3600_000) / 60_000);
+  if (h > 0) return `${h}时${m}分`;
+  return `${Math.max(1, m)}分`;
+}
 
 async function fetchOrders(reset = false) {
   if (loading.value) return;
@@ -188,6 +246,10 @@ function goToDetail(order: OrderVO) {
 
 function getOrderButtons(order: OrderVO) {
   const btns: { text: string; primary: boolean }[] = [];
+  if (isGrouping(order)) {
+    btns.push({ text: '查看拼团', primary: true });
+    return btns;
+  }
   switch (order.status) {
     case 0: btns.push({ text: '查看详情', primary: false }, { text: '取消订单', primary: false }, { text: '立即支付', primary: true }); break;
     case 1: case 2: btns.push({ text: '查看详情', primary: false }, { text: '提醒发货', primary: true }); break;
@@ -203,6 +265,11 @@ async function handleAction(order: OrderVO, btn: any) {
     case '查看物流':
     case '查看详情':
       uni.navigateTo({ url: `/pagesB/order-detail/index?orderNo=${order.orderNo}` });
+      break;
+    case '查看拼团':
+      if (order.groupBuyInstanceId) {
+        uni.navigateTo({ url: `/pagesC/group-buy/detail?id=${order.groupBuyInstanceId}` });
+      }
       break;
     case '确认收货':
       uni.showModal({
@@ -396,6 +463,65 @@ async function handleAction(order: OrderVO, btn: any) {
     }
   }
 
+  .grouping-card {
+    margin-bottom: $space-3;
+    padding: $space-3;
+    border-radius: $radius-md;
+    background: linear-gradient(135deg, rgba($color-primary, 0.1), rgba($color-primary, 0.03));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-2;
+
+    .grouping-left {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: $space-2;
+    }
+
+    .avatar-stack {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .group-avatar {
+      width: 44rpx;
+      height: 44rpx;
+      border-radius: 50%;
+      border: 3rpx solid #ffffff;
+      margin-left: -10rpx;
+      background-color: $color-bg-page;
+
+      &:first-child {
+        margin-left: 0;
+      }
+    }
+
+    .empty-avatar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $color-text-placeholder;
+      font-size: $font-xs;
+      border-style: dashed;
+    }
+
+    .grouping-text {
+      font-size: $font-xs;
+      color: $color-primary;
+      font-weight: $weight-semibold;
+      white-space: nowrap;
+    }
+
+    .grouping-countdown {
+      font-size: $font-xs;
+      color: $color-price;
+      white-space: nowrap;
+    }
+  }
+
   .card-footer {
     display: flex;
     flex-direction: row;
@@ -468,3 +594,5 @@ async function handleAction(order: OrderVO, btn: any) {
   color: $color-text-placeholder;
 }
 </style>
+
+

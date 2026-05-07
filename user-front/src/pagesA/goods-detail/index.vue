@@ -29,14 +29,14 @@
 
       <!-- Price & Buy Tabs -->
       <view class="price-section card-flat" v-if="goods">
-        <view class="buy-tabs">
+        <view v-if="canGroupBuy" class="buy-tabs">
           <view
             class="tab"
             :class="{ active: buyType === 'single' }"
             @tap="buyType = 'single'"
           >单独购买</view>
           <view
-            v-if="groupActivity"
+            v-if="canGroupBuy"
             class="tab"
             :class="{ active: buyType === 'group' }"
             @tap="buyType = 'group'"
@@ -45,11 +45,11 @@
         <view class="price-row">
           <view class="left">
             <text class="currency">¥</text>
-            <text class="price">{{ buyType === 'group' && groupActivity ? groupActivity.groupPrice : (activeSku ? activeSku.price : goods.minPrice) }}</text>
-            <text class="original-price" v-if="buyType === 'group' && groupActivity">¥{{ activeSku?.price || goods.minPrice }}</text>
+            <text class="price">{{ buyType === 'group' && canGroupBuy ? groupActivity?.groupPrice : (activeSku ? activeSku.price : goods.minPrice) }}</text>
+            <text class="original-price" v-if="buyType === 'group' && canGroupBuy">¥{{ activeSku?.price || goods.minPrice }}</text>
             <text class="original-price" v-else-if="activeSku && activeSku.originalPrice">¥{{ activeSku.originalPrice }}</text>
           </view>
-          <text v-if="buyType === 'group' && groupActivity" class="sales">{{ groupActivity.groupSize }}人成团 · 已拼{{ groupActivity.totalJoinCount }}件</text>
+          <text v-if="buyType === 'group' && canGroupBuy" class="sales">{{ groupActivity?.groupSize }}人成团 · 已拼{{ groupActivity?.totalJoinCount }}件</text>
           <text v-else class="sales">月销 {{ goods.sales }}+</text>
         </view>
       </view>
@@ -165,10 +165,62 @@
         </view>
       </view>
       <view class="action-btns">
-        <button v-if="buyType === 'group' && groupActivity" class="add-cart" @tap="goGroupBuyZone">拼团专区</button>
+        <button v-if="buyType === 'group' && canGroupBuy" class="add-cart" @tap="goGroupBuyZone">拼团专区</button>
         <button v-else class="add-cart" @tap="handleAddToCart">加入购物车</button>
-        <button v-if="buyType === 'group' && groupActivity" class="buy-now" @tap="handleLaunchGroup">¥{{ groupActivity.groupPrice }} 发起拼团</button>
+        <button v-if="buyType === 'group' && canGroupBuy" class="buy-now group-buy-now" @tap="handleLaunchGroup">发起拼团</button>
         <button v-else class="buy-now" @tap="handleBuyNow">立即购买</button>
+      </view>
+    </view>
+
+    <view v-if="cartPanelVisible" class="cart-panel-mask" @tap="cartPanelVisible = false">
+      <view class="cart-panel" @tap.stop>
+        <view class="cart-panel-handle"></view>
+        <view class="cart-panel-header">
+          <view>
+            <text class="cart-panel-title">已选商品</text>
+            <text class="cart-panel-desc">共 {{ cartStore.totalCount }} 件，满 {{ deliverySetting?.freeAmount || '39' }} 元免配送费</text>
+          </view>
+          <view class="cart-panel-actions">
+            <text v-if="cartStore.items.length" class="cart-panel-clear" @tap="clearCartPanel">清空</text>
+            <svg-icon name="close" :size="34" color="#9E9E9E" @tap="cartPanelVisible = false" />
+          </view>
+        </view>
+        <scroll-view scroll-y class="cart-panel-list">
+          <view v-if="cartStore.items.length === 0" class="cart-panel-empty">
+            <view class="cart-empty-icon">
+              <svg-icon name="shopping_cart" :size="52" color="#BDBDBD" />
+            </view>
+            <text class="cart-empty-title">购物车还是空的</text>
+            <text class="cart-empty-desc">先挑几件新鲜水果吧</text>
+          </view>
+          <view v-for="item in cartStore.items" :key="item.id" class="cart-panel-item">
+            <image class="cart-panel-img" :src="resolveImageUrl(item.mainImage)" mode="aspectFill" />
+            <view class="cart-panel-info">
+              <text class="cart-panel-name">{{ item.productName }}</text>
+              <text class="cart-panel-spec">{{ item.specName }}</text>
+              <view class="cart-panel-price-row">
+                <text class="cart-panel-price">¥{{ item.price }}</text>
+                <text v-if="item.originalPrice" class="cart-panel-original">¥{{ item.originalPrice }}</text>
+              </view>
+            </view>
+            <view class="cart-stepper">
+              <view class="stepper-btn minus" @tap="decreaseCartItem(item)">-</view>
+              <text class="stepper-num">{{ item.quantity }}</text>
+              <view class="stepper-btn plus" @tap="increaseCartItem(item)">+</view>
+            </view>
+          </view>
+        </scroll-view>
+        <view class="cart-panel-footer">
+          <view class="cart-bag">
+            <svg-icon name="shopping_cart" :size="40" color="#ffffff" />
+            <text v-if="cartStore.totalCount > 0" class="cart-bag-badge">{{ cartStore.totalCount }}</text>
+          </view>
+          <view class="cart-panel-total">
+            <text class="cart-panel-total-price">¥{{ cartStore.totalPrice }}</text>
+            <text class="cart-panel-total-label">已优惠 ¥{{ cartStore.discountAmount || '0.00' }}</text>
+          </view>
+          <button class="cart-panel-btn primary" :class="{ disabled: cartStore.selectedItems.length === 0 }" @tap="goCheckoutFromCart">去结算</button>
+        </view>
       </view>
     </view>
   </view>
@@ -200,12 +252,21 @@ const promotionTip = ref('');
 const isFavorite = ref(false);
 const groupActivity = ref<GroupBuyActivityVO | null>(null);
 const buyType = ref<'single' | 'group'>('single');
+const cartPanelVisible = ref(false);
 
 const activeSkuId = ref(0);
 
 const activeSku = computed(() => {
   if (!goods.value) return null;
   return goods.value.skuList.find(s => s.id === activeSkuId.value) || goods.value.skuList.find(s => s.isDefault === 1) || goods.value.skuList[0];
+});
+
+const canGroupBuy = computed(() => {
+  if (!groupActivity.value || groupActivity.value.status !== 1) return false;
+  if (!groupActivity.value.groupPrice || !groupActivity.value.skuId) return false;
+  if (!groupActivity.value.endTime) return true;
+  const end = new Date(groupActivity.value.endTime.replace(' ', 'T')).getTime();
+  return Number.isNaN(end) || end > Date.now();
 });
 
 const displayImages = computed(() => {
@@ -233,7 +294,8 @@ async function loadDetail() {
     if (summary) reviewSummary.value = summary;
     if (reviewList) reviews.value = reviewList.list;
     if (ds) deliverySetting.value = ds;
-    if (gb) groupActivity.value = gb;
+    groupActivity.value = gb && gb.status === 1 ? gb : null;
+    if (!canGroupBuy.value) buyType.value = 'single';
 
     // 生成满减提示：基于默认SKU价格和满减规则
     if (ds && ds.freeAmount && activeSku.value) {
@@ -295,8 +357,52 @@ function goToChat() {
   uni.navigateTo({ url: `/pagesC/chat/index${params.length ? '?' + params.join('&') : ''}` });
 }
 
-function goToCart() {
+async function goToCart() {
+  try {
+    await cartStore.refreshList();
+  } catch (e) {
+    console.warn('加载购物车失败', e);
+  }
+  cartPanelVisible.value = true;
+}
+
+function goCartPage() {
+  cartPanelVisible.value = false;
   uni.switchTab({ url: '/pages/cart/cart' });
+}
+
+function goCheckoutFromCart() {
+  const selected = cartStore.selectedItems;
+  if (selected.length === 0) {
+    uni.showToast({ title: '请选择要结算的商品', icon: 'none' });
+    return;
+  }
+  const ids = selected.map(i => i.id).join(',');
+  cartPanelVisible.value = false;
+  uni.navigateTo({ url: `/pagesB/checkout/index?cartItemIds=${ids}` });
+}
+
+async function decreaseCartItem(item: any) {
+  if (item.quantity <= 1) {
+    await cartStore.remove(item.id);
+  } else {
+    await cartStore.updateQty(item.id, item.quantity - 1);
+  }
+}
+
+async function increaseCartItem(item: any) {
+  await cartStore.updateQty(item.id, item.quantity + 1);
+}
+
+function clearCartPanel() {
+  uni.showModal({
+    title: '清空购物车',
+    content: '确定清空已选商品吗？',
+    confirmColor: '#2E7D32',
+    success: async (res) => {
+      if (res.confirm) await cartStore.clear();
+    },
+  });
 }
 
 async function handleAddToCart() {
@@ -349,7 +455,7 @@ function goGroupBuyZone() {
 }
 
 async function handleLaunchGroup() {
-  if (!groupActivity.value) {
+  if (!canGroupBuy.value || !groupActivity.value) {
     return uni.showToast({ title: '当前商品暂无拼团', icon: 'none' });
   }
   // 跳转到结算页携带 groupBuyActivityId，由结算页发起 launchGroupBuy
@@ -791,6 +897,272 @@ async function handleLaunchGroup() {
   }
 }
 
+.cart-panel-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.48));
+  display: flex;
+  align-items: flex-end;
+}
+
+.cart-panel {
+  width: 100%;
+  max-height: 72vh;
+  background-color: #ffffff;
+  border-radius: 32rpx 32rpx 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -12rpx 40rpx rgba(0,0,0,0.14);
+}
+
+.cart-panel-handle {
+  width: 72rpx;
+  height: 8rpx;
+  border-radius: 8rpx;
+  background-color: #E0E0E0;
+  margin: 16rpx auto 4rpx;
+}
+
+.cart-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-3 $space-4 $space-3;
+  border-bottom: 2rpx solid rgba($color-divider, 0.45);
+}
+
+.cart-panel-title {
+  display: block;
+  font-size: $font-md;
+  font-weight: $weight-semibold;
+  color: $color-text-primary;
+}
+
+.cart-panel-desc {
+  display: block;
+  margin-top: 6rpx;
+  font-size: $font-xs;
+  color: $color-text-secondary;
+}
+
+.cart-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+}
+
+.cart-panel-clear {
+  font-size: $font-xs;
+  color: $color-text-secondary;
+}
+
+.cart-panel-list {
+  max-height: 560rpx;
+  padding: 0 $space-4;
+  box-sizing: border-box;
+  background-color: #ffffff;
+}
+
+.cart-panel-empty {
+  padding: $space-6 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-2;
+}
+
+.cart-empty-icon {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 56rpx;
+  background-color: $color-bg-page;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-empty-title {
+  font-size: $font-base;
+  font-weight: $weight-semibold;
+  color: $color-text-primary;
+}
+
+.cart-empty-desc {
+  font-size: $font-xs;
+  color: $color-text-secondary;
+}
+
+.cart-panel-item {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 0;
+  border-bottom: 2rpx solid rgba($color-divider, 0.35);
+}
+
+.cart-panel-img {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: $radius-md;
+  background-color: $color-bg-page;
+  flex-shrink: 0;
+}
+
+.cart-panel-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.cart-panel-name {
+  font-size: $font-sm;
+  font-weight: $weight-semibold;
+  color: $color-text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cart-panel-spec {
+  font-size: $font-xs;
+  color: $color-text-secondary;
+}
+
+.cart-panel-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: $space-2;
+}
+
+.cart-panel-price {
+  font-size: $font-base;
+  font-weight: $weight-semibold;
+  color: $color-price;
+}
+
+.cart-panel-original {
+  font-size: $font-xs;
+  color: $color-text-placeholder;
+  text-decoration: line-through;
+}
+
+.cart-stepper {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.stepper-btn {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-base;
+  font-weight: $weight-semibold;
+
+  &.minus {
+    color: $color-primary;
+    border: 2rpx solid rgba($color-primary, 0.35);
+    background-color: #ffffff;
+  }
+
+  &.plus {
+    color: #ffffff;
+    background-color: $color-primary;
+  }
+}
+
+.stepper-num {
+  min-width: 32rpx;
+  text-align: center;
+  font-size: $font-sm;
+  color: $color-text-primary;
+}
+
+.cart-panel-footer {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  background-color: #ffffff;
+  border-top: 2rpx solid rgba($color-divider, 0.45);
+}
+
+.cart-bag {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 44rpx;
+  background: linear-gradient(135deg, $color-primary, #1B5E20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 8rpx 24rpx rgba($color-primary, 0.28);
+}
+
+.cart-bag-badge {
+  position: absolute;
+  top: -4rpx;
+  right: -4rpx;
+  min-width: 30rpx;
+  height: 30rpx;
+  padding: 0 6rpx;
+  border-radius: 15rpx;
+  background-color: $color-price;
+  color: #ffffff;
+  font-size: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-panel-total {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.cart-panel-total-price {
+  font-size: $font-lg;
+  font-weight: $weight-semibold;
+  color: $color-text-primary;
+}
+
+.cart-panel-total-label {
+  font-size: $font-xs;
+  color: $color-text-secondary;
+}
+
+.cart-panel-btn {
+  width: 180rpx;
+  height: 76rpx;
+  border-radius: $radius-pill;
+  font-size: $font-base;
+  font-weight: $weight-semibold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after { border: none; }
+
+  &.primary {
+    background-color: $color-primary;
+    color: #ffffff;
+  }
+
+  &.disabled {
+    opacity: 0.45;
+  }
+}
+
 .bottom-action {
   position: fixed;
   bottom: 0;
@@ -852,6 +1224,7 @@ async function handleLaunchGroup() {
 
     button {
       flex: 1;
+      min-width: 0;
       height: 80rpx;
       border-radius: $radius-pill;
       font-size: $font-base;
@@ -859,6 +1232,8 @@ async function handleLaunchGroup() {
       display: flex;
       align-items: center;
       justify-content: center;
+      white-space: nowrap;
+      overflow: hidden;
       &::after { border: none; }
     }
 
@@ -871,6 +1246,11 @@ async function handleLaunchGroup() {
     .buy-now {
       background-color: $color-primary;
       color: #ffffff;
+    }
+
+    .group-buy-now {
+      font-size: $font-sm;
+      letter-spacing: 0;
     }
   }
 }

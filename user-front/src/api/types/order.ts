@@ -1,3 +1,5 @@
+import type { GroupBuyInstanceVO } from './promo';
+
 export interface OrderPreviewVO {
   items: OrderPreviewItemVO[];
   goodsAmount: string;
@@ -60,6 +62,8 @@ export interface OrderVO {
   payAmount: string;
   userRemark?: string;
   cancelReason?: string;
+  groupBuyInstanceId?: number;
+  groupBuyInstance?: GroupBuyInstanceVO;
   payTime?: string;
   deliveredAt?: string;
   finishedAt?: string;

@@ -178,7 +178,9 @@ function handleAssetClick(id: string) {
     } else if (id === 'coupon') {
       uni.navigateTo({ url: '/pagesC/coupons/index' });
     } else if (id === 'groupbuy') {
-      uni.navigateTo({ url: '/pagesC/group-buy/index' });
+      uni.setStorageSync('orderActiveTab', 'groupbuy');
+      uni.$emit('order:setTab', 'groupbuy');
+      uni.switchTab({ url: '/pages/order/order' });
     }
   });
 }
