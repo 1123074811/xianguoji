@@ -51,7 +51,7 @@
                   class="aspect-square rounded-lg border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-slate-50">
                   <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
                   <span class="text-[10px] mt-1 font-bold uppercase">上传图片</span>
-                  <input type="file" accept="image/*" class="hidden" @change="onCarouselUpload" />
+                  <input type="file" accept="image/*" multiple class="hidden" @change="onCarouselUpload" />
                 </label>
               </div>
             </div>
@@ -69,7 +69,7 @@
                   class="aspect-square rounded-lg border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-primary hover:text-primary transition-colors cursor-pointer bg-slate-50">
                   <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
                   <span class="text-[10px] mt-1 font-bold uppercase">详情图</span>
-                  <input type="file" accept="image/*" class="hidden" @change="onDetailUpload" />
+                  <input type="file" accept="image/*" multiple class="hidden" @change="onDetailUpload" />
                 </label>
               </div>
             </div>
@@ -252,42 +252,68 @@
               <div class="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-slate-800 rounded-b-xl z-10"></div>
               <!-- Screen Content -->
               <div class="h-[640px] overflow-y-auto bg-[#fcf9f8] text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div class="h-12 bg-white border-b border-slate-100 flex items-center justify-between px-3 pt-4">
+                  <span class="material-symbols-outlined text-green-700" style="font-size:16px">arrow_back</span>
+                  <span class="text-[11px] font-bold text-green-700">鲜果记</span>
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-green-700" style="font-size:16px">share</span>
+                    <span class="material-symbols-outlined text-green-700" style="font-size:16px">chat</span>
+                  </div>
+                </div>
                 <!-- Carousel -->
                 <div class="relative w-full aspect-[4/3] bg-slate-100 overflow-hidden">
-                  <img v-if="previewMainImage" :src="previewMainImage" class="w-full h-full object-cover" />
+                  <div
+                    v-if="previewCarouselImages.length"
+                    class="flex w-full h-full transition-transform duration-500 ease-out"
+                    :style="{ transform: `translateX(-${activePreviewCarouselIndex * 100}%)` }"
+                  >
+                    <img
+                      v-for="(img, idx) in previewCarouselImages"
+                      :key="'preview-carousel-' + idx"
+                      :src="img"
+                      class="w-full h-full object-cover flex-none"
+                    />
+                  </div>
                   <div v-else class="w-full h-full flex items-center justify-center">
                     <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>
                   </div>
-                  <div v-if="carouselImages.length > 1" class="absolute bottom-2 right-2 bg-black/30 text-white text-[9px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">1/{{ carouselImages.length }}</div>
+                  <div v-if="previewCarouselImages.length > 1" class="absolute bottom-2 right-2 bg-black/30 text-white text-[9px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">{{ activePreviewCarouselIndex + 1 }}/{{ previewCarouselImages.length }}</div>
                 </div>
                 <!-- Price -->
-                <div class="bg-white px-3 py-2 border-b border-slate-100">
-                  <div class="flex items-baseline gap-1">
-                    <span class="text-[10px] text-green-700 font-bold">¥</span>
-                    <span class="text-xl text-green-700 font-black">{{ previewPrice }}</span>
-                    <span v-if="previewOriginalPrice" class="text-[9px] text-slate-400 line-through ml-1">¥{{ previewOriginalPrice }}</span>
+                <div class="bg-white px-4 py-3 border-b border-slate-100">
+                  <div v-if="previewHasGroupBuy" class="grid grid-cols-2 border-b border-slate-100 mb-3 text-[10px] font-semibold">
+                    <div class="relative pb-2 text-center text-slate-400">单独购买</div>
+                    <div class="relative pb-2 text-center text-green-700 after:absolute after:left-1/2 after:-translate-x-1/2 after:-bottom-px after:w-8 after:h-0.5 after:bg-green-700">发起拼团</div>
                   </div>
-                  <div class="text-[9px] text-slate-400 mt-0.5">月销 0+</div>
+                  <div class="flex items-end justify-between gap-2">
+                    <div class="flex items-baseline gap-1 min-w-0">
+                    <span class="text-[10px] text-green-700 font-bold">¥</span>
+                      <span class="text-xl text-green-700 font-black leading-none">{{ previewHasGroupBuy ? computedGroupPrice : previewPrice }}</span>
+                    <span v-if="previewHasGroupBuy" class="text-[9px] text-slate-400 line-through ml-1">¥{{ previewPrice }}</span>
+                    <span v-else-if="previewOriginalPrice" class="text-[9px] text-slate-400 line-through ml-1">¥{{ previewOriginalPrice }}</span>
+                    </div>
+                    <div class="text-[9px] text-slate-400 shrink-0">{{ previewHasGroupBuy ? `${groupBuy.groupSize}人成团` : '月销 0+' }}</div>
+                  </div>
                 </div>
                 <!-- Title -->
-                <div class="bg-white px-3 py-2 border-b border-slate-100">
-                  <div class="text-xs font-semibold text-slate-800 leading-snug">{{ form.name || '商品名称' }}</div>
-                  <div v-if="form.subtitle" class="text-[10px] text-green-600 mt-0.5">{{ form.subtitle }}</div>
+                <div class="bg-white px-4 py-3 border-b border-slate-100">
+                  <div class="text-xs font-bold text-slate-800 leading-snug">{{ form.name || '商品名称' }}</div>
+                  <div v-if="form.subtitle" class="text-[10px] text-green-600 mt-1">{{ form.subtitle }}</div>
                 </div>
                 <!-- Specs -->
-                <div v-if="skuList.length > 0 && skuList.some(s => s.specName)" class="bg-white px-3 py-2 border-b border-slate-100">
-                  <div class="text-[10px] font-semibold text-slate-700 mb-1.5">规格选择</div>
-                  <div class="flex flex-wrap gap-1.5">
+                <div v-if="skuList.length > 0 && skuList.some(s => s.specName)" class="bg-white px-4 py-3 border-b border-slate-100">
+                  <div class="text-[10px] font-bold text-slate-700 mb-2">规格选择</div>
+                  <div class="flex flex-wrap gap-2">
                     <span v-for="(spec, idx) in skuList.filter(s => s.specName)" :key="idx"
-                      class="px-2 py-0.5 text-[9px] rounded-full border"
+                      class="px-2.5 py-1 text-[9px] rounded-md border"
                       :class="idx === 0 ? 'border-green-700 bg-green-50 text-green-700' : 'border-slate-200 text-slate-500'">
                       {{ spec.specName }}
                     </span>
                   </div>
                 </div>
                 <!-- Delivery -->
-                <div v-if="form.supportDelivery || form.supportPickup" class="bg-white px-3 py-2 border-b border-slate-100">
-                  <div v-if="form.supportDelivery" class="flex items-center gap-1.5 mb-1">
+                <div v-if="form.supportDelivery || form.supportPickup" class="bg-white px-4 py-3 border-b border-slate-100">
+                  <div v-if="form.supportDelivery" class="flex items-center gap-1.5 mb-1.5">
                     <span class="material-symbols-outlined text-green-700" style="font-size:14px">local_shipping</span>
                     <span class="text-[9px] text-slate-600">同城配送</span>
                   </div>
@@ -296,8 +322,28 @@
                     <span class="text-[9px] text-slate-600">支持自提</span>
                   </div>
                 </div>
+                <!-- Reviews -->
+                <div class="bg-white px-4 py-3 border-b border-slate-100">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold text-slate-800">用户评价 (1)</span>
+                    <div class="flex items-center gap-0.5 text-[9px] text-slate-500">
+                      <span class="text-amber-500">★</span>
+                      <span>满意度 100%</span>
+                    </div>
+                  </div>
+                  <div class="rounded-lg bg-[#fcf9f8] px-3 py-2">
+                    <div class="flex items-center justify-between mb-1">
+                      <div class="flex items-center gap-1.5">
+                        <div class="w-5 h-5 rounded-full bg-green-100 text-green-700 text-[9px] font-bold flex items-center justify-center">鲜</div>
+                        <span class="text-[9px] font-semibold text-slate-700">鲜果达人</span>
+                      </div>
+                      <span class="text-[8px] text-slate-400">刚刚</span>
+                    </div>
+                    <p class="text-[9px] text-slate-600 leading-relaxed line-clamp-2">果子很新鲜，包装也很完整，口感清甜多汁，会继续回购。</p>
+                  </div>
+                </div>
                 <!-- Description -->
-                <div v-if="form.description" class="px-3 py-2">
+                <div v-if="form.description" class="px-4 py-3">
                   <div class="flex items-center gap-1 mb-1.5">
                     <div class="w-0.5 h-3 bg-green-700 rounded"></div>
                     <span class="text-[10px] font-semibold text-slate-700">产品详情</span>
@@ -310,14 +356,20 @@
                   <div v-if="detailImages.length > 3" class="text-[9px] text-slate-400 text-center">还有 {{ detailImages.length - 3 }} 张详情图...</div>
                 </div>
                 <!-- Bottom Bar Preview -->
-                <div class="sticky bottom-0 bg-white border-t border-slate-100 px-3 py-1.5 flex items-center gap-2">
-                  <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-slate-400" style="font-size:16px">chat</span>
-                    <span class="material-symbols-outlined text-slate-400" style="font-size:16px">shopping_cart</span>
+                <div class="sticky bottom-0 bg-white border-t border-slate-100 px-3 py-2 flex items-center gap-2">
+                  <div class="flex items-center gap-2 shrink-0">
+                    <div class="flex flex-col items-center gap-0.5">
+                      <span class="material-symbols-outlined text-slate-400" style="font-size:15px">chat</span>
+                      <span class="text-[7px] text-slate-400 leading-none">客服</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-0.5">
+                      <span class="material-symbols-outlined text-slate-400" style="font-size:15px">shopping_cart</span>
+                      <span class="text-[7px] text-slate-400 leading-none">购物车</span>
+                    </div>
                   </div>
-                  <div class="flex-1 flex gap-1.5">
-                    <div class="flex-1 bg-[#fcf9f8] text-slate-700 text-[9px] font-semibold rounded-full py-1 text-center border border-slate-200">加入购物车</div>
-                    <div class="flex-1 bg-green-700 text-white text-[9px] font-semibold rounded-full py-1 text-center">立即购买</div>
+                  <div class="flex-1 min-w-0 flex gap-1.5">
+                    <div class="flex-1 min-w-0 bg-[#fcf9f8] text-slate-700 text-[8px] font-semibold rounded-full h-7 leading-7 text-center border border-slate-200 whitespace-nowrap overflow-hidden">{{ previewHasGroupBuy ? '拼团专区' : '加入购物车' }}</div>
+                    <div class="flex-[1.35] min-w-0 bg-green-700 text-white text-[8px] font-semibold rounded-full h-7 leading-7 text-center whitespace-nowrap overflow-hidden">{{ previewHasGroupBuy ? `¥${computedGroupPrice} 发起拼团` : '立即购买' }}</div>
                   </div>
                 </div>
               </div>
@@ -343,7 +395,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { adminCatalogApi } from '@/api/modules/catalog'
 import { adminPromoApi } from '@/api/modules/promo'
@@ -376,6 +428,8 @@ const form = ref({
 
 const carouselImages = ref<string[]>([])
 const detailImages = ref<string[]>([])
+const previewCarouselIndex = ref(0)
+let previewCarouselTimer: number | undefined
 const groupBuy = reactive({
   enabled: false,
   activityId: 0 as number,
@@ -445,6 +499,16 @@ const previewMainImage = computed(() => {
   return img ? resolveImageUrl(img) : ''
 })
 
+const previewCarouselImages = computed(() => {
+  const images = carouselImages.value.length ? carouselImages.value : (form.value.mainImage ? [form.value.mainImage] : [])
+  return images.map(resolveImageUrl)
+})
+
+const activePreviewCarouselIndex = computed(() => {
+  const len = previewCarouselImages.value.length
+  return len ? previewCarouselIndex.value % len : 0
+})
+
 const previewPrice = computed(() => {
   const defaultSku = skuList.value.find(s => s.isDefault === 1) || skuList.value[0]
   if (defaultSku?.price) return defaultSku.price
@@ -461,6 +525,11 @@ const previewOriginalPrice = computed(() => {
     return defaultSku.originalPrice
   }
   return ''
+})
+
+const previewHasGroupBuy = computed(() => {
+  const defaultSku = skuList.value.find(s => s.isDefault === 1) || skuList.value[0]
+  return groupBuy.enabled && !!defaultSku?.specName && Number(defaultSku?.price || 0) > 0
 })
 
 // ---- 加载数据 ----
@@ -527,28 +596,23 @@ async function loadGroupBuy() {
 
 async function saveGroupBuy(savedProductId: number) {
   if (!savedProductId) return
-  // 取默认SKU；若新增商品后端返回id，但skuList仍是本地数据 — 需先有id
   const defaultSku = skuList.value.find(s => s.isDefault === 1 && s.id) || skuList.value.find(s => s.id)
   const skuId = defaultSku?.id || groupBuy.skuId
-  // 关闭：若有已存活动则停用
   if (!groupBuy.enabled) {
     if (groupBuy.activityId) {
-      try {
-        await adminPromoApi.updateGroupBuy(groupBuy.activityId, { status: 0 })
-      } catch (e) { console.warn('停用拼团失败', e) }
+      await adminPromoApi.updateGroupBuy(groupBuy.activityId, { status: 0 })
     }
     return
   }
   if (!skuId) {
-    toast.error('请先保存SKU再启用拼团')
-    return
+    throw new Error('请先保存SKU再启用拼团')
   }
   const groupPrice = computedGroupPrice.value
   const now = new Date()
-  const startTime = now.toISOString().slice(0, 19).replace('T', ' ')
+  const startTime = formatLocalDateTime(now)
   const endTime = groupBuy.endTime
-    ? groupBuy.endTime.replace('T', ' ') + ':00'
-    : new Date(now.getTime() + 7 * 24 * 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ')
+    ? `${groupBuy.endTime}:00`
+    : formatLocalDateTime(new Date(now.getTime() + 7 * 24 * 3600 * 1000))
   const payload = {
     productId: savedProductId,
     skuId,
@@ -559,14 +623,32 @@ async function saveGroupBuy(savedProductId: number) {
     endTime,
     status: 1,
   }
-  try {
-    if (groupBuy.activityId) {
-      await adminPromoApi.updateGroupBuy(groupBuy.activityId, payload)
-    } else {
-      const res = await adminPromoApi.createGroupBuy(payload)
-      if (res?.id) groupBuy.activityId = res.id
-    }
-  } catch (e) { console.warn('保存拼团失败', e) }
+  if (groupBuy.activityId) {
+    await adminPromoApi.updateGroupBuy(groupBuy.activityId, payload)
+  } else {
+    await adminPromoApi.createGroupBuy(payload)
+    await loadGroupBuy()
+  }
+}
+
+function formatLocalDateTime(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+async function refreshSavedSkuList(savedProductId: number) {
+  const data: AdminProductDetailVO = await adminCatalogApi.productDetail(savedProductId)
+  skuList.value = (data.skuList || []).map(s => ({
+    id: s.id,
+    specName: s.specName,
+    price: String(s.price),
+    originalPrice: String(s.originalPrice),
+    stock: s.stock,
+    isDefault: s.isDefault,
+  }))
+  if (skuList.value.length === 0) {
+    skuList.value.push({ specName: '', price: '', originalPrice: '', stock: 0, isDefault: 1 })
+  }
 }
 
 // ---- 图片上传 ----
@@ -585,7 +667,8 @@ async function uploadImage(file: File): Promise<string> {
 async function onCarouselUpload(e: Event) {
   const input = e.target as HTMLInputElement
   if (!input.files?.length) return
-  for (const file of Array.from(input.files)) {
+  const files = Array.from(input.files).slice(0, Math.max(0, 6 - carouselImages.value.length))
+  for (const file of files) {
     try {
       const url = await uploadImage(file)
       carouselImages.value.push(url)
@@ -670,7 +753,10 @@ async function saveDraft() {
       const res = await adminCatalogApi.createProduct(payload as any)
       savedId = res?.id || 0
     }
-    if (savedId) await saveGroupBuy(savedId)
+    if (savedId) {
+      await refreshSavedSkuList(savedId)
+      await saveGroupBuy(savedId)
+    }
     toast.success('草稿已保存')
     router.push('/goods')
   } catch (e) {
@@ -690,7 +776,10 @@ async function publish() {
       const res = await adminCatalogApi.createProduct(payload as any)
       savedId = res?.id || 0
     }
-    if (savedId) await saveGroupBuy(savedId)
+    if (savedId) {
+      await refreshSavedSkuList(savedId)
+      await saveGroupBuy(savedId)
+    }
     toast.success(isEdit.value ? '商品已更新' : '商品已发布上架')
     router.push('/goods')
   } catch (e) {
@@ -706,5 +795,14 @@ function goBack() {
 onMounted(() => {
   loadCategories()
   loadProduct()
+  previewCarouselTimer = window.setInterval(() => {
+    if (previewCarouselImages.value.length > 1) {
+      previewCarouselIndex.value = (previewCarouselIndex.value + 1) % previewCarouselImages.value.length
+    }
+  }, 2500)
+})
+
+onUnmounted(() => {
+  if (previewCarouselTimer) window.clearInterval(previewCarouselTimer)
 })
 </script>
