@@ -32,10 +32,11 @@
           </view>
         </view>
 
-        <textarea 
-          class="content-input" 
-          placeholder="分享您的购物心得，帮助更多果友挑选好货..." 
+        <textarea
+          class="content-input"
+          placeholder="分享您的购物心得，帮助更多果友挑选好货..."
           v-model="content"
+          :auto-height="true"
         ></textarea>
 
         <view class="upload-grid">
@@ -228,7 +229,7 @@ async function handleSubmit() {
 
   .content-input {
     width: 100%;
-    height: 256rpx;
+    min-height: 120rpx;
     background-color: $color-bg-page;
     padding: $space-3;
     border-radius: $radius-md;
