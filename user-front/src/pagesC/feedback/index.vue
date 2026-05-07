@@ -25,7 +25,6 @@
           v-model="form.content"
           placeholder="请详细描述您遇到的问题或建议，便于我们更好地为您处理（5-500字）"
           :maxlength="500"
-          :auto-height="true"
         />
         <view class="char-count">
           <text :class="{ warning: form.content.length > 480 }">{{ form.content.length }}/500</text>
@@ -236,7 +235,7 @@ async function handleSubmit() {
 
 .textarea {
   width: 100%;
-  min-height: 120rpx;
+  min-height: 240rpx;
   font-size: $font-base;
   color: $color-text-primary;
   line-height: 1.6;

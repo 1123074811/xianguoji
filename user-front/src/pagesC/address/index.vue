@@ -50,7 +50,6 @@
             placeholder="粘贴收件信息一键导入\n如: 收件人: 张三\n手机号码: 13800138000\n所在地区: 广东省深圳市南山区\n详细地址: 科技园路1号"
             v-model="pasteText"
             :maxlength="-1"
-            :auto-height="true"
           />
           <view class="paste-btn-wrap">
             <button class="paste-btn" @tap="parsePasteText">一键导入</button>
@@ -75,7 +74,7 @@
         </view>
         <view class="form-item">
           <text class="label">详细地址</text>
-          <textarea class="textarea" placeholder="街道、楼牌号等" :maxlength="-1" v-model="newAddr.detail" :auto-height="true" />
+          <textarea class="textarea" placeholder="街道、楼牌号等" :maxlength="-1" v-model="newAddr.detail" />
         </view>
         <view class="switch-row">
           <text class="label">设为默认地址</text>
@@ -540,7 +539,7 @@ async function handleSave() {
     border-radius: $radius-sm;
     padding: $space-3;
     font-size: $font-sm;
-    min-height: 240rpx;
+    height: 240rpx;
     width: auto;
     line-height: 1.8;
   }
@@ -604,7 +603,7 @@ async function handleSave() {
     padding: $space-3;
     font-size: $font-sm;
     width: 100%;
-    min-height: 80rpx;
+    height: 160rpx;
     box-sizing: border-box;
   }
 }

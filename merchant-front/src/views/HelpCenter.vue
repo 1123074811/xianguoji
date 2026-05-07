@@ -100,7 +100,7 @@
             意见反馈
           </h3>
           <p class="text-xs text-slate-500 mb-4">您的建议将帮助我们改进产品</p>
-          <textarea v-model="feedbackContent" class="w-full min-h-[80px] p-3 bg-slate-50 border border-outline-variant rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary resize-y" placeholder="请输入您的建议或问题..."></textarea>
+          <textarea v-model="feedbackContent" class="w-full h-24 p-3 bg-slate-50 border border-outline-variant rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary resize-none" placeholder="请输入您的建议或问题..."></textarea>
           <input v-model="feedbackContact" class="mt-2 w-full px-3 py-2 bg-slate-50 border border-outline-variant rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="联系方式（可选）" />
           <button @click="submitFeedback" :disabled="submittingFeedback" class="mt-3 w-full py-2 bg-primary text-white rounded-lg font-label-bold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50">
             {{ submittingFeedback ? '提交中…' : '提交反馈' }}

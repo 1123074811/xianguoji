@@ -135,7 +135,7 @@
             <h2 class="font-h3 text-h3 text-slate-900">商品详情介绍</h2>
           </div>
           <div class="p-6">
-            <textarea class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-sm min-h-[80px] resize-y" v-model="form.description" placeholder="请输入商品详情介绍"></textarea>
+            <textarea class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-sm min-h-[200px] resize-y" v-model="form.description" placeholder="请输入商品详情介绍"></textarea>
           </div>
         </section>
       </div>

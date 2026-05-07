@@ -85,8 +85,8 @@
                 v-model="replyText"
                 :maxlength="200"
                 :placeholder="'请输入回复内容（不超过200字）'"
-                rows="2"
-                class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm resize-y transition-all"
+                rows="3"
+                class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm resize-none transition-all"
               ></textarea>
               <div class="flex items-center justify-between mt-2">
                 <span class="text-xs text-slate-400">{{ replyText.length }}/200</span>
