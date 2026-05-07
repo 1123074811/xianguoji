@@ -13,7 +13,7 @@
       <!-- Branding Content -->
       <div class="relative z-10 flex flex-col items-center text-center px-12">
         <div class="mb-stack-lg p-6 glass-panel rounded-full shadow-2xl">
-          <span class="material-symbols-outlined text-white text-6xl">restaurant</span>
+          <img src="/images/logo.png" alt="鲜果记" class="w-20 h-20 rounded-full object-cover" />
         </div>
         <h1 class="font-h1 text-h1 text-white tracking-tight mb-stack-sm">鲜果记</h1>
         <p class="font-body-lg text-body-lg text-primary-fixed max-w-md">
@@ -41,7 +41,7 @@
     <section class="flex flex-col w-full md:w-[40%] bg-white items-center justify-center px-container-padding-mobile md:px-container-padding-pc relative">
       <!-- Mobile Brand Logo -->
       <div class="md:hidden flex items-center gap-2 mb-stack-lg">
-        <span class="material-symbols-outlined text-primary text-3xl">restaurant</span>
+        <img src="/images/logo.png" alt="鲜果记" class="w-8 h-8 rounded-lg object-cover" />
         <span class="font-h2 text-h2 text-primary">鲜果记</span>
       </div>
 

@@ -3,8 +3,13 @@
     <!-- SideNavBar -->
     <aside class="fixed left-0 top-0 h-screen w-60 border-r border-slate-200 bg-white flex flex-col z-50 overflow-y-auto">
       <div class="p-6">
-        <h1 class="text-lg font-black text-green-800 uppercase tracking-tight">鲜果日记</h1>
-        <p class="text-xs text-slate-500 font-medium uppercase tracking-wider mt-1">商家管理后台</p>
+        <div class="flex items-center gap-3">
+          <img src="/images/logo.png" alt="鲜果记" class="w-10 h-10 rounded-lg object-cover" />
+          <div>
+            <h1 class="text-lg font-black text-green-800 uppercase tracking-tight">鲜果记</h1>
+            <p class="text-xs text-slate-500 font-medium uppercase tracking-wider">商家管理后台</p>
+          </div>
+        </div>
       </div>
       <nav class="flex-1 space-y-1">
         <router-link v-for="menu in menus" :key="menu.path" :to="menu.path"
@@ -109,6 +114,7 @@ const menus = [
   { name: '营销中心', path: '/campaign', icon: 'campaign' },
   { name: '评价管理', path: '/reviews', icon: 'rate_review' },
   { name: '客户管理', path: '/customers', icon: 'group' },
+  { name: '在线客服', path: '/chat', icon: 'support_agent' },
   { name: '配送设置', path: '/shipping', icon: 'local_shipping' },
   { name: '系统设置', path: '/settings', icon: 'settings' }
 ]

@@ -90,6 +90,11 @@ const router = createRouter({
           component: () => import('../views/Messages.vue')
         },
         {
+          path: 'chat',
+          name: 'Chat',
+          component: () => import('../views/Chat.vue')
+        },
+        {
           path: 'help',
           name: 'HelpCenter',
           component: () => import('../views/HelpCenter.vue')

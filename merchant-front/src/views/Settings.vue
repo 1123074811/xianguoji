@@ -141,7 +141,7 @@
         <!-- Version Info -->
         <section class="bg-surface-container rounded-xl p-6">
           <div class="text-center">
-            <span class="material-symbols-outlined text-primary text-3xl">restaurant</span>
+            <img src="/images/logo.png" alt="鲜果记" class="w-12 h-12 rounded-lg object-cover mx-auto" />
             <h4 class="font-label-bold text-slate-700 mt-2">鲜果记 · 商家版</h4>
             <p class="text-xs text-slate-400 mt-1">v1.0.0</p>
             <p class="text-xs text-slate-400 mt-1">© 2024 鲜果日记</p>

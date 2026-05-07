@@ -9,7 +9,7 @@
       <span class="text-slate-600">{{ isEdit ? '编辑：' + form.name : '新增商品' }}</span>
     </nav>
 
-    <div class="grid grid-cols-12 gap-gutter">
+    <div class="grid grid-cols-12 gap-gutter pb-24">
       <!-- Left Column: Primary Details -->
       <div class="col-span-12 lg:col-span-8 space-y-gutter">
         <!-- Basic Info Module -->
@@ -235,6 +235,95 @@
             <p class="text-xs opacity-70 leading-relaxed">{{ healthTip }}</p>
           </div>
         </section>
+
+        <!-- User-side Preview -->
+        <section class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary">phone_iphone</span>
+              <h3 class="font-label-bold text-label-bold text-slate-900 uppercase tracking-wide">用户端预览</h3>
+            </div>
+            <span class="text-[10px] text-slate-400">实时同步编辑内容</span>
+          </div>
+          <div class="p-4 flex justify-center bg-slate-50">
+            <!-- Phone Frame -->
+            <div class="phone-frame w-[280px] bg-white rounded-[28px] border-[3px] border-slate-800 overflow-hidden shadow-lg relative">
+              <!-- Notch -->
+              <div class="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-slate-800 rounded-b-xl z-10"></div>
+              <!-- Screen Content -->
+              <div class="h-[640px] overflow-y-auto bg-[#fcf9f8] text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <!-- Carousel -->
+                <div class="relative w-full aspect-[4/3] bg-slate-100 overflow-hidden">
+                  <img v-if="previewMainImage" :src="previewMainImage" class="w-full h-full object-cover" />
+                  <div v-else class="w-full h-full flex items-center justify-center">
+                    <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>
+                  </div>
+                  <div v-if="carouselImages.length > 1" class="absolute bottom-2 right-2 bg-black/30 text-white text-[9px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">1/{{ carouselImages.length }}</div>
+                </div>
+                <!-- Price -->
+                <div class="bg-white px-3 py-2 border-b border-slate-100">
+                  <div class="flex items-baseline gap-1">
+                    <span class="text-[10px] text-green-700 font-bold">¥</span>
+                    <span class="text-xl text-green-700 font-black">{{ previewPrice }}</span>
+                    <span v-if="previewOriginalPrice" class="text-[9px] text-slate-400 line-through ml-1">¥{{ previewOriginalPrice }}</span>
+                  </div>
+                  <div class="text-[9px] text-slate-400 mt-0.5">月销 0+</div>
+                </div>
+                <!-- Title -->
+                <div class="bg-white px-3 py-2 border-b border-slate-100">
+                  <div class="text-xs font-semibold text-slate-800 leading-snug">{{ form.name || '商品名称' }}</div>
+                  <div v-if="form.subtitle" class="text-[10px] text-green-600 mt-0.5">{{ form.subtitle }}</div>
+                </div>
+                <!-- Specs -->
+                <div v-if="skuList.length > 0 && skuList.some(s => s.specName)" class="bg-white px-3 py-2 border-b border-slate-100">
+                  <div class="text-[10px] font-semibold text-slate-700 mb-1.5">规格选择</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span v-for="(spec, idx) in skuList.filter(s => s.specName)" :key="idx"
+                      class="px-2 py-0.5 text-[9px] rounded-full border"
+                      :class="idx === 0 ? 'border-green-700 bg-green-50 text-green-700' : 'border-slate-200 text-slate-500'">
+                      {{ spec.specName }}
+                    </span>
+                  </div>
+                </div>
+                <!-- Delivery -->
+                <div v-if="form.supportDelivery || form.supportPickup" class="bg-white px-3 py-2 border-b border-slate-100">
+                  <div v-if="form.supportDelivery" class="flex items-center gap-1.5 mb-1">
+                    <span class="material-symbols-outlined text-green-700" style="font-size:14px">local_shipping</span>
+                    <span class="text-[9px] text-slate-600">同城配送</span>
+                  </div>
+                  <div v-if="form.supportPickup" class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-green-700" style="font-size:14px">storefront</span>
+                    <span class="text-[9px] text-slate-600">支持自提</span>
+                  </div>
+                </div>
+                <!-- Description -->
+                <div v-if="form.description" class="px-3 py-2">
+                  <div class="flex items-center gap-1 mb-1.5">
+                    <div class="w-0.5 h-3 bg-green-700 rounded"></div>
+                    <span class="text-[10px] font-semibold text-slate-700">产品详情</span>
+                  </div>
+                  <p class="text-[9px] text-slate-600 leading-relaxed line-clamp-4">{{ form.description }}</p>
+                </div>
+                <!-- Detail Images -->
+                <div v-if="detailImages.length > 0" class="px-3 pb-3 space-y-1.5">
+                  <img v-for="(img, idx) in detailImages.slice(0, 3)" :key="idx" :src="resolveImageUrl(img)" class="w-full rounded-lg" />
+                  <div v-if="detailImages.length > 3" class="text-[9px] text-slate-400 text-center">还有 {{ detailImages.length - 3 }} 张详情图...</div>
+                </div>
+                <!-- Bottom Bar Preview -->
+                <div class="sticky bottom-0 bg-white border-t border-slate-100 px-3 py-1.5 flex items-center gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-400" style="font-size:16px">chat</span>
+                    <span class="material-symbols-outlined text-slate-400" style="font-size:16px">shopping_cart</span>
+                  </div>
+                  <div class="flex-1 flex gap-1.5">
+                    <div class="flex-1 bg-[#fcf9f8] text-slate-700 text-[9px] font-semibold rounded-full py-1 text-center border border-slate-200">加入购物车</div>
+                    <div class="flex-1 bg-green-700 text-white text-[9px] font-semibold rounded-full py-1 text-center">立即购买</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
 
@@ -348,6 +437,30 @@ const healthTip = computed(() => {
   if (!form.value.description) missing.push('商品描述')
   if (missing.length === 0) return '商品信息完善，搜索可见度已最大化！'
   return `补充${missing.slice(0, 2).join('、')}可提升搜索可见度`
+})
+
+// ---- 用户端预览 ----
+const previewMainImage = computed(() => {
+  const img = carouselImages.value[0] || form.value.mainImage
+  return img ? resolveImageUrl(img) : ''
+})
+
+const previewPrice = computed(() => {
+  const defaultSku = skuList.value.find(s => s.isDefault === 1) || skuList.value[0]
+  if (defaultSku?.price) return defaultSku.price
+  if (skuList.value.length > 0) {
+    const prices = skuList.value.map(s => Number(s.price)).filter(p => p > 0)
+    if (prices.length > 0) return Math.min(...prices).toFixed(2)
+  }
+  return '0.00'
+})
+
+const previewOriginalPrice = computed(() => {
+  const defaultSku = skuList.value.find(s => s.isDefault === 1) || skuList.value[0]
+  if (defaultSku?.originalPrice && Number(defaultSku.originalPrice) > Number(defaultSku?.price || 0)) {
+    return defaultSku.originalPrice
+  }
+  return ''
 })
 
 // ---- 加载数据 ----
