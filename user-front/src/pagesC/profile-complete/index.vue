@@ -149,8 +149,34 @@ function handleSkip() {
 <style lang="scss" scoped>
 .complete-container {
   min-height: 100vh;
-  background-color: $color-bg-page;
-  padding: 0 $space-4;
+  background: linear-gradient(180deg, #eaf6ec 0%, #f6fbf5 30%, $color-bg-page 100%);
+  padding: 0 $space-4 $space-6;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -200rpx;
+    right: -160rpx;
+    width: 480rpx;
+    height: 480rpx;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba($color-primary, 0.18) 0%, rgba($color-primary, 0) 70%);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 280rpx;
+    left: -180rpx;
+    width: 420rpx;
+    height: 420rpx;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba($color-primary, 0.10) 0%, rgba($color-primary, 0) 70%);
+    pointer-events: none;
+  }
 }
 
 .header {
@@ -159,11 +185,14 @@ function handleSkip() {
   flex-direction: column;
   align-items: center;
   gap: $space-2;
+  position: relative;
+  z-index: 1;
 
   .title {
-    font-size: $font-xl;
+    font-size: 44rpx;
     font-weight: $weight-semibold;
     color: $color-text-primary;
+    letter-spacing: 2rpx;
   }
 
   .subtitle {
@@ -176,12 +205,14 @@ function handleSkip() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: $space-4 0;
+  padding: $space-6 0 $space-4;
+  position: relative;
+  z-index: 1;
 
   .avatar-btn {
     position: relative;
-    width: 192rpx;
-    height: 192rpx;
+    width: 200rpx;
+    height: 200rpx;
     padding: 0;
     margin: 0;
     border: none;
@@ -190,49 +221,56 @@ function handleSkip() {
     overflow: visible;
 
     &::after { border: none; }
+    &:active .avatar { transform: scale(0.96); }
 
     .avatar {
-      width: 192rpx;
-      height: 192rpx;
+      width: 200rpx;
+      height: 200rpx;
       border-radius: 50%;
-      border: 4rpx solid #ffffff;
-      box-shadow: $shadow-card;
+      border: 6rpx solid #ffffff;
+      box-shadow: 0 12rpx 32rpx rgba($color-primary, 0.18), 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
       background-color: $color-bg-card;
+      transition: transform 0.2s ease;
     }
 
     .avatar-edit-hint {
       position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 56rpx;
-      height: 56rpx;
-      background-color: $color-primary;
+      bottom: 4rpx;
+      right: 4rpx;
+      width: 60rpx;
+      height: 60rpx;
+      background: linear-gradient(135deg, lighten($color-primary, 8%) 0%, $color-primary 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       border: 4rpx solid #ffffff;
+      box-shadow: 0 4rpx 12rpx rgba($color-primary, 0.3);
     }
   }
 
   .hint {
-    margin-top: $space-2;
+    margin-top: $space-3;
     font-size: $font-xs;
     color: $color-text-secondary;
   }
 }
 
 .form-section {
-  margin-top: $space-4;
-  background-color: $color-bg-card;
-  border-radius: $radius-md;
-  padding: 0 $space-4;
+  margin-top: $space-5;
+  background-color: #ffffff;
+  border-radius: 24rpx;
+  padding: 0 $space-5;
+  box-shadow: 0 8rpx 28rpx rgba(46, 125, 50, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+  position: relative;
+  z-index: 1;
 
   .form-item {
     display: flex;
     align-items: center;
-    padding: $space-4 0;
-    border-bottom: 2rpx solid $color-divider;
+    min-height: 112rpx;
+    padding: $space-3 0;
+    border-bottom: 2rpx solid rgba($color-divider, 0.6);
 
     &:last-child {
       border-bottom: none;
@@ -249,12 +287,15 @@ function handleSkip() {
       flex: 1;
       font-size: $font-base;
       color: $color-text-primary;
+      height: 64rpx;
     }
 
     .phone-value {
       flex: 1;
       font-size: $font-base;
-      color: $color-text-secondary;
+      color: $color-text-primary;
+      font-weight: $weight-medium;
+      letter-spacing: 1rpx;
     }
 
     .phone-unbound {
@@ -265,19 +306,22 @@ function handleSkip() {
 
     .bind-phone-btn {
       flex: 1;
-      height: 64rpx;
-      line-height: 64rpx;
+      height: 72rpx;
+      line-height: 72rpx;
       padding: 0 $space-4;
-      background-color: $color-primary;
+      background: linear-gradient(135deg, lighten($color-primary, 6%) 0%, $color-primary 100%);
       color: #ffffff;
       font-size: $font-sm;
+      font-weight: $weight-medium;
       border-radius: $radius-pill;
       border: none;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 6rpx 16rpx rgba($color-primary, 0.25);
 
       &::after { border: none; }
+      &:active { opacity: 0.9; transform: translateY(1rpx); }
     }
   }
 }
@@ -285,38 +329,43 @@ function handleSkip() {
 .actions {
   display: flex;
   gap: $space-3;
-  padding: $space-6 0;
+  padding: $space-6 0 $space-4;
+  position: relative;
+  z-index: 1;
 
   .skip-btn {
     flex: 1;
     height: 96rpx;
-    background-color: $color-bg-card;
+    background-color: #ffffff;
     color: $color-text-secondary;
     border-radius: $radius-pill;
     font-size: $font-base;
-    border: 2rpx solid $color-divider;
+    border: 2rpx solid rgba($color-divider, 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
 
     &::after { border: none; }
+    &:active { background-color: #f7f7f7; }
   }
 
   .save-btn {
     flex: 2;
     height: 96rpx;
-    background-color: $color-primary;
+    background: linear-gradient(135deg, lighten($color-primary, 8%) 0%, $color-primary 100%);
     color: #ffffff;
     border-radius: $radius-pill;
     font-size: $font-base;
-    font-weight: $weight-medium;
+    font-weight: $weight-semibold;
+    letter-spacing: 4rpx;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8rpx 24rpx rgba($color-primary, 0.2);
+    box-shadow: 0 10rpx 28rpx rgba($color-primary, 0.32);
 
     &::after { border: none; }
-    &:active { opacity: 0.9; }
+    &:active { opacity: 0.92; transform: translateY(1rpx); }
   }
 }
 </style>

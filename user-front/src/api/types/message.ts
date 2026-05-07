@@ -7,6 +7,13 @@ export interface MessageVO {
   createdAt: string;
   linkUrl?: string;
 }
+export interface MessageUnreadCounts {
+  all: number;
+  system: number;
+  promotion: number;
+  logistics: number;
+  chat: number;
+}
 export interface FeedbackVO {
   id: number;
   type: string;

@@ -150,9 +150,9 @@
     <!-- Bottom Action Bar -->
     <view class="bottom-action">
       <view class="nav-btns">
-        <view class="nav-item" @tap="goToHome">
-          <svg-icon name="home" :size="40" color="#757575" />
-          <text class="text">首页</text>
+        <view class="nav-item" @tap="goToChat">
+          <svg-icon name="chat" :size="40" color="#757575" />
+          <text class="text">客服</text>
         </view>
         <view class="nav-item" @tap="goToCart">
           <svg-icon name="shopping_cart" :size="40" color="#757575" />
@@ -277,6 +277,22 @@ function goBack() {
 
 function goToHome() {
   uni.switchTab({ url: '/pages/index/index' });
+}
+
+function goToChat() {
+  const p = goods.value;
+  const sku = activeSku.value;
+  const params: string[] = [];
+  if (p) {
+    params.push(`productId=${p.id}`);
+    params.push(`productName=${encodeURIComponent(p.name)}`);
+    if (p.mainImage) params.push(`productImage=${encodeURIComponent(p.mainImage)}`);
+    if (sku) {
+      params.push(`productPrice=${encodeURIComponent(sku.price)}`);
+      if (sku.specName) params.push(`productSpec=${encodeURIComponent(sku.specName)}`);
+    }
+  }
+  uni.navigateTo({ url: `/pagesC/chat/index${params.length ? '?' + params.join('&') : ''}` });
 }
 
 function goToCart() {

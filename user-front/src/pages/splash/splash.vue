@@ -14,7 +14,7 @@
       <view class="logo-wrapper">
         <view class="logo-bg-glow"></view>
         <view class="logo-circle">
-          <svg-icon name="eco" :size="96" color="#2E7D32" />
+          <image class="logo-img" src="/static/images/logo.png" mode="aspectFit" />
         </view>
       </view>
       
@@ -166,6 +166,12 @@ onMounted(() => {
       justify-content: center;
       border: 2rpx solid #ffffff;
       position: relative;
+      overflow: hidden;
+
+      .logo-img {
+        width: 140rpx;
+        height: 140rpx;
+      }
 
       .logo-icon {
         font-size: 96rpx;

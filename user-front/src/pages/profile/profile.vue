@@ -66,7 +66,6 @@
         </view>
         <view class="service-list">
           <view v-for="service in services" :key="service.id" class="service-item" hover-class="btn-active" @tap="handleServiceClick(service.id)">
-            <button v-if="service.id === 'chat'" class="contact-btn" open-type="contact"></button>
             <svg-icon :name="service.icon" :size="48" color="#2E7D32" />
             <text class="label">{{ service.label }}</text>
           </view>
@@ -186,8 +185,9 @@ function handleAssetClick(id: string) {
 
 function handleServiceClick(id: string) {
   if (id === 'chat') {
-    // handled by button open-type for service-list, but used as message center in top nav
-    uni.navigateTo({ url: '/pagesC/message/index' });
+    requireLogin(() => {
+      uni.navigateTo({ url: '/pagesC/chat/index' });
+    });
     return;
   }
   requireLogin(() => {
@@ -417,13 +417,6 @@ async function handleLogout() {
     align-items: center;
     gap: $space-2;
     position: relative;
-
-    .contact-btn {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      z-index: 1;
-    }
 
     .iconfont {
       font-size: 48rpx;

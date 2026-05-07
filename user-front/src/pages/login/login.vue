@@ -3,7 +3,7 @@
     <!-- Top Brand Area -->
     <view class="header">
       <view class="logo-box">
-        <svg-icon name="potted_plant" :size="72" color="#FFFFFF" />
+        <image class="logo-img" src="/static/images/logo.png" mode="aspectFit" />
       </view>
       <text class="brand-name">鲜果记</text>
       <text class="brand-slogan">精品果园 · 产地直采</text>
@@ -329,6 +329,12 @@ async function handleWechatConfirm() {
     justify-content: center;
     margin-bottom: $space-4;
     box-shadow: 0 8rpx 24rpx rgba($color-primary, 0.12);
+    overflow: hidden;
+
+    .logo-img {
+      width: 120rpx;
+      height: 120rpx;
+    }
 
     .logo-icon {
       color: #ffffff;

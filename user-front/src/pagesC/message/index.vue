@@ -3,50 +3,17 @@
     <view class="message-nav">
       <view
         class="nav-item"
-        :class="{ active: activeType === 'system' }"
+        v-for="item in navItems"
+        :key="item.type"
+        :class="{ active: activeType === item.type }"
         hover-class="btn-active"
-        @tap="handleNavClick('system')"
+        @tap="handleNavClick(item.type)"
       >
-        <view class="icon-wrapper system">
-          <svg-icon name="notification" :size="48" color="#FFFFFF" />
-          <view v-if="unreadCount('system') > 0" class="badge">{{ unreadCount('system') }}</view>
+        <view class="icon-wrapper" :class="item.type">
+          <svg-icon :name="item.icon" :size="48" color="#FFFFFF" />
+          <view v-if="unreadCount(item.type) > 0" class="badge">{{ displayBadge(item.type) }}</view>
         </view>
-        <text class="label">系统通知</text>
-      </view>
-      <view
-        class="nav-item"
-        :class="{ active: activeType === 'promotion' }"
-        hover-class="btn-active"
-        @tap="handleNavClick('promotion')"
-      >
-        <view class="icon-wrapper promotion">
-          <svg-icon name="gift" :size="48" color="#FFFFFF" />
-          <view v-if="unreadCount('promotion') > 0" class="badge">{{ unreadCount('promotion') }}</view>
-        </view>
-        <text class="label">优惠活动</text>
-      </view>
-      <view
-        class="nav-item"
-        :class="{ active: activeType === 'logistics' }"
-        hover-class="btn-active"
-        @tap="handleNavClick('logistics')"
-      >
-        <view class="icon-wrapper logistics">
-          <svg-icon name="shipping" :size="48" color="#FFFFFF" />
-          <view v-if="unreadCount('logistics') > 0" class="badge">{{ unreadCount('logistics') }}</view>
-        </view>
-        <text class="label">交易物流</text>
-      </view>
-      <view
-        class="nav-item"
-        :class="{ active: activeType === 'all' }"
-        hover-class="btn-active"
-        @tap="handleNavClick('all')"
-      >
-        <view class="icon-wrapper all">
-          <svg-icon name="chat" :size="48" color="#FFFFFF" />
-        </view>
-        <text class="label">全部</text>
+        <text class="label">{{ item.label }}</text>
       </view>
     </view>
 
@@ -63,7 +30,10 @@
         hover-class="btn-active"
         @tap="handleMessageTap(msg)"
       >
-        <image class="avatar" :src="msg.avatar" mode="aspectFill" />
+        <image v-if="msg.type === 'chat'" class="avatar" :src="CHAT_AVATAR" mode="aspectFill" />
+        <view v-else class="avatar-icon" :class="msg.type">
+          <svg-icon :name="messageIcon(msg.type)" :size="44" color="#FFFFFF" />
+        </view>
         <view class="content-wrapper">
           <view class="top-row">
             <text class="title">{{ msg.title }}</text>
@@ -75,22 +45,24 @@
       </view>
     </scroll-view>
 
-    <wd-status-tip
-      v-else
-      image="message"
-      tip="暂无新消息"
-      class="empty-box"
-    />
+    <view v-else class="empty-box">
+      <view class="empty-icon">
+        <svg-icon name="chat" :size="72" color="#BDBDBD" />
+      </view>
+      <text class="empty-text">暂无新消息</text>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import SvgIcon from '@/components/svg-icon.vue';
 import { messageApi } from '@/api/modules/message';
-import type { MessageVO } from '@/api/types/message';
+import type { MessageVO, MessageUnreadCounts } from '@/api/types/message';
 
-type MsgType = 'system' | 'promotion' | 'logistics';
+type MsgType = 'system' | 'promotion' | 'logistics' | 'chat';
+type NavType = 'all' | MsgType;
 
 interface Message {
   id: number;
@@ -98,7 +70,6 @@ interface Message {
   title: string;
   desc: string;
   time: string;
-  avatar: string;
   unread: boolean;
   link?: string;
 }
@@ -107,41 +78,103 @@ const titleMap: Record<string, string> = {
   all: '全部消息',
   system: '系统通知',
   promotion: '优惠活动',
-  logistics: '交易物流'
+  logistics: '交易物流',
+  chat: '客服消息'
 };
 
+const CHAT_AVATAR = '/static/images/logo.png';
+
+const navItems: { type: NavType; label: string; icon: string }[] = [
+  { type: 'all', label: '全部消息', icon: 'chat' },
+  { type: 'system', label: '系统通知', icon: 'notification' },
+  { type: 'promotion', label: '优惠活动', icon: 'gift' },
+  { type: 'logistics', label: '交易物流', icon: 'shipping' },
+  { type: 'chat', label: '客服消息', icon: 'chat' },
+];
+
 const messages = ref<Message[]>([]);
-const activeType = ref<'all' | MsgType>('all');
+const activeType = ref<NavType>('all');
+const unreadCounts = ref<MessageUnreadCounts>({
+  all: 0,
+  system: 0,
+  promotion: 0,
+  logistics: 0,
+  chat: 0,
+});
 
 const filteredMessages = computed(() => {
   if (activeType.value === 'all') return messages.value;
   return messages.value.filter(m => m.type === activeType.value);
 });
 
-onMounted(loadMessages);
+onShow(() => {
+  loadMessages();
+});
 
-function unreadCount(type: MsgType) {
-  return messages.value.filter(m => m.type === type && m.unread).length;
+function unreadCount(type: NavType) {
+  return unreadCounts.value[type] || 0;
 }
 
-function handleNavClick(type: 'all' | MsgType) {
+function displayBadge(type: NavType) {
+  const count = unreadCount(type);
+  return count > 99 ? '99+' : String(count);
+}
+
+function handleNavClick(type: NavType) {
   activeType.value = type;
+  loadMessages();
 }
 
 async function loadMessages() {
   try {
-    const data = await messageApi.page({ page: 1, size: 100 });
+    const type = messageTypeParam(activeType.value);
+    const data = await messageApi.page({ page: 1, size: 100, ...(type ? { type } : {}) });
     messages.value = data.list.map(mapMessage);
+    await loadUnreadCounts();
   } catch (e) {
     console.warn('消息加载失败', e);
     messages.value = [];
   }
 }
 
+async function loadUnreadCounts() {
+  try {
+    const data = await messageApi.unreadCounts();
+    unreadCounts.value = {
+      all: data.all || 0,
+      system: data.system || 0,
+      promotion: data.promotion || 0,
+      logistics: data.logistics || 0,
+      chat: data.chat || 0,
+    };
+  } catch (e) {
+    const system = messages.value.filter(m => m.type === 'system' && m.unread).length;
+    const promotion = messages.value.filter(m => m.type === 'promotion' && m.unread).length;
+    const logistics = messages.value.filter(m => m.type === 'logistics' && m.unread).length;
+    const chat = messages.value.filter(m => m.type === 'chat' && m.unread).length;
+    unreadCounts.value = {
+      system,
+      promotion,
+      logistics,
+      chat,
+      all: system + promotion + logistics + chat,
+    };
+  }
+}
+
 async function handleMessageTap(msg: Message) {
   if (msg.unread) {
     msg.unread = false;
-    messageApi.markRead(msg.id).catch(() => {});
+    decrementUnread(msg.type);
+    messageApi.markRead(msg.id).then(loadUnreadCounts).catch(loadUnreadCounts);
+  }
+  if (msg.type === 'chat') {
+    uni.navigateTo({ url: '/pagesC/chat/index' });
+    return;
+  }
+  if (msg.type === 'system') {
+    uni.navigateTo({ url: `/pagesC/message/detail?id=${msg.id}` });
+    return;
   }
   if (msg.link) {
     if (msg.link.startsWith('/pages/')) {
@@ -149,13 +182,16 @@ async function handleMessageTap(msg: Message) {
     } else {
       uni.navigateTo({ url: msg.link });
     }
+    return;
   }
+  uni.navigateTo({ url: `/pagesC/message/detail?id=${msg.id}` });
 }
 
 async function markAllRead() {
   try {
-    await messageApi.markAllRead();
+    await messageApi.markAllRead(messageTypeParam(activeType.value));
     filteredMessages.value.forEach(m => (m.unread = false));
+    await loadUnreadCounts();
     uni.showToast({ title: '已全部标为已读', icon: 'success' });
   } catch (e) {
     console.warn('全部已读失败', e);
@@ -163,13 +199,13 @@ async function markAllRead() {
 }
 
 function mapMessage(msg: MessageVO): Message {
+  const type = mapMsgType(msg.type);
   return {
     id: msg.id,
-    type: mapMsgType(msg.type),
+    type,
     title: msg.title,
     desc: msg.content,
     time: formatTime(msg.createdAt),
-    avatar: '/static/images/wechat-logo.png',
     unread: msg.isRead === 0,
     link: msg.linkUrl,
   };
@@ -178,7 +214,28 @@ function mapMessage(msg: MessageVO): Message {
 function mapMsgType(type: number): MsgType {
   if (type === 3) return 'promotion';
   if (type === 2 || type === 4) return 'logistics';
+  if (type === 6) return 'chat';
   return 'system';
+}
+
+function messageTypeParam(type: NavType) {
+  if (type === 'promotion') return 3;
+  if (type === 'logistics') return 2;
+  if (type === 'chat') return 6;
+  if (type === 'system') return 1;
+  return undefined;
+}
+
+function messageIcon(type: MsgType) {
+  if (type === 'promotion') return 'gift';
+  if (type === 'logistics') return 'shipping';
+  if (type === 'chat') return 'chat';
+  return 'notification';
+}
+
+function decrementUnread(type: MsgType) {
+  unreadCounts.value[type] = Math.max(0, unreadCounts.value[type] - 1);
+  unreadCounts.value.all = Math.max(0, unreadCounts.value.all - 1);
 }
 
 function formatTime(value?: string) {
@@ -227,6 +284,7 @@ function formatTime(value?: string) {
       &.system { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
       &.promotion { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); }
       &.logistics { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+      &.chat { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
       &.all { background: linear-gradient(135deg, #2E7D32 0%, #8BC34A 100%); }
 
       .badge {
@@ -290,6 +348,21 @@ function formatTime(value?: string) {
       margin-right: $space-3;
     }
 
+    .avatar-icon {
+      width: 96rpx;
+      height: 96rpx;
+      border-radius: 50%;
+      margin-right: $space-3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      &.system { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+      &.promotion { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); }
+      &.logistics { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    }
+
     .content-wrapper {
       flex: 1;
       display: flex;
@@ -335,7 +408,29 @@ function formatTime(value?: string) {
 }
 
 .empty-box {
-  margin-top: 200rpx;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-3;
+  padding-top: 120rpx;
+
+  .empty-icon {
+    width: 128rpx;
+    height: 128rpx;
+    border-radius: 50%;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: $shadow-card;
+  }
+
+  .empty-text {
+    font-size: $font-sm;
+    color: $color-text-secondary;
+  }
 }
 </style>
 
