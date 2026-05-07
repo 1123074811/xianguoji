@@ -29,7 +29,10 @@
 
       <!-- New Address Form -->
       <view class="form-section">
-        <view class="form-title">新增收货地址</view>
+        <view class="form-header">
+          <view class="form-title">{{ editingAddressId ? '编辑收货地址' : '新增收货地址' }}</view>
+          <button v-if="editingAddressId" class="cancel-edit-btn" @tap="cancelEdit">取消编辑</button>
+        </view>
 
         <!-- Quick Import Buttons -->
         <view class="quick-import-row">
@@ -47,8 +50,9 @@
         <view class="paste-row">
           <textarea
             class="paste-input"
-            placeholder="粘贴收件信息一键导入\n如: 收件人: 张三\n手机号码: 13800138000\n所在地区: 广东省深圳市南山区\n详细地址: 科技园路1号"
+            placeholder="粘贴收件信息，支持自动识别姓名、手机号和地址"
             v-model="pasteText"
+            auto-height
             :maxlength="-1"
           />
           <view class="paste-btn-wrap">
@@ -74,7 +78,7 @@
         </view>
         <view class="form-item">
           <text class="label">详细地址</text>
-          <textarea class="textarea" placeholder="街道、楼牌号等" :maxlength="-1" v-model="newAddr.detail" />
+          <textarea class="textarea" placeholder="街道、楼牌号等" auto-height :maxlength="-1" v-model="newAddr.detail" />
         </view>
         <view class="switch-row">
           <text class="label">设为默认地址</text>
@@ -85,7 +89,7 @@
 
     <!-- Bottom Bar -->
     <view class="bottom-bar">
-      <button class="save-btn" @tap="handleSave">保存并使用</button>
+      <button class="save-btn" @tap="handleSave">{{ editingAddressId ? '保存修改' : '保存并使用' }}</button>
     </view>
   </view>
 </template>
@@ -113,6 +117,7 @@ async function loadAddresses() {
 onMounted(() => loadAddresses());
 
 const pasteText = ref('');
+const editingAddressId = ref<number | null>(null);
 
 const newAddr = ref({
   consignee: '',
@@ -142,6 +147,7 @@ function handleSelect(addr: AddressVO) {
 }
 
 function handleEdit(addr: AddressVO) {
+  editingAddressId.value = addr.id;
   newAddr.value = {
     consignee: addr.consignee,
     phone: addr.phone,
@@ -152,8 +158,31 @@ function handleEdit(addr: AddressVO) {
     detail: addr.detail,
     isDefault: addr.isDefault,
     tag: addr.tag || '',
+    longitude: addr.longitude,
+    latitude: addr.latitude,
   };
   uni.pageScrollTo({ selector: '.form-section', duration: 300 });
+}
+
+function resetForm() {
+  editingAddressId.value = null;
+  newAddr.value = {
+    consignee: '',
+    phone: '',
+    region: '',
+    province: '',
+    city: '',
+    district: '',
+    detail: '',
+    isDefault: false,
+    tag: '',
+    longitude: undefined,
+    latitude: undefined,
+  };
+}
+
+function cancelEdit() {
+  resetForm();
 }
 
 function onRegionChange(result: { province: string; city: string; district: string }) {
@@ -367,7 +396,7 @@ async function handleSave() {
     return uni.showToast({ title: '请填写完整地址信息', icon: 'none' });
   }
   try {
-    await userApi.addAddress({
+    const addressData = {
       consignee: newAddr.value.consignee,
       phone: newAddr.value.phone,
       province: newAddr.value.province,
@@ -378,13 +407,14 @@ async function handleSave() {
       tag: newAddr.value.tag || undefined,
       longitude: newAddr.value.longitude,
       latitude: newAddr.value.latitude,
-    });
-    uni.showToast({ title: '地址已保存', icon: 'success' });
-    // Reset form
-    newAddr.value = {
-      consignee: '', phone: '', region: '', province: '', city: '', district: '',
-      detail: '', isDefault: false, tag: '', longitude: undefined, latitude: undefined,
     };
+    if (editingAddressId.value) {
+      await userApi.updateAddress(editingAddressId.value, addressData);
+    } else {
+      await userApi.addAddress(addressData);
+    }
+    uni.showToast({ title: editingAddressId.value ? '地址已修改' : '地址已保存', icon: 'success' });
+    resetForm();
     loadAddresses();
   } catch (e) {
     console.warn('保存地址失败', e);
@@ -422,6 +452,8 @@ async function handleSave() {
 
 .main-scroll {
   flex: 1;
+  min-height: 0;
+  height: calc(100vh - 104rpx);
   overflow: hidden;
   padding: 0 $space-4;
 }
@@ -484,11 +516,31 @@ async function handleSave() {
   border-radius: $radius-lg;
   margin-bottom: 160rpx;
 
+  .form-header {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $space-4;
+  }
+
   .form-title {
     font-size: $font-base;
     font-weight: $weight-semibold;
     color: $color-primary;
-    margin-bottom: $space-4;
+  }
+
+  .cancel-edit-btn {
+    margin: 0;
+    padding: 0 $space-3;
+    height: 56rpx;
+    line-height: 56rpx;
+    border-radius: $radius-pill;
+    background-color: rgba($color-primary, 0.08);
+    color: $color-primary;
+    font-size: $font-xs;
+    font-weight: $weight-semibold;
+    &::after { border: none; }
   }
 }
 
@@ -537,11 +589,12 @@ async function handleSave() {
     background-color: #ffffff;
     border: 2rpx solid $color-divider;
     border-radius: $radius-sm;
-    padding: $space-3;
+    padding: $space-2;
     font-size: $font-sm;
-    height: 240rpx;
+    min-height: 72rpx;
     width: auto;
-    line-height: 1.8;
+    line-height: 32rpx;
+    box-sizing: border-box;
   }
 
   .paste-btn-wrap {
@@ -600,10 +653,11 @@ async function handleSave() {
     background-color: #ffffff;
     border: 2rpx solid $color-divider;
     border-radius: $radius-sm;
-    padding: $space-3;
+    padding: $space-2 $space-3;
     font-size: $font-sm;
     width: 100%;
-    height: 160rpx;
+    min-height: 72rpx;
+    line-height: 32rpx;
     box-sizing: border-box;
   }
 }
