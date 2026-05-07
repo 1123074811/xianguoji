@@ -1,0 +1,77 @@
+spring:
+  profiles:
+    active: test
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${TEST_DB_URL:jdbc:mysql://localhost:3306/xianguoji_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${TEST_DB_USER:root}
+    password: ${TEST_DB_PASSWORD:test}
+    druid:
+      initial-size: 2
+      min-idle: 2
+      max-active: 10
+      validation-query: SELECT 1
+  data:
+    redis:
+      host: ${TEST_REDIS_HOST:localhost}
+      port: ${TEST_REDIS_PORT:6379}
+      database: 1
+      password: ${TEST_REDIS_PASSWORD:}
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.xianguoji.server.module.*.entity
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+
+xianguoji:
+  cache:
+    enabled: true
+  jwt:
+    active-kid: v1
+    secrets:
+      v1: test_secret_key_32_bytes_long_for_testing
+      v2: ""
+    user-access-ttl-minutes: 120
+    user-refresh-ttl-hours: 168
+    admin-access-ttl-minutes: 30
+    admin-refresh-ttl-hours: 12
+    secret: ""
+  upload:
+    base-dir: /tmp/xianguoji/upload
+    domain: http://localhost:8080/static
+  oss:
+    endpoint: ""
+    access-key-id: ""
+    access-key-secret: ""
+    bucket: ""
+    domain: ""
+  sms:
+    provider: mock
+  wechat:
+    appid: test_appid
+    secret: test_secret
+    pay:
+      mch-id: ""
+      api-key-v3: ""
+  security:
+    alert-webhook: ""
+    upload-max-size-mb: 10
+    brute-force-max-attempts: 5
+    brute-force-lock-minutes: 15
+
+logging:
+  level:
+    com.xianguoji: debug
+    org.testcontainers: info
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId:-}] %-5level %logger{36} - %msg%n"
