@@ -107,7 +107,6 @@ const userStore = useUserStore();
 const isManaging = ref(false);
 
 onShow(async () => {
-  uni.hideTabBar();
   if (userStore.isLogin) {
     await cartStore.refreshList();
   }

@@ -91,7 +91,6 @@ import SvgIcon from '@/components/svg-icon.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
 
 onShow(async () => {
-  uni.hideTabBar();
   if (userStore.isLogin) {
     await userStore.fetchProfile();
   }

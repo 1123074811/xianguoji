@@ -75,7 +75,6 @@ import { catalogApi } from '@/api/modules/catalog';
 import type { CategoryTreeVO, ProductVO } from '@/api/types/catalog';
 
 onShow(() => {
-  uni.hideTabBar();
   refresh();
 });
 

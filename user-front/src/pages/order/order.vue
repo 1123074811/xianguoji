@@ -113,7 +113,6 @@ function statusText(order: OrderVO) {
 }
 
 onShow(async () => {
-  uni.hideTabBar();
   const storedTab = uni.getStorageSync('orderActiveTab');
   if (storedTab && tabs.find(t => t.id === storedTab)) {
     activeTabId.value = storedTab;
