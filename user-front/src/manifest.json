@@ -8,9 +8,14 @@
     "mp-weixin" : {
         "appid" : "wxfbb4085f2c6b2992",
         "setting" : {
-            "urlCheck" : false
+            "urlCheck" : false,
+            "minified" : true
         },
         "usingComponents" : true,
+        "lazyCodeLoading" : "requiredComponents",
+        "optimization" : {
+            "subPackages" : true
+        },
         "permission" : {
             "scope.userLocation" : {
                 "desc" : "您的位置将用于展示附近的自提点"
