@@ -75,7 +75,19 @@ public class GroupBuyServiceImpl implements GroupBuyService {
                 new LambdaQueryWrapper<GroupBuyActivity>()
                         .eq(GroupBuyActivity::getStatus, 1)
                         .orderByDesc(GroupBuyActivity::getCreatedAt));
-        List<GroupBuyActivityVO> voList = p.getRecords().stream().map(this::toActivityVO).toList();
+        List<GroupBuyActivityVO> voList = p.getRecords().stream().map(this::toActivityVO).collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
+        return new PageVO<>(p.getTotal(), voList, page, size);
+    }
+
+    @Override
+    public PageVO<GroupBuyActivityVO> getAdminGroupBuyPage(Integer page, Integer size, Integer status) {
+        LambdaQueryWrapper<GroupBuyActivity> wrapper = new LambdaQueryWrapper<GroupBuyActivity>()
+                .orderByDesc(GroupBuyActivity::getCreatedAt);
+        if (status != null) {
+            wrapper.eq(GroupBuyActivity::getStatus, status);
+        }
+        Page<GroupBuyActivity> p = activityMapper.selectPage(new Page<>(page, size), wrapper);
+        List<GroupBuyActivityVO> voList = p.getRecords().stream().map(this::toActivityVO).collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
         return new PageVO<>(p.getTotal(), voList, page, size);
     }
 
@@ -561,6 +573,15 @@ public class GroupBuyServiceImpl implements GroupBuyService {
     private GroupBuyActivityVO toActivityVO(GroupBuyActivity a) {
         Product product = productMapper.selectById(a.getProductId());
         ProductSku sku = skuMapper.selectById(a.getSkuId());
+        long ongoing = instanceMapper.selectCount(new LambdaQueryWrapper<GroupBuyInstance>()
+                .eq(GroupBuyInstance::getActivityId, a.getId())
+                .eq(GroupBuyInstance::getStatus, 1));
+        long success = instanceMapper.selectCount(new LambdaQueryWrapper<GroupBuyInstance>()
+                .eq(GroupBuyInstance::getActivityId, a.getId())
+                .eq(GroupBuyInstance::getStatus, 2));
+        long failed = instanceMapper.selectCount(new LambdaQueryWrapper<GroupBuyInstance>()
+                .eq(GroupBuyInstance::getActivityId, a.getId())
+                .eq(GroupBuyInstance::getStatus, 3));
         return GroupBuyActivityVO.builder()
                 .id(a.getId())
                 .productId(a.getProductId())
@@ -571,10 +592,15 @@ public class GroupBuyServiceImpl implements GroupBuyService {
                 .originalPrice(sku != null ? sku.getOriginalPrice() : BigDecimal.ZERO)
                 .groupSize(a.getGroupSize())
                 .validHours(a.getValidHours())
+                .startTime(a.getStartTime())
                 .endTime(a.getEndTime())
                 .totalJoinCount(a.getTotalJoinCount())
                 .successCount(a.getSuccessCount())
                 .status(a.getStatus())
+                .ongoingCount((int) ongoing)
+                .instanceSuccessCount((int) success)
+                .instanceFailedCount((int) failed)
+                .createdAt(a.getCreatedAt())
                 .build();
     }
 }

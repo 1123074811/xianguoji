@@ -11,6 +11,8 @@ public interface GroupBuyService {
 
     PageVO<GroupBuyActivityVO> getGroupBuyPage(Integer page, Integer size);
 
+    PageVO<GroupBuyActivityVO> getAdminGroupBuyPage(Integer page, Integer size, Integer status);
+
     Long launch(Long uid, GroupBuyLaunchDto dto);
 
     Long join(Long uid, Long instanceId, com.xianguoji.server.module.promo.dto.GroupBuyJoinDto dto);

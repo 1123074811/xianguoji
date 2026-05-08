@@ -24,8 +24,16 @@ public class GroupBuyActivityVO {
     private BigDecimal originalPrice;
     private Integer groupSize;
     private Integer validHours;
+    private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Integer totalJoinCount;
     private Integer successCount;
     private Integer status;
+    /** 进行中团数 */
+    private Integer ongoingCount;
+    /** 成团数 */
+    private Integer instanceSuccessCount;
+    /** 失败团数 */
+    private Integer instanceFailedCount;
+    private LocalDateTime createdAt;
 }

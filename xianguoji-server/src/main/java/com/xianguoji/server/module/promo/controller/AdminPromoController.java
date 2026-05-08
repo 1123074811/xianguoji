@@ -197,14 +197,8 @@ public class AdminPromoController {
     @Operation(summary = "拼团活动列表")
     @GetMapping("/group-buy/list")
     @AdminRequired
-    public R<PageVO<GroupBuyActivity>> groupBuyList(AdminPromoQry qry) {
-        LambdaQueryWrapper<GroupBuyActivity> wrapper = new LambdaQueryWrapper<GroupBuyActivity>()
-                .orderByDesc(GroupBuyActivity::getCreatedAt);
-        if (qry.getStatus() != null) {
-            wrapper.eq(GroupBuyActivity::getStatus, qry.getStatus());
-        }
-        Page<GroupBuyActivity> page = groupBuyActivityMapper.selectPage(new Page<>(qry.getPage(), qry.getSize()), wrapper);
-        return R.ok(new PageVO<>(page.getTotal(), page.getRecords(), qry.getPage(), qry.getSize()));
+    public R<PageVO<com.xianguoji.server.module.promo.vo.GroupBuyActivityVO>> groupBuyList(AdminPromoQry qry) {
+        return R.ok(groupBuyService.getAdminGroupBuyPage(qry.getPage(), qry.getSize(), qry.getStatus()));
     }
 
     @Operation(summary = "新增拼团活动")
