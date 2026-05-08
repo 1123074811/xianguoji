@@ -3,7 +3,6 @@
     <!-- Top Navigation -->
     <view class="header-nav-sticky">
       <view class="left">
-        <svg-icon name="arrow-back" :size="40" color="#757575" @click="goBack" />
         <text class="title">我的订单</text>
       </view>
       <view class="right-icons" style="display: flex; gap: 24rpx;">
@@ -227,10 +226,6 @@ watch(activeTabId, () => fetchOrders(true));
 
 function loadMore() {
   fetchOrders();
-}
-
-function goBack() {
-  uni.navigateBack();
 }
 
 function goToMessage() {

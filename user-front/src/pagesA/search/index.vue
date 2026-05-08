@@ -2,13 +2,17 @@
   <view class="page-container">
     <!-- Search Header -->
     <view class="search-header">
-      <wd-search
-        v-model="keyword"
-        placeholder="搜索新鲜水果、蔬菜"
-        focus
-        hide-cancel
-        @search="handleSearch"
-      />
+      <view class="search-input-wrap">
+        <svg-icon name="search" :size="32" color="#BDBDBD" />
+        <input
+          class="search-input"
+          v-model="keyword"
+          placeholder="搜索新鲜水果、蔬菜"
+          confirm-type="search"
+          @confirm="handleSearch"
+          focus
+        />
+      </view>
       <text class="search-btn" @tap="handleSearch">搜索</text>
     </view>
 
@@ -73,18 +77,21 @@ onMounted(async () => {
     console.warn('加载热门搜索失败', e);
   }
   // 加载历史搜索（需登录）
+  let rawHistory: string[] = [];
   if (userStore.isLogin) {
     try {
-      historyList.value = await catalogApi.searchHistory();
+      rawHistory = await catalogApi.searchHistory();
     } catch (e) {
       // 未登录时从本地缓存读取
       const history = uni.getStorageSync('searchHistory');
-      if (history) historyList.value = JSON.parse(history);
+      if (history) rawHistory = JSON.parse(history);
     }
   } else {
     const history = uni.getStorageSync('searchHistory');
-    if (history) historyList.value = JSON.parse(history);
+    if (history) rawHistory = JSON.parse(history);
   }
+  // 去重：保留首次出现（即最新）的顺序
+  historyList.value = [...new Set(rawHistory)];
 });
 
 async function handleSearch() {
@@ -147,10 +154,22 @@ async function clearHistory() {
   gap: $space-3;
   border-bottom: 2rpx solid $color-divider;
 
-  :deep(.wd-search) {
+  .search-input-wrap {
     flex: 1;
-    padding: 0;
-    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    background-color: $color-bg-page;
+    border-radius: $radius-pill;
+    padding: $space-2 $space-3;
+    height: 72rpx;
+
+    .search-input {
+      flex: 1;
+      font-size: $font-base;
+      color: $color-text-primary;
+      height: 100%;
+    }
   }
 
   .search-btn {
@@ -199,6 +218,10 @@ async function clearHistory() {
       display: flex;
       align-items: center;
       gap: 4rpx;
+      max-width: 240rpx;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
 
       &.hot {
         background-color: rgba($color-price, 0.05);
@@ -207,6 +230,7 @@ async function clearHistory() {
 
       .hot-icon {
         margin-right: 4rpx;
+        flex-shrink: 0;
       }
     }
   }
