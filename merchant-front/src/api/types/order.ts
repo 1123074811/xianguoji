@@ -20,6 +20,7 @@ export interface AdminOrderVO {
   payAmount: string;
   userRemark?: string;
   cancelReason?: string;
+  groupBuyInstanceId?: number;
   payTime?: string;
   deliveredAt?: string;
   finishedAt?: string;

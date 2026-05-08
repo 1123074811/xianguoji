@@ -37,4 +37,8 @@ export interface AdminGroupBuyVO {
   totalJoinCount?: number;
   successCount?: number;
   status: number;
+  ongoingCount?: number;
+  instanceSuccessCount?: number;
+  instanceFailedCount?: number;
+  createdAt?: string;
 }

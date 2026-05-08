@@ -2,16 +2,21 @@
   <div>
     <!-- Page Header -->
     <div class="mb-stack-lg flex justify-between items-end">
-      <div>
-        <h1 class="font-h1 text-h1 text-on-surface mb-1">营销管理</h1>
-        <p class="font-body-md text-body-md text-slate-500">优惠券与促销活动管理，助力销售增长。</p>
+      <div class="flex items-center gap-6">
+        <div>
+          <h1 class="font-h1 text-h1 text-on-surface mb-1">营销管理</h1>
+          <p class="font-body-md text-body-md text-slate-500">优惠券与促销活动管理，助力销售增长。</p>
+        </div>
+        <el-segmented v-model="activeSection" :options="sectionOptions" size="default" />
       </div>
-      <router-link to="/campaign/coupon/create" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg flex items-center gap-2 font-label-bold shadow-md hover:translate-y-[-1px] transition-all">
+      <router-link v-if="activeSection === 'coupon'" to="/campaign/coupon/create" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg flex items-center gap-2 font-label-bold shadow-md hover:translate-y-[-1px] transition-all">
         <span class="material-symbols-outlined">add</span>
         创建优惠券
       </router-link>
     </div>
 
+    <!-- ===== 优惠券视图 ===== -->
+    <template v-if="activeSection === 'coupon'">
     <!-- Marketing Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-stack-lg">
       <div v-for="stat in stats" :key="stat.label" class="bg-white p-stack-md border border-outline-variant rounded-xl shadow-sm hover:shadow-md transition-shadow">
@@ -26,7 +31,10 @@
         <p class="text-xs text-slate-400 mt-2">{{ stat.desc }}</p>
       </div>
     </div>
+    </template>
 
+    <!-- ===== 拼团视图 ===== -->
+    <template v-if="activeSection === 'groupBuy'">
     <!-- Group-Buy Stats -->
     <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-stack-md mb-stack-lg">
       <div class="flex items-center justify-between mb-stack-sm">
@@ -60,8 +68,129 @@
       </div>
     </div>
 
+    <!-- Group-Buy Activity Table -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col mb-stack-lg">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">list_alt</span>
+          <h2 class="font-h3 text-h3 text-on-surface">拼团活动</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <button v-for="gbTab in groupBuyTabs" :key="gbTab.label" @click="switchGroupBuyTab(gbTab.status)"
+            class="px-3 py-1 text-xs font-label-bold rounded-full transition-colors"
+            :class="gbCurrentStatus === gbTab.status ? 'bg-primary text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'">
+            {{ gbTab.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div v-if="gbLoading" class="flex items-center justify-center py-12">
+        <span class="material-symbols-outlined animate-spin text-4xl text-primary">refresh</span>
+        <span class="ml-3 text-slate-500">加载中...</span>
+      </div>
+
+      <!-- Empty -->
+      <div v-else-if="groupBuyList.length === 0" class="flex flex-col items-center justify-center py-12">
+        <span class="material-symbols-outlined text-6xl text-slate-300 mb-4">groups</span>
+        <p class="text-slate-500 font-label-bold mb-2">暂无拼团活动</p>
+        <p class="text-slate-400 text-sm">在商品编辑页中启用拼团设置即可创建</p>
+      </div>
+
+      <!-- Table -->
+      <div v-else class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase">商品</th>
+              <th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase">拼团价</th>
+              <th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase text-center">成团人数</th>
+              <th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase text-center">参团人数</th>
+              <th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase text-center">进行中</th>
+              <th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase text-center">已成团</th>
+              <th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase text-center">已失败</th>
+              <th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase">活动时间</th>
+              <th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase text-center">状态</th>
+              <th class="px-6 py-3 font-table-header text-table-header text-slate-500 uppercase text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr v-for="gb in groupBuyList" :key="gb.id" class="hover:bg-slate-50 transition-colors h-[48px]">
+              <td class="px-6 py-3">
+                <div class="flex items-center gap-3">
+                  <img v-if="gb.mainImage" :src="gb.mainImage" class="w-9 h-9 rounded-lg object-cover border border-slate-100" />
+                  <span class="font-label-bold text-slate-800 truncate max-w-[160px]">{{ gb.productName || `商品#${gb.productId}` }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-3">
+                <span class="text-error font-bold">¥{{ gb.groupPrice }}</span>
+                <span v-if="gb.originalPrice" class="text-xs text-slate-400 line-through ml-1">¥{{ gb.originalPrice }}</span>
+              </td>
+              <td class="px-6 py-3 text-center font-label-bold">{{ gb.groupSize }}人</td>
+              <td class="px-6 py-3 text-center font-label-bold">{{ gb.totalJoinCount ?? 0 }}</td>
+              <td class="px-6 py-3 text-center">
+                <span v-if="(gb.ongoingCount ?? 0) > 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">{{ gb.ongoingCount }}</span>
+                <span v-else class="text-slate-400">0</span>
+              </td>
+              <td class="px-6 py-3 text-center">
+                <span v-if="(gb.instanceSuccessCount ?? 0) > 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">{{ gb.instanceSuccessCount }}</span>
+                <span v-else class="text-slate-400">0</span>
+              </td>
+              <td class="px-6 py-3 text-center">
+                <span v-if="(gb.instanceFailedCount ?? 0) > 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600 border border-red-200">{{ gb.instanceFailedCount }}</span>
+                <span v-else class="text-slate-400">0</span>
+              </td>
+              <td class="px-6 py-3 text-sm text-slate-600">
+                <div>{{ formatDate(gb.startTime) }}</div>
+                <div class="text-xs text-slate-400">至 {{ formatDate(gb.endTime) }}</div>
+              </td>
+              <td class="px-6 py-3 text-center">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border" :class="gbStatusClass(gb.status)">{{ gbStatusText(gb.status) }}</span>
+              </td>
+              <td class="px-6 py-3 text-right">
+                <div class="flex items-center justify-end gap-2 text-slate-400">
+                  <Popconfirm v-if="gb.status === 1" title="结束拼团" :message="`确定要结束拼团活动「${gb.productName || '#' + gb.productId}」吗？进行中的团不受影响。`" type="warning" confirm-text="结束" @confirm="doEndGroupBuy(gb)">
+                    <Tooltip text="结束活动">
+                      <button class="p-1 hover:text-amber-500 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">stop_circle</span>
+                      </button>
+                    </Tooltip>
+                  </Popconfirm>
+                  <Popconfirm title="删除拼团" :message="`确定要删除拼团活动「${gb.productName || '#' + gb.productId}」吗？此操作不可撤销。`" type="danger" confirm-text="删除" @confirm="doDeleteGroupBuy(gb)">
+                    <Tooltip text="删除活动">
+                      <button class="p-1 hover:text-error transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                      </button>
+                    </Tooltip>
+                  </Popconfirm>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="!gbLoading && groupBuyList.length > 0" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-surface-container-low">
+        <span class="text-body-sm text-slate-500">
+          共 {{ gbTotal }} 条活动
+        </span>
+        <div class="flex items-center gap-1">
+          <button @click="gbPage > 1 && (gbPage--, loadGroupBuyList())" :disabled="gbPage <= 1" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-sm">chevron_left</span>
+          </button>
+          <span class="px-2 text-sm text-slate-500">{{ gbPage }} / {{ gbTotalPages }}</span>
+          <button @click="gbPage < gbTotalPages && (gbPage++, loadGroupBuyList())" :disabled="gbPage >= gbTotalPages" class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-sm">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    </template>
+
     <!-- Coupon List Card -->
-    <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
+    <div v-if="activeSection === 'coupon'" class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
       <!-- Tabs -->
       <div class="flex items-center px-6 border-b border-slate-100 overflow-x-auto">
         <button v-for="tab in couponTabs" :key="tab.label" @click="switchTab(tab.status)"
@@ -174,13 +303,21 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElSegmented } from 'element-plus'
 import { adminPromoApi, type CouponStatsVO, type GroupBuyStatsVO } from '@/api/modules/promo'
-import type { AdminCouponVO } from '@/api/types/promo'
+import type { AdminCouponVO, AdminGroupBuyVO } from '@/api/types/promo'
 import Tooltip from '@/components/Tooltip.vue'
 import Popconfirm from '@/components/Popconfirm.vue'
 import { toast } from '@/utils/toast'
 
 const router = useRouter()
+
+// 分段控制器
+const activeSection = ref<'coupon' | 'groupBuy'>('coupon')
+const sectionOptions = [
+  { label: '优惠券', value: 'coupon' },
+  { label: '拼团', value: 'groupBuy' },
+]
 
 // 响应式数据
 const loading = ref(false)
@@ -197,6 +334,77 @@ const groupBuyStats = ref<GroupBuyStatsVO | null>(null)
 const loadGroupBuyStats = async () => {
   try { groupBuyStats.value = await adminPromoApi.groupBuyStats() }
   catch (e) { console.warn('加载拼团统计失败', e) }
+}
+
+// ===== 拼团活动列表 =====
+const groupBuyList = ref<AdminGroupBuyVO[]>([])
+const gbLoading = ref(false)
+const gbTotal = ref(0)
+const gbPage = ref(1)
+const gbPageSize = 10
+const gbCurrentStatus = ref<number | null>(null)
+const gbTotalPages = computed(() => Math.max(1, Math.ceil(gbTotal.value / gbPageSize)))
+
+const groupBuyTabs = [
+  { label: '全部', status: null },
+  { label: '进行中', status: 1 },
+  { label: '已结束', status: 0 },
+]
+
+const switchGroupBuyTab = (status: number | null) => {
+  gbCurrentStatus.value = status
+  gbPage.value = 1
+  loadGroupBuyList()
+}
+
+const loadGroupBuyList = async () => {
+  gbLoading.value = true
+  try {
+    const params: any = { page: gbPage.value, size: gbPageSize }
+    if (gbCurrentStatus.value !== null) params.status = gbCurrentStatus.value
+    const data = await adminPromoApi.groupBuyPage(params)
+    groupBuyList.value = data.list || []
+    gbTotal.value = data.total || 0
+  } catch (e) {
+    console.warn('加载拼团活动失败', e)
+  } finally {
+    gbLoading.value = false
+  }
+}
+
+const gbStatusText = (status: number) => status === 1 ? '进行中' : '已结束'
+const gbStatusClass = (status: number) =>
+  status === 1
+    ? 'bg-green-50 text-green-700 border-green-200'
+    : 'bg-slate-100 text-slate-500 border-slate-200'
+
+const formatDate = (d?: string) => {
+  if (!d) return '-'
+  return new Date(d).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
+const doEndGroupBuy = async (gb: AdminGroupBuyVO) => {
+  try {
+    await adminPromoApi.updateGroupBuy(gb.id, { status: 0 })
+    loadGroupBuyList()
+    loadGroupBuyStats()
+    toast.success('拼团活动已结束')
+  } catch (e) {
+    console.error('结束拼团失败', e)
+    toast.error('操作失败')
+  }
+}
+
+const doDeleteGroupBuy = async (gb: AdminGroupBuyVO) => {
+  try {
+    await adminPromoApi.deleteGroupBuy(gb.id)
+    loadGroupBuyList()
+    loadGroupBuyStats()
+    toast.success('拼团活动已删除')
+  } catch (e) {
+    console.error('删除拼团失败', e)
+    toast.error('删除失败')
+  }
 }
 const stats = computed(() => [
   { label: '活跃优惠券', value: couponStats.value ? String(couponStats.value.activeCount) : '0', change: '+0 本周', changeColor: 'text-green-600', desc: '正在发放中', icon: 'confirmation_number', iconClass: 'text-primary bg-primary/10' },
@@ -389,5 +597,12 @@ watch(currentStatus, () => {
 // 组件挂载时加载数据
 onMounted(() => {
   loadCoupons()
+  loadGroupBuyList()
+})
+
+// 切换视图时加载对应数据
+watch(activeSection, (val) => {
+  if (val === 'coupon') loadCoupons()
+  else loadGroupBuyList()
 })
 </script>

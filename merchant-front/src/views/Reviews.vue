@@ -58,9 +58,9 @@
             </div>
 
             <div class="flex items-center gap-3 mt-3">
-              <button v-if="!review.merchantReply && replyingTo !== review.id" class="text-primary text-xs font-bold flex items-center gap-1 hover:underline" @click="startReply(review)">
+              <button v-if="!review.merchantReply && replyingTo !== review.id" class="text-primary text-xs font-bold flex items-center gap-1 group" @click="startReply(review)">
                 <span class="material-symbols-outlined text-sm">reply</span>
-                回复
+                <span class="group-hover:underline underline-offset-2">回复</span>
               </button>
               <button v-if="replyingTo === review.id" class="text-slate-400 text-xs flex items-center gap-1 hover:text-slate-600" @click="cancelReply">
                 <span class="material-symbols-outlined text-sm">close</span>

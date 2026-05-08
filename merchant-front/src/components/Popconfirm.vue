@@ -1,8 +1,10 @@
 <template>
-  <span class="relative inline-block align-middle" ref="triggerRef">
+  <span class="inline-block align-middle" ref="triggerRef">
     <span @click.stop="toggle" class="inline-flex cursor-pointer">
       <slot />
     </span>
+  </span>
+  <teleport to="body">
     <transition
       enter-active-class="transition duration-150 ease-out"
       enter-from-class="opacity-0 scale-95 translate-y-1"
@@ -14,9 +16,9 @@
       <div
         v-if="visible"
         ref="popoverRef"
+        :style="popoverStyle"
         :class="[
-          'absolute z-[100] w-64 rounded-xl bg-white shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-slate-200 p-4',
-          positionClass,
+          'fixed z-[100] w-64 rounded-xl bg-white shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-slate-200 p-4',
         ]"
         @click.stop
       >
@@ -52,11 +54,11 @@
         </div>
       </div>
     </transition>
-  </span>
+  </teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 
 type PopconfirmType = 'danger' | 'warning' | 'info'
 
@@ -85,6 +87,55 @@ const emit = defineEmits<{
 const visible = ref(false)
 const triggerRef = ref<HTMLSpanElement | null>(null)
 const popoverRef = ref<HTMLDivElement | null>(null)
+const popoverStyle = ref<Record<string, string>>({})
+
+// 计算 fixed 坐标，考虑视口边界
+function updatePosition() {
+  if (!triggerRef.value || !visible.value) return
+  const rect = triggerRef.value.getBoundingClientRect()
+  const popoverWidth = 256   // w-64 = 16rem = 256px
+  const popoverHeight = 130  // 近似高度
+  const gap = 10
+  let top = 0
+  let left = 0
+
+  switch (props.placement) {
+    case 'bottom':
+      top = rect.bottom + gap
+      left = rect.left + rect.width / 2 - popoverWidth / 2
+      break
+    case 'left':
+      top = rect.top + rect.height / 2 - popoverHeight / 2
+      left = rect.left - popoverWidth - gap
+      break
+    case 'right':
+      top = rect.top + rect.height / 2 - popoverHeight / 2
+      left = rect.right + gap
+      break
+    case 'top':
+    default:
+      top = rect.top - popoverHeight - gap
+      left = rect.left + rect.width / 2 - popoverWidth / 2
+      break
+  }
+
+  // 视口边界保护
+  const margin = 8
+  left = Math.max(margin, Math.min(left, window.innerWidth - popoverWidth - margin))
+  top = Math.max(margin, Math.min(top, window.innerHeight - popoverHeight - margin))
+
+  popoverStyle.value = { top: `${top}px`, left: `${left}px` }
+}
+
+// 滚动/resize 时重算位置
+function onReposition() {
+  if (visible.value) updatePosition()
+}
+
+// 监听可见性变化，显示时计算位置
+watch(visible, (v) => {
+  if (v) nextTick(updatePosition)
+})
 
 const icon = computed(() => {
   switch (props.type) {
@@ -118,16 +169,6 @@ const confirmBtnClass = computed(() => {
   }
 })
 
-const positionClass = computed(() => {
-  switch (props.placement) {
-    case 'bottom': return 'top-full left-1/2 -translate-x-1/2 mt-2.5'
-    case 'left': return 'right-full top-1/2 -translate-y-1/2 mr-2.5'
-    case 'right': return 'left-full top-1/2 -translate-y-1/2 ml-2.5'
-    case 'top':
-    default: return 'bottom-full left-1/2 -translate-x-1/2 mb-2.5'
-  }
-})
-
 const arrowClass = computed(() => {
   switch (props.placement) {
     case 'bottom': return 'top-[-5px] left-1/2 -translate-x-1/2 border-t border-l'
@@ -140,6 +181,7 @@ const arrowClass = computed(() => {
 
 function toggle() {
   visible.value = !visible.value
+  if (visible.value) nextTick(updatePosition)
 }
 
 function confirm() {
@@ -160,6 +202,14 @@ function onClickOutside(e: MouseEvent) {
   visible.value = false
 }
 
-onMounted(() => document.addEventListener('click', onClickOutside, true))
-onBeforeUnmount(() => document.removeEventListener('click', onClickOutside, true))
+onMounted(() => {
+  document.addEventListener('click', onClickOutside, true)
+  window.addEventListener('scroll', onReposition, true)
+  window.addEventListener('resize', onReposition)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onClickOutside, true)
+  window.removeEventListener('scroll', onReposition, true)
+  window.removeEventListener('resize', onReposition)
+})
 </script>

@@ -60,6 +60,7 @@
               <th class="px-stack-md text-left font-table-header text-table-header text-on-surface-variant uppercase tracking-wider">商品摘要</th>
               <th class="px-stack-md text-right font-table-header text-table-header text-on-surface-variant uppercase tracking-wider">金额</th>
               <th class="px-stack-md text-center font-table-header text-table-header text-on-surface-variant uppercase tracking-wider">配送方式</th>
+              <th class="px-stack-md text-center font-table-header text-table-header text-on-surface-variant uppercase tracking-wider">订单类型</th>
               <th class="px-stack-md text-center font-table-header text-table-header text-on-surface-variant uppercase tracking-wider">状态</th>
               <th class="px-stack-md text-right font-table-header text-table-header text-on-surface-variant uppercase tracking-wider">操作</th>
             </tr>
@@ -83,6 +84,16 @@
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700">
                   <span class="material-symbols-outlined text-[14px]">{{ order.deliveryType === 1 ? 'local_shipping' : 'storefront' }}</span>
                   {{ order.deliveryType === 1 ? '配送' : '自提' }}
+                </span>
+              </td>
+              <td class="px-stack-md py-3 text-center">
+                <span v-if="order.groupBuyInstanceId" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-green-50 text-green-700 border border-green-200">
+                  <span class="material-symbols-outlined text-[14px]">groups</span>
+                  拼团
+                </span>
+                <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-50 text-slate-500 border border-slate-200">
+                  <span class="material-symbols-outlined text-[14px]">person</span>
+                  单独购买
                 </span>
               </td>
               <td class="px-stack-md py-3 text-center">
