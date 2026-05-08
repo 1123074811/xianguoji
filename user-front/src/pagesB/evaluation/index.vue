@@ -89,7 +89,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { reviewApi } from '@/api/modules/review';
+import { reviewApi } from '@/pagesB/api/review';
 import SvgIcon from '@/components/svg-icon.vue';
 
 const orderId = ref(0);

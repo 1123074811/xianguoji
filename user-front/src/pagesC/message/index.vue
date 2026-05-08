@@ -58,7 +58,7 @@
 import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import SvgIcon from '@/components/svg-icon.vue';
-import { messageApi } from '@/api/modules/message';
+import { messageApi } from '@/pagesC/api/message';
 import type { MessageVO, MessageUnreadCounts } from '@/api/types/message';
 
 type MsgType = 'system' | 'promotion' | 'logistics' | 'chat';

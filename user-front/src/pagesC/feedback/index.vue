@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 import { reactive, computed, ref } from 'vue';
-import { messageApi } from '@/api/modules/message';
+import { messageApi } from '@/pagesC/api/message';
 import { useUserStore } from '@/stores/user';
 import SvgIcon from '@/components/svg-icon.vue';
 

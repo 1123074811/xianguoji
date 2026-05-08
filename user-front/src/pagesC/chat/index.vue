@@ -124,7 +124,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
-import { chatApi } from '@/api/modules/chat';
+import { chatApi } from './api';
 import type { ChatMessageVO, ProductCardVO, ChatSendDto } from '@/api/types/chat';
 import { resolveImageUrl } from '@/utils/image';
 import { useUserStore } from '@/stores/user';

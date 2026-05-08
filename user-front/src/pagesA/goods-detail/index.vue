@@ -231,7 +231,7 @@ import { ref, computed, onMounted } from 'vue';
 import { onShareAppMessage } from '@dcloudio/uni-app';
 import { useCartStore } from '@/stores/cart';
 import { catalogApi } from '@/api/modules/catalog';
-import { reviewApi } from '@/api/modules/review';
+import { reviewApi } from '@/pagesA/api/review';
 import { shopApi } from '@/api/modules/shop';
 import { userApi } from '@/api/modules/user';
 import { promoApi } from '@/api/modules/promo';

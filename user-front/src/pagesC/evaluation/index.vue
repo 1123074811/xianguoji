@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { reviewApi } from '@/api/modules/review';
+import { reviewApi } from '@/pagesC/api/review';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
 import type { PendingReviewItemVO, ReviewVO } from '@/api/types/review';
