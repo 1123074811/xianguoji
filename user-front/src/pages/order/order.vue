@@ -188,8 +188,9 @@ function groupCountdown(order: OrderVO) {
   if (diff <= 0) return '等待退款';
   const h = Math.floor(diff / 3600_000);
   const m = Math.floor((diff % 3600_000) / 60_000);
-  if (h > 0) return `${h}时${m}分`;
-  return `${Math.max(1, m)}分`;
+  const s = Math.floor((diff % 60_000) / 1000);
+  if (h > 0) return `${h}时${m}分${s}秒`;
+  return `${m}分${s}秒`;
 }
 
 async function fetchOrders(reset = false) {

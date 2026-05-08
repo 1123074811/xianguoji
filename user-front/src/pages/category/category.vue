@@ -3,7 +3,7 @@
     <!-- Top Search Bar -->
     <view class="header-sticky">
       <view class="brand-area">
-        <svg-icon name="eco" :size="32" color="#2E7D32" />
+        <image class="brand-logo" src="/static/images/logo.png" mode="aspectFit" />
         <text class="brand-name">鲜果记</text>
       </view>
       <view class="search-box" @tap="goToSearch">
@@ -189,12 +189,13 @@ function goToMessage() {
     display: flex;
     align-items: center;
     gap: 8rpx;
-    
-    .brand-icon {
-      font-size: 32rpx;
-      color: $color-primary;
+
+    .brand-logo {
+      width: 48rpx;
+      height: 48rpx;
+      border-radius: 50%;
     }
-    
+
     .brand-name {
       font-size: $font-base;
       font-weight: bold;

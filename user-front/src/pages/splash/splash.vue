@@ -58,7 +58,7 @@ onMounted(() => {
         url: '/pages/index/index'
       });
     } else {
-      progress.value += 2;
+      progress.value += 5;
     }
   }, 30);
 });

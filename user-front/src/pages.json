@@ -118,6 +118,12 @@
           }
         },
         {
+          "path": "group-buy/share",
+          "style": {
+            "navigationBarTitleText": "好友拼团"
+          }
+        },
+        {
           "path": "coupons/index",
           "style": {
             "navigationBarTitleText": "领券中心"

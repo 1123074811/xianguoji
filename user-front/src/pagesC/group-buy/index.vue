@@ -115,7 +115,7 @@ async function goShareDetail() {
   }
   try {
     const inst = await promoApi.groupBuyByShareCode(code);
-    uni.navigateTo({ url: `/pagesC/group-buy/detail?id=${inst.id}` });
+    uni.navigateTo({ url: `/pagesC/group-buy/share?code=${code}` });
   } catch (e) {
     uni.showToast({ title: '分享码无效或已过期', icon: 'none' });
   }

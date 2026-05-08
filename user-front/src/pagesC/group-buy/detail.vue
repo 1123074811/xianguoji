@@ -51,16 +51,24 @@
     </view>
 
     <view class="action-bar">
-      <button v-if="instance?.status === 1 && !meIsParticipant" class="btn btn-primary" @tap="goJoin">立即参团</button>
-      <button v-else-if="instance?.status === 1" class="btn btn-disabled" disabled>已在拼团中</button>
-      <button v-else-if="instance?.status === 2" class="btn btn-secondary" @tap="goOrders">查看订单</button>
-      <button v-else class="btn btn-secondary" @tap="goBack">返回</button>
+      <template v-if="instance?.status === 1">
+        <button class="btn btn-share" open-type="share">邀请好友</button>
+        <button v-if="!meIsParticipant" class="btn btn-primary" @tap="goJoin">立即参团</button>
+        <button v-else class="btn btn-disabled" disabled>已在拼团中</button>
+      </template>
+      <template v-else-if="instance?.status === 2">
+        <button class="btn btn-secondary" @tap="goOrders">查看订单</button>
+      </template>
+      <template v-else>
+        <button class="btn btn-secondary" @tap="goBack">返回</button>
+      </template>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { onShareAppMessage } from '@dcloudio/uni-app';
 import { promoApi } from '@/api/modules/promo';
 import { useUserStore } from '@/stores/user';
 import { resolveImageUrl } from '@/utils/image';
@@ -133,6 +141,19 @@ onMounted(() => {
   const opts = page?.options || {};
   loadDetail(Number(opts.id || opts.instanceId || 0), opts.code || opts.shareCode || '');
   timer = setInterval(() => { now.value = Date.now(); }, 1000);
+});
+
+onShareAppMessage(() => {
+  const name = instance.value?.productName || '鲜果记拼团';
+  const price = instance.value?.groupPrice || '';
+  const image = instance.value?.mainImage ? resolveImageUrl(instance.value.mainImage) : '';
+  const code = instance.value?.shareCode || '';
+  const leader = instance.value?.leaderName || '好友';
+  return {
+    title: `${leader}邀请你一起拼${name}，仅¥${price}`,
+    path: `/pagesC/group-buy/share?code=${code}`,
+    imageUrl: image,
+  };
 });
 
 onUnmounted(() => {
@@ -253,8 +274,10 @@ onUnmounted(() => {
 .action-bar {
   margin-top: auto;
   padding-top: $space-2;
+  display: flex;
+  gap: $space-2;
   .btn {
-    width: 100%;
+    flex: 1;
     height: 88rpx;
     border-radius: $radius-pill;
     font-size: $font-base;
@@ -262,6 +285,7 @@ onUnmounted(() => {
     &::after { border: none; }
   }
   .btn-primary { background: $color-primary; color: #fff; }
+  .btn-share { background: $color-primary-bg; color: $color-primary; border: 2rpx solid rgba($color-primary, 0.3); }
   .btn-secondary { background: $color-bg-page; color: $color-text-primary; }
   .btn-disabled { background: $color-divider; color: #fff; }
 }

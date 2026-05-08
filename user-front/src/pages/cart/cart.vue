@@ -3,7 +3,7 @@
     <!-- Top Navigation -->
     <view class="header-nav-sticky">
       <view class="left" @tap="goToCategory">
-        <svg-icon name="category" :size="40" color="#757575" />
+        <image class="brand-logo" src="/static/images/logo.png" mode="aspectFit" />
         <text class="brand-name">鲜果记</text>
       </view>
       <svg-icon name="chat" :size="40" color="#757575" @click="goToMessage" />
@@ -211,8 +211,14 @@ async function handleSubmit() {
   .left {
     display: flex;
     align-items: center;
-    gap: $space-3;
-    
+    gap: $space-2;
+
+    .brand-logo {
+      width: 48rpx;
+      height: 48rpx;
+      border-radius: 50%;
+    }
+
     .brand-name {
       font-size: $font-lg;
       font-weight: bold;

@@ -7,10 +7,10 @@
       </view>
       <text class="title">鲜果记</text>
       <view class="right-btns">
-        <view class="btn">
+        <button class="btn share-btn" open-type="share">
           <svg-icon name="share" :size="40" color="#2E7D32" />
-        </view>
-        <view class="btn">
+        </button>
+        <view class="btn" @tap="goToChat">
           <svg-icon name="chat" :size="40" color="#2E7D32" />
         </view>
       </view>
@@ -228,6 +228,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { onShareAppMessage } from '@dcloudio/uni-app';
 import { useCartStore } from '@/stores/cart';
 import { catalogApi } from '@/api/modules/catalog';
 import { reviewApi } from '@/api/modules/review';
@@ -463,6 +464,17 @@ async function handleLaunchGroup() {
     url: `/pagesB/checkout/index?groupBuyActivityId=${groupActivity.value.id}`,
   });
 }
+
+onShareAppMessage(() => {
+  const name = goods.value?.name || '鲜果记好物推荐';
+  const image = goods.value?.mainImage ? resolveImageUrl(goods.value.mainImage) : '';
+  const price = activeSku.value?.price || goods.value?.minPrice || '';
+  return {
+    title: `${name} ¥${price}`,
+    path: `/pagesA/goods-detail/index?id=${productId.value}`,
+    imageUrl: image,
+  };
+});
 </script>
 
 <style lang="scss" scoped>
@@ -504,6 +516,18 @@ async function handleLaunchGroup() {
   .right-btns {
     display: flex;
     gap: $space-2;
+  }
+
+  .share-btn {
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+    background: transparent;
+    border: none;
+
+    &::after {
+      border: none;
+    }
   }
 }
 
