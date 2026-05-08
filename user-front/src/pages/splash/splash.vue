@@ -47,18 +47,35 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import SvgIcon from '@/components/svg-icon.vue';
+import { prefetchHomeData } from '@/utils/home-prefetch';
 
 const progress = ref(0);
 
 onMounted(() => {
+  let prefetchDone = false;
+  const prefetchTask = Promise.race([
+    prefetchHomeData().then(() => {
+      prefetchDone = true;
+    }).catch((e) => {
+      console.warn('首页预加载失败', e);
+      prefetchDone = true;
+    }),
+    new Promise((resolve) => setTimeout(() => {
+      prefetchDone = true;
+      resolve(undefined);
+    }, 5000)),
+  ]);
+
   const timer = setInterval(() => {
+    if (progress.value < 95 || prefetchDone) {
+      progress.value = Math.min(100, progress.value + 5);
+    }
+
     if (progress.value >= 100) {
       clearInterval(timer);
-      uni.switchTab({
+      prefetchTask.finally(() => uni.switchTab({
         url: '/pages/index/index'
-      });
-    } else {
-      progress.value += 5;
+      }));
     }
   }, 30);
 });

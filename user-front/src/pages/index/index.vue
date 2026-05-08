@@ -1,7 +1,15 @@
 <template>
   <view class="home-container">
+    <view v-if="!homeReady" class="home-loading-mask">
+      <view class="loading-logo">
+        <image class="loading-logo-img" src="/static/images/logo.png" mode="aspectFit" />
+      </view>
+      <text class="loading-brand">鲜果记</text>
+      <text class="loading-desc">正在准备新鲜好物...</text>
+    </view>
+
     <!-- Top Search Bar -->
-    <view class="header-sticky">
+    <view v-else class="header-sticky">
       <view class="search-bar" @tap="goToSearch">
         <svg-icon name="search" :size="32" color="#BDBDBD" />
         <text class="search-placeholder">搜索新鲜果蔬</text>
@@ -11,7 +19,7 @@
       </view>
     </view>
 
-    <scroll-view scroll-y class="main-scroll" @scrolltolower="loadMore">
+    <scroll-view v-if="homeReady" scroll-y class="main-scroll" @scrolltolower="loadMore">
       <!-- Shop Closed Banner -->
       <view v-if="!shopOpen" class="closed-banner">
         <svg-icon name="store" :size="36" color="#C62828" />
@@ -123,7 +131,7 @@
     </scroll-view>
 
     <!-- Custom Tab Bar -->
-    <custom-tab-bar active-path="pages/index/index" />
+    <custom-tab-bar v-if="homeReady" active-path="pages/index/index" />
   </view>
 </template>
 
@@ -139,13 +147,18 @@ import { promoApi } from '@/api/modules/promo';
 import type { BannerVO, CategoryTreeVO, ProductVO } from '@/api/types/catalog';
 import type { CouponVO, GroupBuyActivityVO } from '@/api/types/promo';
 import { useAppStore } from '@/stores/app';
+import { readHomePrefetchData, type HomePrefetchData } from '@/utils/home-prefetch';
 
 const appStore = useAppStore();
 const shopOpen = computed(() => appStore.shopInfo?.isOpen === 1);
 
 onShow(() => {
-  uni.hideTabBar();
-  appStore.loadShopInfo();
+  const prefetched = readHomePrefetchData();
+  if (prefetched) {
+    applyHomePrefetchData(prefetched);
+  } else {
+    appStore.loadShopInfo();
+  }
   loadHomeData();
 });
 
@@ -156,6 +169,7 @@ const groupBuys = ref<GroupBuyActivityVO[]>([]);
 const recommendedGoods = ref<ProductVO[]>([]);
 const loading = ref(false);
 const noMore = ref(false);
+const homeReady = ref(false);
 
 const shortcutColors = [
   '#E8F5E9', '#FFF3E0', '#FFF8E1', '#F5F5F5',
@@ -167,6 +181,20 @@ const shortcutIconColors = [
 ];
 const couponBgColors = ['#FFDAD6', '#B9F474', '#A3F69C', '#FFDAD6'];
 const couponTextColors = ['#BA1A1A', '#3E6A00', '#0D631B', '#BA1A1A'];
+
+function applyHomePrefetchData(data: HomePrefetchData) {
+  shortcuts.value = data.categories.slice(0, 8);
+  banners.value = data.banners;
+  coupons.value = data.coupons;
+  groupBuys.value = data.groupBuys;
+  recommendedGoods.value = data.recommendedGoods;
+  homeReady.value = true;
+  if (data.shopInfo) {
+    appStore.shopInfo = data.shopInfo;
+    appStore.deliverySetting = data.deliverySetting;
+    appStore.loaded = true;
+  }
+}
 
 async function loadHomeData() {
   try {
@@ -182,8 +210,10 @@ async function loadHomeData() {
     coupons.value = couponList;
     groupBuys.value = groupBuyPage.list;
     recommendedGoods.value = recList;
+    homeReady.value = true;
   } catch (e) {
     console.warn('首页数据加载失败', e);
+    homeReady.value = true;
   }
 }
 
@@ -285,6 +315,46 @@ function goGroupDetail(item: GroupBuyActivityVO) {
   background-color: $color-bg-page;
   box-sizing: border-box;
   padding-bottom: calc(128rpx + env(safe-area-inset-bottom));
+}
+
+.home-loading-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: $color-bg-page;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+}
+
+.loading-logo {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 32rpx rgba(46, 125, 50, 0.12);
+}
+
+.loading-logo-img {
+  width: 88rpx;
+  height: 88rpx;
+}
+
+.loading-brand {
+  margin-top: $space-2;
+  font-size: $font-lg;
+  font-weight: 700;
+  color: $color-primary;
+}
+
+.loading-desc {
+  font-size: $font-xs;
+  color: $color-text-secondary;
 }
 
 .header-sticky {
