@@ -5,22 +5,21 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.ResultCode;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 微信小程序工具类：调用 code2Session 获取 openid / session_key / unionid
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class WechatUtil {
 
     @Value("${xianguoji.wechat.appid}")
@@ -29,8 +28,15 @@ public class WechatUtil {
     @Value("${xianguoji.wechat.secret}")
     private String secret;
 
+    private final StringRedisTemplate redisTemplate;
+
     private static final String CODE2SESSION_URL =
             "https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code";
+    private static final String ACCESS_TOKEN_URL =
+            "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s";
+    private static final String GET_PHONE_URL =
+            "https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=%s";
+    private static final String REDIS_KEY_ACCESS_TOKEN = "wechat:access_token";
 
     // S-5: SSRF 白名单 —— 微信接口仅允许此前缀
     private static final Set<String> WECHAT_ALLOWED_PREFIXES = Set.of(
@@ -67,43 +73,70 @@ public class WechatUtil {
     }
 
     /**
-     * 解密微信小程序 getPhoneNumber 返回的加密数据，提取纯手机号
+     * 获取微信 access_token（带 Redis 缓存，有效期 7200s，提前 5 分钟刷新）
+     */
+    public String getAccessToken() {
+        String cached = redisTemplate.opsForValue().get(REDIS_KEY_ACCESS_TOKEN);
+        if (cached != null && !cached.isEmpty()) {
+            return cached;
+        }
+        String url = String.format(ACCESS_TOKEN_URL, appid, secret);
+        UrlSecurityUtil.validateUrlPrefix(url, WECHAT_ALLOWED_PREFIXES);
+        String body = HttpUtil.get(url, 5000);
+        log.debug("[WechatUtil] getAccessToken response: {}", body);
+        JSONObject json = JSONUtil.parseObj(body);
+        Integer errcode = json.getInt("errcode");
+        if (errcode != null && errcode != 0) {
+            String errmsg = json.getStr("errmsg", "unknown");
+            log.error("[WechatUtil] getAccessToken failed: errcode={}, errmsg={}", errcode, errmsg);
+            throw new BizException(ResultCode.THIRD_PARTY_ERROR, "获取access_token失败: " + errmsg);
+        }
+        String accessToken = json.getStr("access_token");
+        if (accessToken == null || accessToken.isEmpty()) {
+            throw new BizException(ResultCode.THIRD_PARTY_ERROR, "获取access_token为空");
+        }
+        int expiresIn = json.getInt("expires_in", 7200);
+        // 提前 300s 过期，避免边界问题
+        redisTemplate.opsForValue().set(REDIS_KEY_ACCESS_TOKEN, accessToken, expiresIn - 300, TimeUnit.SECONDS);
+        return accessToken;
+    }
+
+    /**
+     * 使用微信新版 getPhoneNumber API，通过 code 直接换取手机号
      *
-     * @param sessionKey   code2Session 返回的 session_key
-     * @param encryptedData getPhoneNumber 回调的 encryptedData
-     * @param iv           getPhoneNumber 回调的 iv
+     * @param code getPhoneNumber 回调返回的 code
      * @return 纯手机号字符串（如 13800138000）
      */
-    public String decryptPhoneNumber(String sessionKey, String encryptedData, String iv) {
-        try {
-            byte[] keyBytes = Base64.getDecoder().decode(sessionKey);
-            byte[] ivBytes = Base64.getDecoder().decode(iv);
-            byte[] encBytes = Base64.getDecoder().decode(encryptedData);
+    public String getPhoneNumber(String code) {
+        String accessToken = getAccessToken();
+        String url = String.format(GET_PHONE_URL, accessToken);
+        UrlSecurityUtil.validateUrlPrefix(url, WECHAT_ALLOWED_PREFIXES);
 
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE,
-                    new SecretKeySpec(keyBytes, "AES"),
-                    new IvParameterSpec(ivBytes));
-            byte[] plainBytes = cipher.doFinal(encBytes);
-            String plainText = new String(plainBytes, StandardCharsets.UTF_8);
+        JSONObject reqBody = new JSONObject();
+        reqBody.set("code", code);
+        String resp = HttpUtil.post(url, reqBody.toString(), 5000);
+        log.debug("[WechatUtil] getPhoneNumber response: {}", resp);
 
-            JSONObject json = JSONUtil.parseObj(plainText);
-            // 校验 appid 一致性，防篡改
-            String watermarkAppid = json.getByPath("watermark.appid", String.class);
-            if (watermarkAppid == null || !watermarkAppid.equals(appid)) {
-                log.warn("[WechatUtil] decryptPhoneNumber watermark appid mismatch: expected={}, got={}", appid, watermarkAppid);
-                throw new BizException(ResultCode.BIZ_ERROR, "手机号解密校验失败");
+        JSONObject json = JSONUtil.parseObj(resp);
+        Integer errcode = json.getInt("errcode");
+        if (errcode != null && errcode != 0) {
+            String errmsg = json.getStr("errmsg", "unknown");
+            log.error("[WechatUtil] getPhoneNumber failed: errcode={}, errmsg={}", errcode, errmsg);
+            // access_token 过期时清除缓存重试
+            if (errcode == 42001 || errcode == 40001) {
+                redisTemplate.delete(REDIS_KEY_ACCESS_TOKEN);
             }
-            String phone = json.getStr("phoneNumber");
-            if (phone == null || phone.isEmpty()) {
-                throw new BizException(ResultCode.BIZ_ERROR, "未获取到手机号");
-            }
-            return phone;
-        } catch (BizException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("[WechatUtil] decryptPhoneNumber failed", e);
-            throw new BizException(ResultCode.BIZ_ERROR, "手机号解密失败");
+            throw new BizException(ResultCode.THIRD_PARTY_ERROR, "获取手机号失败: " + errmsg);
         }
+
+        JSONObject phoneInfo = json.getJSONObject("phone_info");
+        if (phoneInfo == null) {
+            throw new BizException(ResultCode.BIZ_ERROR, "手机号信息为空");
+        }
+        String phone = phoneInfo.getStr("phoneNumber");
+        if (phone == null || phone.isEmpty()) {
+            throw new BizException(ResultCode.BIZ_ERROR, "未获取到手机号");
+        }
+        return phone;
     }
 }

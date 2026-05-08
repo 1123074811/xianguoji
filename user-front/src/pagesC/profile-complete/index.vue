@@ -57,7 +57,6 @@
 import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { userApi } from '@/api/modules/user';
-import { authApi } from '@/api/modules/auth';
 import SvgIcon from '@/components/svg-icon.vue';
 
 const userStore = useUserStore();
@@ -110,26 +109,14 @@ async function handleSave() {
 
 async function onGetPhoneNumber(e: any) {
   const detail = e.detail;
-  if (detail.errMsg !== 'getPhoneNumber:ok' || !detail.encryptedData || !detail.iv) {
+  if (detail.errMsg !== 'getPhoneNumber:ok' || !detail.code) {
     return uni.showToast({ title: '获取手机号失败', icon: 'none' });
   }
   uni.showLoading({ title: '绑定中...', mask: true });
   try {
-    // 1. 获取 jsCode
-    const jsCode = await new Promise<string>((resolve, reject) => {
-      uni.login({
-        provider: 'weixin',
-        success: (r: any) => r.code ? resolve(r.code) : reject(new Error('无code')),
-        fail: reject,
-      });
-    });
-    // 2. 调用后端绑定接口
-    await userApi.bindPhone({
-      jsCode,
-      encryptedData: detail.encryptedData,
-      iv: detail.iv,
-    });
-    // 3. 刷新用户资料
+    // 使用微信新版 getPhoneNumber API 返回的 code，后端直接换取手机号
+    await userApi.bindPhone({ code: detail.code });
+    // 刷新用户资料
     await userStore.fetchProfile();
     uni.hideLoading();
     uni.showToast({ title: '绑定成功', icon: 'success' });

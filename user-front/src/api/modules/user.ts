@@ -43,6 +43,6 @@ export const userApi = {
   removeFavorite: (productId: number) =>
     request<void>({ url: `/api/u/favorite/${productId}`, method: 'DELETE' }),
 
-  bindPhone: (data: { jsCode: string; encryptedData: string; iv: string }) =>
+  bindPhone: (data: { code: string }) =>
     request<void>({ url: '/api/u/user/bind-phone', method: 'POST', data }),
 };

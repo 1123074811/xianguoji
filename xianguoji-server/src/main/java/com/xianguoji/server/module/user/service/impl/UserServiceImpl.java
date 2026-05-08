@@ -90,24 +90,17 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.selectById(uid);
         if (user == null) throw new BizException(ResultCode.NOT_FOUND, "用户不存在");
 
-        // 1. 用 jsCode 换取 session_key
-        cn.hutool.json.JSONObject session = wechatUtil.code2Session(dto.getJsCode());
-        String sessionKey = session.getStr("session_key");
-        if (sessionKey == null || sessionKey.isEmpty()) {
-            throw new BizException(ResultCode.THIRD_PARTY_ERROR, "获取session_key失败");
-        }
+        // 使用微信新版 getPhoneNumber API，通过 code 直接换取手机号
+        String phone = wechatUtil.getPhoneNumber(dto.getCode());
 
-        // 2. 解密手机号
-        String phone = wechatUtil.decryptPhoneNumber(sessionKey, dto.getEncryptedData(), dto.getIv());
-
-        // 3. 检查手机号是否已被其他用户绑定
+        // 检查手机号是否已被其他用户绑定
         User existing = userMapper.selectOne(
                 new LambdaQueryWrapper<User>().eq(User::getPhone, phone));
         if (existing != null && !existing.getId().equals(uid)) {
             throw new BizException(ResultCode.BIZ_ERROR, "该手机号已被其他账号绑定");
         }
 
-        // 4. 绑定
+        // 绑定
         User upd = new User();
         upd.setId(uid);
         upd.setPhone(phone);

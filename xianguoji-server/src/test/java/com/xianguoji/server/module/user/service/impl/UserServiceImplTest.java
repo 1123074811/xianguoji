@@ -186,12 +186,11 @@ class UserServiceImplTest {
     void bindPhone_shouldThrowException_whenWechatCodeInvalid() {
         // Arrange
         when(userMapper.selectById(1L)).thenReturn(testUser);
-        when(wechatUtil.code2Session("invalid_code")).thenReturn(new cn.hutool.json.JSONObject());
+        when(wechatUtil.getPhoneNumber("invalid_code"))
+                .thenThrow(new BizException(ResultCode.THIRD_PARTY_ERROR, "获取手机号失败: invalid code"));
 
         BindPhoneDto dto = new BindPhoneDto();
-        dto.setJsCode("invalid_code");
-        dto.setEncryptedData("data");
-        dto.setIv("iv");
+        dto.setCode("invalid_code");
 
         // Act & Assert
         BizException exception = assertThrows(BizException.class, () -> userService.bindPhone(1L, dto));
@@ -205,11 +204,7 @@ class UserServiceImplTest {
     void bindPhone_shouldThrowException_whenPhoneOccupiedByOtherUser() {
         // Arrange
         when(userMapper.selectById(1L)).thenReturn(testUser);
-
-        cn.hutool.json.JSONObject session = new cn.hutool.json.JSONObject();
-        session.set("session_key", "test_session_key");
-        when(wechatUtil.code2Session("valid_code")).thenReturn(session);
-        when(wechatUtil.decryptPhoneNumber(anyString(), anyString(), anyString())).thenReturn("13900139002");
+        when(wechatUtil.getPhoneNumber("valid_code")).thenReturn("13900139002");
 
         User otherUser = new User();
         otherUser.setId(2L);
@@ -217,9 +212,7 @@ class UserServiceImplTest {
         when(userMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(otherUser);
 
         BindPhoneDto dto = new BindPhoneDto();
-        dto.setJsCode("valid_code");
-        dto.setEncryptedData("data");
-        dto.setIv("iv");
+        dto.setCode("valid_code");
 
         // Act & Assert
         BizException exception = assertThrows(BizException.class, () -> userService.bindPhone(1L, dto));
@@ -234,20 +227,14 @@ class UserServiceImplTest {
         // Arrange
         testUser.setPhone("13900139002");
         when(userMapper.selectById(1L)).thenReturn(testUser);
-
-        cn.hutool.json.JSONObject session = new cn.hutool.json.JSONObject();
-        session.set("session_key", "test_session_key");
-        when(wechatUtil.code2Session("valid_code")).thenReturn(session);
-        when(wechatUtil.decryptPhoneNumber(anyString(), anyString(), anyString())).thenReturn("13900139002");
+        when(wechatUtil.getPhoneNumber("valid_code")).thenReturn("13900139002");
 
         // 同一个人的手机号，selectOne应返回同一个用户
         when(userMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(testUser);
         when(userMapper.updateById(any(User.class))).thenReturn(1);
 
         BindPhoneDto dto = new BindPhoneDto();
-        dto.setJsCode("valid_code");
-        dto.setEncryptedData("data");
-        dto.setIv("iv");
+        dto.setCode("valid_code");
 
         // Act & Assert - 不应抛异常
         assertDoesNotThrow(() -> userService.bindPhone(1L, dto));
