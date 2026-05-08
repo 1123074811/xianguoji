@@ -95,9 +95,23 @@ public class CatalogController {
     @LoginRequired
     public R<Void> recordSearch(@RequestBody java.util.Map<String, String> body) {
         String keyword = body.get("keyword");
-        if (keyword != null && !keyword.isBlank()) {
+        if (keyword == null || keyword.isBlank()) {
+            return R.ok();
+        }
+        Long uid = LoginContext.uid();
+        // 若已有相同关键词则更新时间（去重），否则插入新记录
+        SearchHistory existing = searchHistoryMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SearchHistory>()
+                        .eq(SearchHistory::getUserId, uid)
+                        .eq(SearchHistory::getKeyword, keyword)
+                        .orderByDesc(SearchHistory::getCreatedAt)
+                        .last("LIMIT 1"));
+        if (existing != null) {
+            existing.setCreatedAt(LocalDateTime.now());
+            searchHistoryMapper.updateById(existing);
+        } else {
             SearchHistory sh = new SearchHistory();
-            sh.setUserId(LoginContext.uid());
+            sh.setUserId(uid);
             sh.setKeyword(keyword);
             sh.setCreatedAt(LocalDateTime.now());
             searchHistoryMapper.insert(sh);
