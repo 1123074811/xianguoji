@@ -10,6 +10,30 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: xianguoji_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -ptest"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,8 +44,21 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Init DB Schema
+        run: |
+          sed 's/DROP DATABASE IF EXISTS `xianguoji`/-- skipped/;s/CREATE DATABASE `xianguoji`.*;/-- skipped/;s/USE `xianguoji`/USE `xianguoji_test`/' database/schema.sql \
+            | mysql -h 127.0.0.1 -u root -ptest
+          mysql -h 127.0.0.1 -u root -ptest xianguoji_test < xianguoji-server/src/test/resources/sql/schema.sql
+
       - name: Build & Test
         working-directory: xianguoji-server
+        env:
+          TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/xianguoji_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+          TEST_DB_USER: root
+          TEST_DB_PASSWORD: test
+          TEST_REDIS_HOST: 127.0.0.1
+          TEST_REDIS_PORT: 6379
+          TEST_REDIS_PASSWORD: ""
         run: mvn -B verify
 
       - name: OWASP Dependency Check

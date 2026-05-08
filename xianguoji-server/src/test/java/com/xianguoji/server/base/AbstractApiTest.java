@@ -4,7 +4,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
@@ -13,6 +16,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.time.Duration;
 
 /**
@@ -34,7 +41,6 @@ public abstract class AbstractApiTest {
             .withDatabaseName("xianguoji_test")
             .withUsername("root")
             .withPassword("test")
-            .withInitScript("sql/schema.sql")
             .waitingFor(Wait.forLogMessage(".*ready for connections.*", 1))
             .withStartupTimeout(Duration.ofMinutes(5));
 
@@ -47,13 +53,32 @@ public abstract class AbstractApiTest {
             .withStartupTimeout(Duration.ofMinutes(2));
 
     @BeforeAll
-    static void setupProperties() {
+    static void setupProperties() throws Exception {
         // 设置Testcontainers容器的连接信息到系统属性
         System.setProperty("TEST_DB_URL", mysql.getJdbcUrl());
         System.setProperty("TEST_DB_USER", mysql.getUsername());
         System.setProperty("TEST_DB_PASSWORD", mysql.getPassword());
         System.setProperty("TEST_REDIS_HOST", redis.getHost());
         System.setProperty("TEST_REDIS_PORT", redis.getMappedPort(6379).toString());
+
+        // 初始化数据库：先建表再插入种子数据
+        try (Connection conn = DriverManager.getConnection(
+                mysql.getJdbcUrl(), mysql.getUsername(), mysql.getPassword())) {
+            conn.createStatement().execute("USE xianguoji_test");
+            // 加载主schema（替换数据库名为xianguoji_test）
+            Path schemaPath = Path.of(System.getProperty("user.dir"))
+                    .resolve("../database/schema.sql").normalize();
+            String sql = Files.readString(schemaPath)
+                    .replace("DROP DATABASE IF EXISTS `xianguoji`", "-- skipped")
+                    .replace("CREATE DATABASE `xianguoji` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci", "-- skipped")
+                    .replace("USE `xianguoji`", "USE `xianguoji_test`");
+            Path tmp = Files.createTempFile("schema-", ".sql");
+            Files.writeString(tmp, sql);
+            ScriptUtils.executeSqlScript(conn, new FileSystemResource(tmp));
+            Files.delete(tmp);
+            // 加载测试种子数据
+            ScriptUtils.executeSqlScript(conn, new ClassPathResource("sql/schema.sql"));
+        }
     }
 
     /**
