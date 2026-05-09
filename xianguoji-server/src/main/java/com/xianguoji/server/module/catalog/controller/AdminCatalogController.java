@@ -129,7 +129,7 @@ public class AdminCatalogController {
         product.setIsRecommend(body.get("isRecommend") != null ? (Integer) body.get("isRecommend") : 0);
         product.setSupportDelivery(body.get("supportDelivery") != null ? (Integer) body.get("supportDelivery") : 1);
         product.setSupportPickup(body.get("supportPickup") != null ? (Integer) body.get("supportPickup") : 1);
-        product.setStatus(1);
+        product.setStatus(body.get("status") != null ? (Integer) body.get("status") : 1);
         product.setSales(0);
         product.setSort(0);
         productMapper.insert(product);
@@ -196,6 +196,7 @@ public class AdminCatalogController {
         if (body.get("isRecommend") != null) product.setIsRecommend((Integer) body.get("isRecommend"));
         if (body.get("supportDelivery") != null) product.setSupportDelivery((Integer) body.get("supportDelivery"));
         if (body.get("supportPickup") != null) product.setSupportPickup((Integer) body.get("supportPickup"));
+        if (body.get("status") != null) product.setStatus((Integer) body.get("status"));
         productMapper.updateById(product);
 
         // Evict product detail cache

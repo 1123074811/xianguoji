@@ -154,7 +154,7 @@ public class CatalogServiceImpl implements CatalogService {
     public ProductDetailVO getProductDetail(Long id) {
         // 注：UV 记录由 Controller 在缓存外完成（缓存命中时不进入此方法）
         Product product = productMapper.selectById(id);
-        if (product == null) throw new BizException(ResultCode.NOT_FOUND, "商品不存在");
+        if (product == null || product.getStatus() == 3) throw new BizException(ResultCode.NOT_FOUND, "商品不存在");
 
         List<ProductSku> skuList = productSkuMapper.selectList(
                 new LambdaQueryWrapper<ProductSku>()
