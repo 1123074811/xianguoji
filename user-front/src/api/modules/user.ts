@@ -29,7 +29,7 @@ export const userApi = {
     request<PageVO<ProductVO>>({ url: '/api/u/footprint/page', params }),
 
   addFootprint: (productId: number) =>
-    request<void>({ url: `/api/u/footprint/${productId}`, method: 'POST' }),
+    request<void>({ url: `/api/u/footprint/${productId}`, method: 'POST', silent: true }),
 
   clearFootprint: () =>
     request<void>({ url: '/api/u/footprint', method: 'DELETE' }),

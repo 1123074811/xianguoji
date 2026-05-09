@@ -144,7 +144,7 @@
           <text class="detail-title">产品详情</text>
         </view>
         <view class="detail-content" v-if="goods">
-          <text class="detail-text">{{ goods.description }}</text>
+          <rich-text v-if="goods.description" class="detail-text" :nodes="goods.description"></rich-text>
           <template v-if="goods.detailImages.length">
             <image v-for="(img, idx) in goods.detailImages" :key="idx" class="detail-img" :src="resolveImageUrl(img)" mode="widthFix" />
           </template>
@@ -235,6 +235,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { onShareAppMessage } from '@dcloudio/uni-app';
 import { useCartStore } from '@/stores/cart';
+import { useUserStore } from '@/stores/user';
 import { catalogApi } from '@/api/modules/catalog';
 import { reviewApi } from '@/pagesA/api/review';
 import { shopApi } from '@/api/modules/shop';
@@ -284,9 +285,23 @@ const displayImages = computed(() => {
   return raw.map(resolveImageUrl);
 });
 
+function decodeHtmlEntities(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+}
+
 async function loadDetail() {
   try {
     const detail = await catalogApi.productDetail(productId.value);
+    if (detail.description) {
+      detail.description = decodeHtmlEntities(detail.description);
+    }
     goods.value = detail;
     isFavorite.value = detail.isFavorite;
     // 设置默认SKU
@@ -338,10 +353,10 @@ onUnmounted(() => {
 });
 
 async function recordFootprint() {
-  console.log('[footprint] recordFootprint called, productId=', productId.value);
+  const userStore = useUserStore();
+  if (!userStore.token) return;
   try {
-    const res = await userApi.addFootprint(productId.value);
-    console.log('[footprint] success', res);
+    await userApi.addFootprint(productId.value);
   } catch (e: any) {
     console.warn('[footprint] failed', e?.code, e?.msg || e?.errMsg || e);
   }
@@ -554,6 +569,7 @@ onShareAppMessage(() => {
 .main-scroll {
   flex: 1;
   overflow: hidden;
+  padding-bottom: calc(112rpx + env(safe-area-inset-bottom));
 }
 
 .carousel {
@@ -914,13 +930,14 @@ onShareAppMessage(() => {
   }
 
   .detail-content {
+    padding: $space-4;
+    background-color: #ffffff;
+
     .detail-text {
       display: block;
       font-size: $font-base;
       line-height: 1.6;
       color: $color-text-primary;
-      padding: $space-4;
-      background-color: #ffffff;
     }
 
     .detail-img {
