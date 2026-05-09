@@ -25,4 +25,7 @@ export const staffApi = {
 
   changePassword: (data: { oldPassword: string; newPassword: string }) =>
     request<void>({ url: '/api/admin/staff/me/password', method: 'PUT', data }),
+
+  logoutOthers: () =>
+    request<{ count: number }>({ url: '/api/admin/staff/me/logout-others', method: 'POST' }),
 };

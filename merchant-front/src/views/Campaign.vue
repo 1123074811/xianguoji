@@ -146,6 +146,7 @@
               </td>
               <td class="px-6 py-3 text-center">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border" :class="gbStatusClass(gb.status)">{{ gbStatusText(gb.status) }}</span>
+                <span v-if="gb.status === 1 && isExpiringSoon(gb.endTime)" class="inline-flex items-center ml-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">即将到期</span>
               </td>
               <td class="px-6 py-3 text-right">
                 <div class="flex items-center justify-end gap-2 text-slate-400">
@@ -381,6 +382,14 @@ const gbStatusClass = (status: number) =>
 const formatDate = (d?: string) => {
   if (!d) return '-'
   return new Date(d).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
+const isExpiringSoon = (endTime?: string) => {
+  if (!endTime) return false
+  const end = new Date(endTime).getTime()
+  if (Number.isNaN(end)) return false
+  const diff = end - Date.now()
+  return diff > 0 && diff < 24 * 60 * 60 * 1000
 }
 
 const doEndGroupBuy = async (gb: AdminGroupBuyVO) => {

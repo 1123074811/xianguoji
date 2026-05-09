@@ -45,9 +45,9 @@
         </nav>
       </div>
       <div class="flex items-center gap-5">
-        <button @click="toggleOpenStatus" class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer select-none" :class="isOpen ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'">
-          <span class="w-2 h-2 rounded-full" :class="isOpen ? 'bg-green-600 animate-pulse' : 'bg-slate-400'"></span>
-          {{ isOpen ? '营业中' : '已打烊' }}
+        <button @click="toggleOpenStatus" class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer select-none" :class="appStore.shopOpen ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'">
+          <span class="w-2 h-2 rounded-full" :class="appStore.shopOpen ? 'bg-green-600 animate-pulse' : 'bg-slate-400'"></span>
+          {{ appStore.shopOpen ? '营业中' : '已打烊' }}
         </button>
         <div class="flex items-center gap-3">
           <router-link to="/messages" class="text-slate-500 hover:text-primary transition-colors relative">
@@ -72,37 +72,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { adminShopApi } from '@/api/modules/shop'
 import { toast } from '@/utils/toast'
 import { useWebSocket } from '@/composables/useWebSocket'
+import { useAppStore } from '@/stores/app'
 
 const route = useRoute()
 const router = useRouter()
+const appStore = useAppStore()
 
 const { lastMessage, unreadCount } = useWebSocket()
 
-const isOpen = ref(true)
-
-async function loadOpenStatus() {
-  try {
-    const shop = await adminShopApi.shopInfo()
-    isOpen.value = shop.isOpen === 1
-  } catch (e) {
-    console.warn('加载店铺状态失败', e)
-  }
-}
-
 async function toggleOpenStatus() {
-  const next = isOpen.value ? 0 : 1
-  isOpen.value = !isOpen.value
   try {
-    await adminShopApi.updateOpenStatus(next)
+    const next = appStore.shopOpen ? 0 : 1
+    await appStore.toggleShopOpen()
     toast.success(next === 1 ? '已开启营业' : '已暂停营业')
   } catch (e) {
-    console.warn('切换营业状态失败', e)
-    isOpen.value = !isOpen.value
     toast.error('切换营业状态失败')
   }
 }
@@ -138,5 +125,5 @@ watch(lastMessage, (msg) => {
   toast[t](msg.content, 5000)
 })
 
-onMounted(loadOpenStatus)
+onMounted(() => appStore.loadShopOpen())
 </script>
