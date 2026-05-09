@@ -52,6 +52,11 @@
           <text v-if="buyType === 'group' && canGroupBuy" class="sales">{{ groupActivity?.groupSize }}人成团 · 已拼{{ groupActivity?.totalJoinCount }}件</text>
           <text v-else class="sales">月销 {{ goods.sales }}+</text>
         </view>
+        <view v-if="canGroupBuy && buyType === 'group'" class="activity-countdown">
+          <svg-icon name="schedule" :size="28" color="#E53935" />
+          <countdown-flip :end-time="groupActivity!.endTime" />
+          <text class="activity-time">{{ formatActivityTime(groupActivity!.startTime) }} ~ {{ formatActivityTime(groupActivity!.endTime) }}</text>
+        </view>
       </view>
 
       <!-- Title & Slogan -->
@@ -227,7 +232,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { onShareAppMessage } from '@dcloudio/uni-app';
 import { useCartStore } from '@/stores/cart';
 import { catalogApi } from '@/api/modules/catalog';
@@ -237,6 +242,7 @@ import { userApi } from '@/api/modules/user';
 import { promoApi } from '@/api/modules/promo';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
+import CountdownFlip from '@/components/countdown-flip.vue';
 import type { ProductDetailVO } from '@/api/types/catalog';
 import type { ReviewVO, ReviewSummaryVO } from '@/api/types/review';
 import type { DeliverySettingVO } from '@/api/types/shop';
@@ -254,6 +260,8 @@ const isFavorite = ref(false);
 const groupActivity = ref<GroupBuyActivityVO | null>(null);
 const buyType = ref<'single' | 'group'>('single');
 const cartPanelVisible = ref(false);
+const now = ref(Date.now());
+let activityTimer: ReturnType<typeof setInterval> | null = null;
 
 const activeSkuId = ref(0);
 
@@ -267,7 +275,7 @@ const canGroupBuy = computed(() => {
   if (!groupActivity.value.groupPrice || !groupActivity.value.skuId) return false;
   if (!groupActivity.value.endTime) return true;
   const end = new Date(groupActivity.value.endTime.replace(' ', 'T')).getTime();
-  return Number.isNaN(end) || end > Date.now();
+  return Number.isNaN(end) || end > now.value;
 });
 
 const displayImages = computed(() => {
@@ -322,6 +330,11 @@ onMounted(() => {
     loadDetail();
     recordFootprint();
   }
+  activityTimer = setInterval(() => { now.value = Date.now(); }, 1000);
+});
+
+onUnmounted(() => {
+  if (activityTimer) { clearInterval(activityTimer); activityTimer = null; }
 });
 
 async function recordFootprint() {
@@ -336,6 +349,13 @@ async function recordFootprint() {
 
 function goBack() {
   uni.navigateBack();
+}
+
+function formatActivityTime(t?: string) {
+  if (!t) return '';
+  const d = new Date(t.replace(' ', 'T'));
+  if (Number.isNaN(d.getTime())) return t;
+  return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
 function goToHome() {
@@ -650,6 +670,22 @@ onShareAppMessage(() => {
     .sales {
       font-size: $font-xs;
       color: $color-text-secondary;
+    }
+  }
+
+  .activity-countdown {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: $space-2;
+    padding: $space-1 $space-2;
+    background: rgba($color-price, 0.06);
+    border-radius: $radius-sm;
+
+    .activity-time {
+      font-size: 20rpx;
+      color: $color-text-placeholder;
+      margin-left: auto;
     }
   }
 }

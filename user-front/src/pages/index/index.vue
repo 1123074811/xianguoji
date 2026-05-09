@@ -100,6 +100,9 @@
                 <text class="group-buy-tag">{{ item.groupSize }}人团</text>
                 <text class="group-buy-count">已拼{{ item.totalJoinCount }}件</text>
               </view>
+              <view class="group-buy-countdown" v-if="item.endTime">
+                <countdown-flip :end-time="item.endTime" compact />
+              </view>
               <view class="group-buy-bottom">
                 <view class="group-buy-price">
                   <text class="group-buy-symbol">¥</text>
@@ -140,6 +143,7 @@ import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import GoodsCard from '@/components/goods-card.vue';
 import SvgIcon from '@/components/svg-icon.vue';
+import CountdownFlip from '@/components/countdown-flip.vue';
 import CustomTabBar from '@/components/custom-tab-bar.vue';
 import { catalogApi } from '@/api/modules/catalog';
 import { resolveImageUrl } from '@/utils/image';
@@ -668,6 +672,11 @@ function goGroupDetail(item: GroupBuyActivityVO) {
   .group-buy-count {
     font-size: 20rpx;
     color: $color-text-secondary;
+  }
+
+  .group-buy-countdown {
+    display: flex;
+    align-items: center;
   }
 
   .group-buy-bottom {

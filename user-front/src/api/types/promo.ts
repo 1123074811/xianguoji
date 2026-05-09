@@ -29,6 +29,7 @@ export interface GroupBuyActivityVO {
   originalPrice: string;
   groupSize: number;
   validHours: number;
+  startTime: string;
   endTime: string;
   totalJoinCount: number;
   successCount: number;

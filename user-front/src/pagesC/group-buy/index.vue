@@ -64,6 +64,10 @@
                   <text class="tag">{{ item.groupSize }}人团</text>
                   <text class="sales">已拼 {{ item.totalJoinCount }} 件 · 已成 {{ item.successCount }} 团</text>
                 </view>
+                <view class="activity-row" v-if="item.endTime">
+                  <countdown-flip :end-time="item.endTime" compact />
+                  <text class="time-value">截止 {{ formatEndTime(item.endTime) }}</text>
+                </view>
               </view>
               <view class="bottom">
                 <view class="price-box">
@@ -85,6 +89,7 @@ import { ref, onMounted } from 'vue';
 import { promoApi } from '@/api/modules/promo';
 import { resolveImageUrl } from '@/utils/image';
 import SvgIcon from '@/components/svg-icon.vue';
+import CountdownFlip from '@/components/countdown-flip.vue';
 import type { GroupBuyActivityVO } from '@/api/types/promo';
 
 const groupGoods = ref<GroupBuyActivityVO[]>([]);
@@ -105,6 +110,12 @@ function goBack() {
 
 function goGroupDetail(item: GroupBuyActivityVO) {
   uni.navigateTo({ url: `/pagesA/goods-detail/index?id=${item.productId}` });
+}
+
+function formatEndTime(t: string) {
+  const d = new Date(t.replace(' ', 'T'));
+  if (Number.isNaN(d.getTime())) return t;
+  return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
 async function goShareDetail() {
@@ -287,6 +298,15 @@ async function goShareDetail() {
 
         .tag { font-size: 18rpx; color: $color-primary; background-color: $color-primary-bg; padding: 2rpx $space-1; border-radius: $radius-pill; }
         .sales { font-size: 18rpx; color: $color-text-placeholder; }
+      }
+
+      .activity-row {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+        margin-top: 6rpx;
+
+        .time-value { font-size: 18rpx; color: $color-text-placeholder; }
       }
     }
 
