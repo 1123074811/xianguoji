@@ -25,5 +25,7 @@ public interface GroupBuyService {
 
     void scanExpiredInstances();
 
+    void scanExpiredActivities();
+
     Map<String, Object> getStats();
 }

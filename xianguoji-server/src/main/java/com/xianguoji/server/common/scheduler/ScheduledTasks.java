@@ -103,11 +103,12 @@ public class ScheduledTasks {
     }
 
     /**
-     * 每5分钟：拼团失败扫描
+     * 每5分钟：拼团实例过期扫描 + 活动过期自动关闭
      */
     @Scheduled(cron = "0 */5 * * * *")
     public void scanGroupBuyExpired() {
         groupBuyService.scanExpiredInstances();
+        groupBuyService.scanExpiredActivities();
     }
 
     /**

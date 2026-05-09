@@ -74,6 +74,7 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         Page<GroupBuyActivity> p = activityMapper.selectPage(new Page<>(page, size),
                 new LambdaQueryWrapper<GroupBuyActivity>()
                         .eq(GroupBuyActivity::getStatus, 1)
+                        .ge(GroupBuyActivity::getEndTime, LocalDateTime.now())
                         .orderByDesc(GroupBuyActivity::getCreatedAt));
         List<GroupBuyActivityVO> voList = p.getRecords().stream().map(this::toActivityVO).collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
         return new PageVO<>(p.getTotal(), voList, page, size);
@@ -295,6 +296,36 @@ public class GroupBuyServiceImpl implements GroupBuyService {
             if (rows == 0) continue;
 
             handleInstanceFailure(inst);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void scanExpiredActivities() {
+        List<GroupBuyActivity> expired = activityMapper.selectList(
+                new LambdaQueryWrapper<GroupBuyActivity>()
+                        .eq(GroupBuyActivity::getStatus, 1)
+                        .lt(GroupBuyActivity::getEndTime, LocalDateTime.now()));
+
+        for (GroupBuyActivity activity : expired) {
+            int rows = activityMapper.update(null, new LambdaUpdateWrapper<GroupBuyActivity>()
+                    .eq(GroupBuyActivity::getId, activity.getId())
+                    .eq(GroupBuyActivity::getStatus, 1)
+                    .set(GroupBuyActivity::getStatus, 0));
+            if (rows == 0) continue;
+
+            log.info("拼团活动{}已过期，自动关闭", activity.getId());
+
+            // WS通知商家
+            Product product = productMapper.selectById(activity.getProductId());
+            String pname = product != null ? product.getName() : ("#" + activity.getProductId());
+            try {
+                wsNotificationService.notifyMarketing("拼团活动已到期",
+                        "「" + pname + "」拼团活动已到期自动关闭，进行中的团不受影响",
+                        "/campaign");
+            } catch (RuntimeException e) {
+                log.warn("拼团活动到期通知推送失败 activityId={}", activity.getId(), e);
+            }
         }
     }
 
