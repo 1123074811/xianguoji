@@ -3,6 +3,8 @@ package com.xianguoji.server.module.staff.controller;
 import com.xianguoji.server.common.annotation.AdminRequired;
 import com.xianguoji.server.common.result.PageVO;
 import com.xianguoji.server.common.result.R;
+import com.xianguoji.server.common.security.JwtBlacklistManager;
+import com.xianguoji.server.common.security.JwtUtil;
 import com.xianguoji.server.common.security.LoginContext;
 import com.xianguoji.server.module.staff.dto.StaffAddDto;
 import com.xianguoji.server.module.staff.dto.StaffUpdDto;
@@ -12,6 +14,7 @@ import com.xianguoji.server.module.staff.service.StaffService;
 import com.xianguoji.server.module.staff.vo.StaffVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +30,8 @@ public class StaffController {
 
     private final StaffService staffService;
     private final StaffMapper staffMapper;
+    private final JwtBlacklistManager jwtBlacklistManager;
+    private final JwtUtil jwtUtil;
 
     @Operation(summary = "当前员工安全信息")
     @GetMapping("/me/security")
@@ -81,5 +86,27 @@ public class StaffController {
     public R<Void> changeSelfPassword(@RequestBody Map<String, String> body) {
         staffService.changeSelfPassword(LoginContext.sid(), body.get("oldPassword"), body.get("newPassword"));
         return R.ok();
+    }
+
+    @Operation(summary = "退出其他设备")
+    @PostMapping("/me/logout-others")
+    @AdminRequired
+    public R<Map<String, Integer>> logoutOtherDevices(HttpServletRequest request) {
+        String token = extractToken(request);
+        String currentJti = "";
+        if (token != null && !token.isBlank()) {
+            var claims = jwtUtil.parse(token);
+            currentJti = claims.getId() != null ? claims.getId() : "";
+        }
+        int count = jwtBlacklistManager.blacklistAllForUser(LoginContext.sid(), currentJti);
+        return R.ok(Map.of("count", count));
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
+        }
+        return request.getHeader("token");
     }
 }

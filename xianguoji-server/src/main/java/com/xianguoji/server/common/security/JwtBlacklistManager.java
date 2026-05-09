@@ -97,6 +97,35 @@ public class JwtBlacklistManager {
         return uid != null ? Long.valueOf(uid) : null;
     }
 
+    /**
+     * 将指定用户的所有活跃 token 加入黑名单（排除当前 jti）
+     *
+     * @param uid        用户/员工 ID
+     * @param currentJti 当前请求的 jti，不加入黑名单
+     */
+    public int blacklistAllForUser(Long uid, String currentJti) {
+        var keys = stringRedisTemplate.keys(ACTIVE_TOKEN_PREFIX + "*");
+        if (keys == null || keys.isEmpty()) return 0;
+        int count = 0;
+        for (String key : keys) {
+            String val = stringRedisTemplate.opsForValue().get(key);
+            if (val != null && val.equals(String.valueOf(uid))) {
+                String jti = key.substring(ACTIVE_TOKEN_PREFIX.length());
+                if (jti.equals(currentJti)) continue;
+                // 加入黑名单，TTL 取 active token 剩余时间
+                Long ttl = stringRedisTemplate.getExpire(key, TimeUnit.MILLISECONDS);
+                if (ttl != null && ttl > 0) {
+                    stringRedisTemplate.opsForValue().set(
+                            BLACKLIST_PREFIX + jti, "1", Duration.ofMillis(ttl));
+                }
+                stringRedisTemplate.delete(key);
+                count++;
+                log.info("[JwtBlacklist] 强制下线 uid={}, jti={}", uid, jti);
+            }
+        }
+        return count;
+    }
+
     private String extractJti(String token) {
         try {
             // 从 token claims 中提取 jti，不依赖 JwtUtil 避免循环依赖
