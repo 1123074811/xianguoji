@@ -43,6 +43,12 @@ public class GroupBuyController {
         return R.ok(groupBuyService.getInstanceByShareCode(shareCode));
     }
 
+    @Operation(summary = "拼团实例详情（公开）")
+    @GetMapping("/api/pub/group-buy/instance/{instanceId}")
+    public R<GroupBuyInstanceVO> instanceDetail(@PathVariable Long instanceId) {
+        return R.ok(groupBuyService.getInstanceDetail(instanceId));
+    }
+
     @Operation(summary = "开团")
     @PostMapping("/api/u/group-buy/launch")
     @LoginRequired

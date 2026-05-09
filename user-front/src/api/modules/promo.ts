@@ -36,6 +36,9 @@ export const promoApi = {
   groupBuyDetail: (instanceId: number) =>
     request<GroupBuyInstanceVO>({ url: `/api/u/group-buy/${instanceId}` }),
 
+  groupBuyInstanceDetail: (instanceId: number) =>
+    request<GroupBuyInstanceVO>({ url: `/api/pub/group-buy/instance/${instanceId}`, anonymous: true }),
+
   launchGroupBuy: (data: { activityId: number } & GroupBuyOrderDto) =>
     request<{ instanceId: number; shareCode: string }>({ url: '/api/u/group-buy/launch', method: 'POST', data }),
 

@@ -178,7 +178,7 @@ async function loadByShareCode(code: string) {
 
 async function loadByInstanceId(id: number) {
   try {
-    instance.value = await promoApi.groupBuyDetail(id);
+    instance.value = await promoApi.groupBuyInstanceDetail(id);
     await loadRelated();
   } catch (e) {
     uni.showToast({ title: '加载拼团失败', icon: 'none' });
