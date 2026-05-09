@@ -74,11 +74,16 @@
               <td class="px-3 py-3 text-body-md" :class="product.totalStock < 50 ? 'text-error font-bold' : 'text-slate-600'">{{ product.totalStock }} 件</td>
               <td class="px-3 py-3 text-body-md text-slate-600">{{ product.sales }}</td>
               <td class="px-3 py-3">
-                <button @click="toggleStatus(product)"
-                  class="w-10 h-5 rounded-full relative cursor-pointer shadow-inner transition-colors"
-                  :class="product.status === 1 ? 'bg-primary-container' : 'bg-outline-variant'">
-                  <div class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all" :class="product.status === 1 ? 'right-0.5' : 'left-0.5'"></div>
-                </button>
+                <template v-if="product.status === 3">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-600 border border-amber-200">草稿</span>
+                </template>
+                <template v-else>
+                  <button @click="toggleStatus(product)"
+                    class="w-10 h-5 rounded-full relative cursor-pointer shadow-inner transition-colors"
+                    :class="product.status === 1 ? 'bg-primary-container' : 'bg-outline-variant'">
+                    <div class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all" :class="product.status === 1 ? 'right-0.5' : 'left-0.5'"></div>
+                  </button>
+                </template>
               </td>
               <td class="px-6 py-3 text-right">
                 <div class="flex items-center justify-end gap-2 text-slate-400">
@@ -147,10 +152,11 @@ import { toast } from '@/utils/toast';
 import Tooltip from '@/components/Tooltip.vue';
 import Popconfirm from '@/components/Popconfirm.vue';
 
-/** status: 0=已下架 1=在售 2=回收站 */
+/** status: 0=已下架 1=在售 2=回收站 3=草稿 */
 const tabs: { label: string; value?: number }[] = [
   { label: '全部' },
   { label: '在售中', value: 1 },
+  { label: '草稿箱', value: 3 },
   { label: '已下架', value: 0 },
   { label: '回收站', value: 2 },
 ];

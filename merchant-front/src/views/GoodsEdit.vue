@@ -135,7 +135,7 @@
             <h2 class="font-h3 text-h3 text-slate-900">商品详情介绍</h2>
           </div>
           <div class="p-6">
-            <textarea class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-sm min-h-[200px] resize-y" v-model="form.description" placeholder="请输入商品详情介绍"></textarea>
+            <rich-editor v-model="form.description" />
           </div>
         </section>
       </div>
@@ -348,7 +348,7 @@
                     <div class="w-0.5 h-3 bg-green-700 rounded"></div>
                     <span class="text-[10px] font-semibold text-slate-700">产品详情</span>
                   </div>
-                  <p class="text-[9px] text-slate-600 leading-relaxed line-clamp-4">{{ form.description }}</p>
+                  <div class="preview-description text-[9px] text-slate-600 leading-relaxed line-clamp-6" v-html="decodedDescription"></div>
                 </div>
                 <!-- Detail Images -->
                 <div v-if="detailImages.length > 0" class="px-3 pb-3 space-y-1.5">
@@ -398,6 +398,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { adminCatalogApi } from '@/api/modules/catalog'
+import RichEditor from '@/components/rich-editor.vue'
 import { adminPromoApi } from '@/api/modules/promo'
 import { request } from '@/api/request'
 import { resolveImageUrl } from '@/utils/image'
@@ -462,6 +463,13 @@ interface SkuItem {
 const skuList = ref<SkuItem[]>([{ specName: '', price: '', originalPrice: '', stock: 0, isDefault: 1 }])
 
 const categories = ref<AdminCategoryVO[]>([])
+
+const decodedDescription = computed(() => {
+  const str = form.value.description || ''
+  const txt = document.createElement('textarea')
+  txt.innerHTML = str
+  return txt.value
+})
 
 const healthScore = computed(() => {
   let score = 0
@@ -745,7 +753,7 @@ function buildPayload(statusOverride?: number) {
 async function saveDraft() {
   saving.value = true
   try {
-    const payload = buildPayload(0)
+    const payload = buildPayload(3)
     let savedId = productId.value
     if (isEdit.value) {
       await adminCatalogApi.updateProduct(productId.value, payload)
@@ -806,3 +814,64 @@ onUnmounted(() => {
   if (previewCarouselTimer) window.clearInterval(previewCarouselTimer)
 })
 </script>
+
+<style>
+.preview-description h3 {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+.preview-description p {
+  font-size: 9px;
+  color: #475569;
+  margin-bottom: 2px;
+  line-height: 1.4;
+}
+.preview-description ul {
+  list-style: disc;
+  padding-left: 12px;
+  font-size: 9px;
+  color: #475569;
+  margin-bottom: 2px;
+}
+.preview-description li {
+  margin-bottom: 1px;
+}
+.preview-description b,
+.preview-description strong {
+  font-weight: 600;
+}
+.preview-description blockquote {
+  border-left: 2px solid #2E7D32;
+  padding: 2px 6px;
+  margin: 2px 0;
+  background: #f0fdf4;
+  font-size: 9px;
+  color: #475569;
+}
+.preview-description u {
+  text-decoration: underline;
+}
+.preview-description s,
+.preview-description strike {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+.preview-description a {
+  color: #2E7D32;
+  text-decoration: underline;
+}
+.preview-description img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 3px 0;
+}
+.preview-description hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 4px 0;
+}
+</style>
