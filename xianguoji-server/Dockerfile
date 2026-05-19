@@ -1,7 +1,7 @@
 # S-16: 多阶段构建，非 root 运行
 FROM eclipse-temurin:17-jre-alpine AS runtime
 
-RUN addgroup -S app && adduser -S app -G app
+RUN apk add --no-cache wget && addgroup -S app && adduser -S app -G app
 
 WORKDIR /app
 

@@ -13,6 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DOMAIN_NAME="oujincong.xyz"
 APP_DIR="/opt/xianguoji"
 SERVER_PORT=8080
+APP_USER="xianguoji"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -416,8 +417,8 @@ GRANT ALL PRIVILEGES ON xianguoji.* TO 'root'@'localhost';
 FLUSH PRIVILEGES;
 SQLEOF
 
-        # 允许远程连接
-        sed -i 's/^bind-address.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf 2>/dev/null || true
+        # 仅监听本机，公网访问由 Nginx 代理业务接口，禁止直接暴露 MySQL
+        sed -i 's/^bind-address.*/bind-address = 127.0.0.1/' /etc/mysql/mysql.conf.d/mysqld.cnf 2>/dev/null || true
         systemctl restart mysql
         sleep 5
         log_info "系统 MySQL 配置完成"
@@ -563,6 +564,11 @@ else
     # ---- Systemd 部署 ----
     log_step "8. 使用 Systemd 部署后端..."
 
+    if ! id -u "$APP_USER" >/dev/null 2>&1; then
+        useradd --system --home "$APP_DIR" --shell /usr/sbin/nologin "$APP_USER"
+        log_info "已创建低权限运行用户：$APP_USER"
+    fi
+
     # 生成生产配置
     if [ ! -f "$APP_DIR/application-prod-override.yml" ]; then
         cat > "$APP_DIR/application-prod-override.yml" <<PRODYML
@@ -596,19 +602,23 @@ PRODYML
     fi
 
     # 创建 systemd 服务
-    if [ ! -f "/etc/systemd/system/xianguoji.service" ]; then
-        cat > /etc/systemd/system/xianguoji.service <<'SYSTEMDEOF'
+    cat > /etc/systemd/system/xianguoji.service <<SYSTEMDEOF
 [Unit]
 Description=XianGuoJi Backend Service
 After=network.target mysql.service redis.service
 
 [Service]
 Type=simple
-User=root
+User=$APP_USER
+Group=$APP_USER
 WorkingDirectory=/opt/xianguoji
 ExecStart=/usr/bin/java -server -Xms512m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -Djava.security.egd=file:/dev/./urandom -jar /opt/xianguoji/xianguoji-server/target/xianguoji-server-1.0.0.jar --spring.profiles.active=prod --spring.config.additional-location=file:/opt/xianguoji/application-prod-override.yml
 Restart=always
 RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/opt/xianguoji /data/xianguoji /var/log/xianguoji
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=xianguoji
@@ -616,9 +626,10 @@ SyslogIdentifier=xianguoji
 [Install]
 WantedBy=multi-user.target
 SYSTEMDEOF
-    fi
 
     mkdir -p /data/xianguoji/upload
+    mkdir -p /var/log/xianguoji
+    chown -R "$APP_USER:$APP_USER" "$APP_DIR" /data/xianguoji /var/log/xianguoji
 
     systemctl daemon-reload
     if [ "$IS_UPGRADE" = "true" ]; then
