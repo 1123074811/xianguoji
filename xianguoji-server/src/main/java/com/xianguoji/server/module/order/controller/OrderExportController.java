@@ -24,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/order")
 @RequiredArgsConstructor
-@AdminRequired
+@AdminRequired(roles = {"owner", "admin", "finance"})
 public class OrderExportController {
 
     private final OrderMapper orderMapper;

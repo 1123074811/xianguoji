@@ -38,6 +38,7 @@ public class HotspotRateLimitFilter extends OncePerRequestFilter {
     /** 路径前缀 → (窗口秒数, 阈值)；注意：必须前缀更具体的规则在前。
      *  实际登录/短信路径在 /api/pub/auth，原 /api/auth 仅用于 logout 等已认证场景。 */
     private static final List<Rule> RULES = List.of(
+            new Rule("/api/pub/file/upload-avatar", 10, 10),
             new Rule("/api/pub/auth", 10, 30),
             new Rule("/api/u/auth", 10, 30),
             new Rule("/api/u/order", 10, 60),

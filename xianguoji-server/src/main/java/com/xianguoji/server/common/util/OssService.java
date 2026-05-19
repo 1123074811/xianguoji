@@ -85,6 +85,11 @@ public class OssService {
                 securityEventService.log("UPLOAD_MISMATCH", "", "ext=" + ext + " header=" + hexHeader.substring(0, 16));
                 throw new BizException(ResultCode.PARAM_ERROR, "文件内容与扩展名不匹配");
             }
+            if ("webp".equalsIgnoreCase(ext) && !hexHeader.substring(16, Math.min(24, hexHeader.length())).equals("57454250")) {
+                log.warn("[S-10] WebP文件格式不匹配: header={}", hexHeader.substring(0, Math.min(24, hexHeader.length())));
+                securityEventService.log("UPLOAD_MISMATCH", "", "ext=" + ext + " header=" + hexHeader.substring(0, 16));
+                throw new BizException(ResultCode.PARAM_ERROR, "文件内容与扩展名不匹配");
+            }
         } catch (IOException e) {
             throw new BizException(ResultCode.INTERNAL_ERROR, "文件校验失败");
         }

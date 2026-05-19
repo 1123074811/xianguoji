@@ -4,6 +4,7 @@ import lombok.Data;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.redisson.config.SingleServerConfig;
 import org.redisson.spring.data.connection.RedissonConnection;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -27,13 +28,13 @@ public class RedissonConfig {
     public RedissonClient redissonClient() {
         Config config = new Config();
         String address = "redis://" + host + ":" + port;
-        config.useSingleServer()
+        SingleServerConfig singleServerConfig = config.useSingleServer()
                 .setAddress(address)
                 .setDatabase(database)
                 .setConnectionPoolSize(10)
                 .setConnectionMinimumIdleSize(2);
         if (password != null && !password.isBlank()) {
-            config.useSingleServer().setPassword(password);
+            singleServerConfig.setPassword(password);
         }
         return Redisson.create(config);
     }

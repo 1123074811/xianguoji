@@ -94,7 +94,7 @@ public class AdminOrderController {
 
     @Operation(summary = "同意退款")
     @PostMapping("/refund/{refundNo}/approve")
-    @AdminRequired
+    @AdminRequired(roles = {"owner", "admin", "finance"})
     public R<Void> approveRefund(@PathVariable String refundNo) {
         orderService.approveRefund(refundNo);
         return R.ok();
@@ -102,7 +102,7 @@ public class AdminOrderController {
 
     @Operation(summary = "拒绝退款")
     @PostMapping("/refund/{refundNo}/reject")
-    @AdminRequired
+    @AdminRequired(roles = {"owner", "admin", "finance"})
     public R<Void> rejectRefund(@PathVariable String refundNo, @RequestBody Map<String, String> body) {
         orderService.rejectRefund(refundNo, body.get("reason"));
         return R.ok();

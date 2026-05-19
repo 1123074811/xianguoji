@@ -26,7 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/report")
 @RequiredArgsConstructor
-@AdminRequired
+@AdminRequired(roles = {"owner", "admin", "finance"})
 public class ReportController {
 
     private final ReportService reportService;
