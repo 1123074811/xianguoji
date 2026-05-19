@@ -23,6 +23,8 @@ public class Refund {
     @TableField(typeHandler = JacksonTypeHandler.class)
     private List<String> images;
     private Integer status;
+    private String refundChannel;
+    private String refundTransactionId;
     private String rejectReason;
     private Long handledBy;
     private LocalDateTime handledAt;

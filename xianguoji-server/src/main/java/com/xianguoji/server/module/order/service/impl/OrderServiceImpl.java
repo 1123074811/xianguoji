@@ -8,6 +8,7 @@ import com.xianguoji.server.common.enums.OrderStatus;
 import com.xianguoji.server.common.exception.BizException;
 import com.xianguoji.server.common.result.PageVO;
 import com.xianguoji.server.common.result.ResultCode;
+import com.xianguoji.server.common.security.LoginContext;
 import com.xianguoji.server.common.util.OrderNoUtil;
 import com.xianguoji.server.common.util.PickupCodeUtil;
 import com.xianguoji.server.common.util.StockRedisHelper;
@@ -52,6 +53,8 @@ import com.xianguoji.server.module.shop.mapper.ShopMapper;
 import com.xianguoji.server.module.user.mapper.UserAddressMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +66,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -88,6 +92,7 @@ public class OrderServiceImpl implements OrderService {
     private final WsNotificationService wsNotificationService;
     private final StockRedisHelper stockRedisHelper;
     private final ApplicationEventPublisher eventPublisher;
+    private final RedissonClient redissonClient;
 
     @Override
     public OrderPreviewVO preview(Long uid, OrderPreviewDto dto) {
@@ -280,8 +285,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setOrderNo(orderNo);
         order.setUserId(uid);
-        order.setStatus(OrderStatus.PENDING_ACCEPT.getCode());
-        order.setPayStatus(1);
+        order.setStatus(OrderStatus.PENDING_PAY.getCode());
+        order.setPayStatus(0);
         order.setDeliveryType(dto.getDeliveryType());
         order.setDeliveryTime(dto.getDeliveryTime());
         order.setGoodsAmount(goodsAmount);
@@ -352,14 +357,57 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Object pay(Long uid, String orderNo) {
-        Order order = getOrderByNo(orderNo);
-        if (!order.getUserId().equals(uid)) throw new BizException(ResultCode.ACCESS_DENIED);
-        if (order.getStatus() != OrderStatus.PENDING_PAY.getCode()) {
-            throw new BizException(ResultCode.ORDER_STATUS_INVALID, "订单状态不允许支付");
+        RLock lock = redissonClient.getLock("lock:order:pay:" + orderNo);
+        boolean locked = false;
+        try {
+            locked = lock.tryLock(3, 10, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BizException(ResultCode.PAYMENT_DUPLICATE, "支付处理中，请勿重复提交");
+            }
+            Order order = getOrderByNo(orderNo);
+            if (!order.getUserId().equals(uid)) throw new BizException(ResultCode.ACCESS_DENIED);
+            if (order.getStatus() != OrderStatus.PENDING_PAY.getCode()) {
+                if (order.getPayStatus() != null && order.getPayStatus() == 1
+                        && order.getStatus() != OrderStatus.CANCELLED.getCode()
+                        && order.getStatus() != OrderStatus.REFUNDED.getCode()
+                        && order.getStatus() != OrderStatus.COMPLETED.getCode()) {
+                    return Map.of(
+                            "payNo", order.getPayTradeNo() != null ? order.getPayTradeNo() : "",
+                            "orderNo", order.getOrderNo(),
+                            "payChannel", order.getPayMethod() != null ? order.getPayMethod() : "MOCK",
+                            "paidAt", order.getPayTime() != null ? order.getPayTime() : "",
+                            "status", order.getStatus()
+                    );
+                }
+                throw new BizException(ResultCode.ORDER_STATUS_INVALID, "订单状态不允许支付");
+            }
+            LocalDateTime paidAt = LocalDateTime.now();
+            String payNo = "MOCK" + OrderNoUtil.gen();
+            order.setStatus(OrderStatus.PENDING_ACCEPT.getCode());
+            order.setPayStatus(1);
+            order.setPayMethod("MOCK");
+            order.setPayTradeNo(payNo);
+            order.setPayTime(paidAt);
+            orderMapper.updateById(order);
+            addStatusLog(order.getId(), OrderStatus.PENDING_PAY.getCode(), OrderStatus.PENDING_ACCEPT.getCode(), 1, uid, "模拟支付成功");
+            eventPublisher.publishEvent(new OrderPaidEvent(this, orderNo, order.getId(), order.getPayAmount().toPlainString(), order.getDeliveryType()));
+            return Map.of(
+                    "payNo", payNo,
+                    "orderNo", order.getOrderNo(),
+                    "payChannel", "MOCK",
+                    "paidAt", paidAt,
+                    "status", order.getStatus()
+            );
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BizException(ResultCode.BIZ_ERROR, "支付处理中断，请稍后重试");
+        } finally {
+            if (locked && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
-        // TODO: 微信支付占位
-        throw new UnsupportedOperationException("TODO: 集成微信支付 unifiedOrder");
     }
 
     @Override
@@ -456,10 +504,19 @@ public class OrderServiceImpl implements OrderService {
     public void applyRefund(Long uid, RefundApplyDto dto) {
         Order order = getOrderByNo(dto.getOrderNo());
         if (!order.getUserId().equals(uid)) throw new BizException(ResultCode.ACCESS_DENIED);
-        if (order.getStatus() < OrderStatus.PENDING_ACCEPT.getCode()) {
+        if (!isRefundableStatus(order.getStatus())) {
             throw new BizException(ResultCode.ORDER_STATUS_INVALID, "订单状态不允许退款");
         }
 
+        Refund existing = refundMapper.selectOne(new LambdaQueryWrapper<Refund>()
+                .eq(Refund::getOrderId, order.getId())
+                .in(Refund::getStatus, 0, 1, 3)
+                .last("LIMIT 1"));
+        if (existing != null) {
+            return;
+        }
+
+        int fromStatus = order.getStatus();
         Refund refund = new Refund();
         refund.setRefundNo(OrderNoUtil.genRefundNo());
         refund.setOrderId(order.getId());
@@ -473,7 +530,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStatus(OrderStatus.REFUNDING.getCode());
         orderMapper.updateById(order);
-        addStatusLog(order.getId(), order.getStatus(), OrderStatus.REFUNDING.getCode(), 1, uid, "申请退款");
+        addStatusLog(order.getId(), fromStatus, OrderStatus.REFUNDING.getCode(), 1, uid, "申请退款");
 
         // WebSocket通知商家端
         wsNotificationService.notifyRefundApply(order.getOrderNo(), order.getPayAmount().toPlainString());
@@ -494,6 +551,8 @@ public class OrderServiceImpl implements OrderService {
                 .reason(refund.getReason())
                 .images(refund.getImages())
                 .status(refund.getStatus())
+                .refundChannel(refund.getRefundChannel())
+                .refundTransactionId(refund.getRefundTransactionId())
                 .rejectReason(refund.getRejectReason())
                 .handledAt(refund.getHandledAt())
                 .createdAt(refund.getCreatedAt())
@@ -614,23 +673,45 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approveRefund(String refundNo) {
-        Refund refund = refundMapper.selectOne(
-                new LambdaQueryWrapper<Refund>().eq(Refund::getRefundNo, refundNo));
-        if (refund == null) throw new BizException(ResultCode.NOT_FOUND, "退款单不存在");
-        if (refund.getStatus() != 0) throw new BizException(ResultCode.BIZ_ERROR, "退款单状态不正确");
+        RLock lock = redissonClient.getLock("lock:order:refund:" + refundNo);
+        boolean locked = false;
+        try {
+            locked = lock.tryLock(3, 10, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BizException(ResultCode.BIZ_ERROR, "退款处理中，请勿重复提交");
+            }
+            Refund refund = refundMapper.selectOne(
+                    new LambdaQueryWrapper<Refund>().eq(Refund::getRefundNo, refundNo));
+            if (refund == null) throw new BizException(ResultCode.NOT_FOUND, "退款单不存在");
+            if (refund.getStatus() == 3) return;
+            if (refund.getStatus() != 0 && refund.getStatus() != 1) {
+                throw new BizException(ResultCode.BIZ_ERROR, "退款单状态不正确");
+            }
 
-        refund.setStatus(3); // 已退款
-        refund.setHandledAt(LocalDateTime.now());
-        refundMapper.updateById(refund);
+            refund.setStatus(3);
+            refund.setRefundChannel("MOCK");
+            refund.setRefundTransactionId("MOCK_REFUND_" + refund.getRefundNo());
+            refund.setHandledBy(LoginContext.sid());
+            refund.setHandledAt(LocalDateTime.now());
+            refundMapper.updateById(refund);
 
-        Order order = orderMapper.selectById(refund.getOrderId());
-        if (order != null) {
-            order.setPayStatus(2);
-            order.setStatus(OrderStatus.REFUNDED.getCode());
-            orderMapper.updateById(order);
-            addStatusLog(order.getId(), OrderStatus.REFUNDING.getCode(), OrderStatus.REFUNDED.getCode(), 2, null, "退款完成");
+            Order order = orderMapper.selectById(refund.getOrderId());
+            if (order != null) {
+                if (order.getStatus() == OrderStatus.REFUNDED.getCode()) return;
+                int fromStatus = order.getStatus();
+                order.setPayStatus(2);
+                order.setStatus(OrderStatus.REFUNDED.getCode());
+                orderMapper.updateById(order);
+                addStatusLog(order.getId(), fromStatus, OrderStatus.REFUNDED.getCode(), 2, null, "模拟退款完成");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BizException(ResultCode.BIZ_ERROR, "退款处理中断，请稍后重试");
+        } finally {
+            if (locked && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
-        // TODO: 调微信支付退款
     }
 
     @Override
@@ -643,14 +724,24 @@ public class OrderServiceImpl implements OrderService {
 
         refund.setStatus(2);
         refund.setRejectReason(reason);
+        refund.setHandledBy(LoginContext.sid());
         refund.setHandledAt(LocalDateTime.now());
         refundMapper.updateById(refund);
 
         Order order = orderMapper.selectById(refund.getOrderId());
         if (order != null) {
-            // 退回原状态
-            order.setStatus(OrderStatus.COMPLETED.getCode());
+            int fromStatus = order.getStatus();
+            OrderStatusLog refundApplyLog = statusLogMapper.selectOne(new LambdaQueryWrapper<OrderStatusLog>()
+                    .eq(OrderStatusLog::getOrderId, order.getId())
+                    .eq(OrderStatusLog::getToStatus, OrderStatus.REFUNDING.getCode())
+                    .orderByDesc(OrderStatusLog::getId)
+                    .last("LIMIT 1"));
+            int restoreStatus = refundApplyLog != null && refundApplyLog.getFromStatus() != null
+                    ? refundApplyLog.getFromStatus()
+                    : OrderStatus.PENDING_ACCEPT.getCode();
+            order.setStatus(restoreStatus);
             orderMapper.updateById(order);
+            addStatusLog(order.getId(), fromStatus, restoreStatus, 2, null, "商家拒绝退款: " + reason);
         }
     }
 
@@ -751,6 +842,15 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    private boolean isRefundableStatus(Integer status) {
+        if (status == null) return false;
+        return status == OrderStatus.PENDING_ACCEPT.getCode()
+                || status == OrderStatus.PREPARING.getCode()
+                || status == OrderStatus.DELIVERING.getCode()
+                || status == OrderStatus.PENDING_PICKUP.getCode()
+                || status == OrderStatus.COMPLETED.getCode();
+    }
+
     private OrderVO toOrderVO(Order order) {
         List<OrderItem> items = orderItemMapper.selectList(
                 new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, order.getId()));
@@ -784,6 +884,8 @@ public class OrderServiceImpl implements OrderService {
                 .discountAmount(order.getDiscountAmount())
                 .deliveryFee(order.getDeliveryFee())
                 .payAmount(order.getPayAmount())
+                .payMethod(order.getPayMethod())
+                .payTradeNo(order.getPayTradeNo())
                 .userRemark(order.getUserRemark())
                 .cancelReason(order.getCancelReason())
                 .groupBuyInstanceId(order.getGroupBuyInstanceId())

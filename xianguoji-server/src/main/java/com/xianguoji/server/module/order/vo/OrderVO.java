@@ -31,6 +31,8 @@ public class OrderVO {
     private BigDecimal discountAmount;
     private BigDecimal deliveryFee;
     private BigDecimal payAmount;
+    private String payMethod;
+    private String payTradeNo;
     private String userRemark;
     private String cancelReason;
     private Long groupBuyInstanceId;

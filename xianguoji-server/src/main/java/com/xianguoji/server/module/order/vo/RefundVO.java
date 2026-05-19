@@ -22,6 +22,8 @@ public class RefundVO {
     private String reason;
     private java.util.List<String> images;
     private Integer status;
+    private String refundChannel;
+    private String refundTransactionId;
     private String rejectReason;
     private LocalDateTime handledAt;
     private LocalDateTime createdAt;

@@ -527,10 +527,8 @@ public class GroupBuyServiceImpl implements GroupBuyService {
         Order order = new Order();
         order.setOrderNo(orderNo);
         order.setUserId(uid);
-        order.setStatus(0);
-        order.setPayStatus(1);
-        order.setPayTime(LocalDateTime.now());
-        order.setPayTradeNo("MOCK_GROUP_PAY_" + orderNo);
+        order.setStatus(OrderStatus.PENDING_PAY.getCode());
+        order.setPayStatus(0);
         order.setDeliveryType(deliveryType != null ? deliveryType : 1);
         order.setDeliveryTime(deliveryTime);
         order.setGoodsAmount(activity.getGroupPrice());
@@ -570,10 +568,10 @@ public class GroupBuyServiceImpl implements GroupBuyService {
 
         OrderStatusLog slog = new OrderStatusLog();
         slog.setOrderId(order.getId());
-        slog.setToStatus(0);
+        slog.setToStatus(OrderStatus.PENDING_PAY.getCode());
         slog.setOperatorType(1);
         slog.setOperatorId(uid);
-        slog.setRemark(logRemark + "（模拟支付成功）");
+        slog.setRemark(logRemark);
         statusLogMapper.insert(slog);
 
         return orderNo;
