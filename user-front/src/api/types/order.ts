@@ -40,7 +40,7 @@ export interface OrderSubmitDto {
   cartItemIds?: number[];
   userCouponId?: number;
   userRemark?: string;
-  payMethod: 'wechat' | 'alipay';
+  payMethod: 'wechat' | 'alipay' | 'mock' | 'offline' | 'reservation';
   groupBuyActivityId?: number;
   groupBuyInstanceId?: number;
 }

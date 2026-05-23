@@ -8,12 +8,22 @@
 
     <!-- Avatar -->
     <view class="avatar-section">
+      <!-- #ifdef MP-WEIXIN -->
       <button class="avatar-btn" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
         <image :src="avatarUrl || '/static/images/default-avatar.png'" mode="aspectFill" class="avatar" />
         <view class="avatar-edit-hint">
           <svg-icon name="edit" :size="28" color="#ffffff" />
         </view>
       </button>
+      <!-- #endif -->
+      <!-- #ifdef H5 -->
+      <button class="avatar-btn" @tap="showH5AvatarTip">
+        <image :src="avatarUrl || '/static/images/default-avatar.png'" mode="aspectFill" class="avatar" />
+        <view class="avatar-edit-hint">
+          <svg-icon name="edit" :size="28" color="#ffffff" />
+        </view>
+      </button>
+      <!-- #endif -->
       <text class="hint">点击更换头像</text>
     </view>
 
@@ -71,6 +81,10 @@ function onChooseAvatar(e: any) {
     avatarUrl.value = tempUrl;
     avatarChanged.value = true;
   }
+}
+
+function showH5AvatarTip() {
+  uni.showToast({ title: 'H5演示版暂使用默认头像', icon: 'none' });
 }
 
 function onNicknameBlur(e: any) {

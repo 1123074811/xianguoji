@@ -2,6 +2,13 @@ import { useUserStore } from '@/stores/user';
 
 // F-1: 环境切换 + F-2: 生产环境强制 HTTPS
 const BASE_URL = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8080';
+let CLIENT_TYPE = import.meta.env.VITE_CLIENT_TYPE || 'h5';
+// #ifdef MP-WEIXIN
+CLIENT_TYPE = 'miniapp';
+// #endif
+// #ifdef APP-PLUS
+CLIENT_TYPE = 'app';
+// #endif
 
 // F-2: 生产环境校验 HTTPS
 if (import.meta.env.PROD && BASE_URL.startsWith('http://')) {
@@ -158,7 +165,7 @@ export function request<T = any>(opts: RequestOptions): Promise<T> {
         // F-6: 幂等请求 ID
         ...(opts.requestId ? { 'X-Request-Id': opts.requestId } : {}),
         // F-9: 防抓包标记
-        'X-Client-Type': 'miniapp',
+        'X-Client-Type': CLIENT_TYPE,
         ...opts.header,
       },
       success: (res) => {

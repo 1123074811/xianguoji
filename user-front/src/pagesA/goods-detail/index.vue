@@ -7,9 +7,16 @@
       </view>
       <text class="title">鲜果记</text>
       <view class="right-btns">
+        <!-- #ifdef MP-WEIXIN -->
         <button class="btn share-btn" open-type="share">
           <svg-icon name="share" :size="40" color="#2E7D32" />
         </button>
+        <!-- #endif -->
+        <!-- #ifdef H5 -->
+        <button class="btn share-btn" @tap="copyShareLink">
+          <svg-icon name="share" :size="40" color="#2E7D32" />
+        </button>
+        <!-- #endif -->
         <view class="btn" @tap="goToChat">
           <svg-icon name="chat" :size="40" color="#2E7D32" />
         </view>
@@ -497,6 +504,15 @@ async function handleLaunchGroup() {
   // 跳转到结算页携带 groupBuyActivityId，由结算页发起 launchGroupBuy
   uni.navigateTo({
     url: `/pagesB/checkout/index?groupBuyActivityId=${groupActivity.value.id}`,
+  });
+}
+
+function copyShareLink() {
+  const path = `/pagesA/goods-detail/index?id=${productId.value}`;
+  const base = typeof window !== 'undefined' ? window.location.origin : '';
+  uni.setClipboardData({
+    data: base ? `${base}${path}` : path,
+    success: () => uni.showToast({ title: '链接已复制', icon: 'success' }),
   });
 }
 

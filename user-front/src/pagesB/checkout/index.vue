@@ -245,6 +245,9 @@ const routeOptions = ref<Record<string, string>>({});
 const groupBuyActivity = ref<GroupBuyActivityVO | null>(null);
 const groupBuyInstance = ref<GroupBuyInstanceVO | null>(null);
 const isGroupBuyMode = computed(() => !!(groupBuyActivity.value || groupBuyInstance.value));
+const isWechatPayEnabled = import.meta.env.VITE_ENABLE_WECHAT_PAY === 'true';
+const demoPayMethod = (import.meta.env.VITE_DEMO_PAY_METHOD || 'mock') as 'mock' | 'offline' | 'reservation';
+const currentPayMethod = computed(() => isWechatPayEnabled ? 'wechat' : demoPayMethod);
 
 const finalPrice = computed(() => {
   if (preview.value) return preview.value.payAmount;
@@ -454,7 +457,7 @@ async function submitOrder() {
         pickupPointId: deliveryType.value === 2 ? preview.value?.pickupPoint?.id : undefined,
         deliveryType: deliveryType.value,
         userRemark: remark.value || undefined,
-        payMethod: 'wechat',
+        payMethod: currentPayMethod.value,
       };
       let instanceId: number;
       if (groupBuyInstance.value) {
@@ -481,10 +484,17 @@ async function submitOrder() {
       cartItemIds: cartItemIds.length ? cartItemIds : undefined,
       userCouponId: selectedCouponId.value,
       userRemark: remark.value || undefined,
-      payMethod: 'wechat',
+      payMethod: currentPayMethod.value,
     });
+    if (!isWechatPayEnabled && demoPayMethod === 'mock') {
+      try {
+        await orderApi.pay(result.orderNo, { payMethod: 'mock' });
+      } catch (e) {
+        console.warn('模拟支付失败，订单已提交', e);
+      }
+    }
     uni.hideLoading();
-    uni.redirectTo({ url: `/pagesB/payment-result/index?orderNo=${result.orderNo}` });
+    uni.redirectTo({ url: `/pagesB/payment-result/index?orderNo=${result.orderNo}&payMode=${currentPayMethod.value}` });
   } catch (e) {
     uni.hideLoading();
     console.warn('提交订单失败', e);

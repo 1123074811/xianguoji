@@ -41,24 +41,21 @@
 
       <button class="login-btn" @tap="handleLogin">立即登录</button>
 
+      <button v-if="enableDemoLogin" class="demo-login-btn" @tap="handleDemoLogin">演示账号一键登录</button>
+
       <!-- Social Login Divider -->
-      <view class="divider">
+      <view v-if="showWechatLogin" class="divider">
         <view class="line"></view>
         <text class="divider-text">其他登录方式</text>
         <view class="line"></view>
       </view>
 
       <!-- WeChat Login -->
-      <view class="social-login">
+      <view v-if="showWechatLogin" class="social-login">
         <!-- #ifdef MP-WEIXIN -->
         <button class="wechat-btn" hover-class="btn-active" :loading="quickLoading" @tap="handleWechatTap">
           <svg-icon name="wechat" :size="64" color="#07C160" />
         </button>
-        <!-- #endif -->
-        <!-- #ifndef MP-WEIXIN -->
-        <view class="wechat-btn" hover-class="btn-active" @tap="() => uni.showToast({ title: '请在微信小程序中使用微信登录', icon: 'none' })">
-          <svg-icon name="wechat" :size="64" color="#07C160" />
-        </view>
         <!-- #endif -->
         <text class="social-text">微信快捷登录</text>
       </view>
@@ -81,6 +78,7 @@
       </view>
     </view>
 
+    <!-- #ifdef MP-WEIXIN -->
     <!-- WeChat Authorization Modal -->
     <view v-if="showWechatModal" class="modal-mask" @tap="showWechatModal = false">
       <view class="modal-content" @tap.stop>
@@ -114,6 +112,7 @@
         </view>
       </view>
     </view>
+    <!-- #endif -->
 
     <!-- Decorative Background Image -->
     <image class="bg-decoration" src="/static/images/login-bg-fruit.png" mode="aspectFill" />
@@ -133,6 +132,11 @@ const agreed = ref(false);
 const counting = ref(false);
 const count = ref(60);
 const loginLoading = ref(false);
+const demoLoginLoading = ref(false);
+const showWechatLogin = ref(import.meta.env.VITE_ENABLE_WECHAT_LOGIN === 'true');
+const enableDemoLogin = ref(import.meta.env.VITE_ENABLE_DEMO_LOGIN !== 'false');
+const demoPhone = import.meta.env.VITE_DEMO_LOGIN_PHONE || '13800000001';
+const demoCode = import.meta.env.VITE_DEMO_LOGIN_CODE || '1234';
 
 // 微信授权弹窗状态
 const showWechatModal = ref(false);
@@ -186,6 +190,30 @@ async function handleLogin() {
     console.warn('登录失败', e);
   } finally {
     loginLoading.value = false;
+  }
+}
+
+async function handleDemoLogin() {
+  if (!agreed.value) {
+    return uni.showToast({ title: '请先同意协议', icon: 'none' });
+  }
+  if (demoLoginLoading.value) return;
+  demoLoginLoading.value = true;
+  uni.showLoading({ title: '演示登录中' });
+  try {
+    phone.value = demoPhone;
+    code.value = demoCode;
+    await authApi.sendSms({ phone: demoPhone });
+    await userStore.smsLogin(demoPhone, demoCode);
+    await useCartStore().refreshCount();
+    uni.hideLoading();
+    uni.showToast({ title: '登录成功', icon: 'success' });
+    setTimeout(() => uni.switchTab({ url: '/pages/index/index' }), 400);
+  } catch (e) {
+    uni.hideLoading();
+    console.warn('演示登录失败', e);
+  } finally {
+    demoLoginLoading.value = false;
   }
 }
 
@@ -440,6 +468,23 @@ async function handleWechatConfirm() {
     margin-top: $space-2;
     box-shadow: 0 8rpx 32rpx rgba($color-primary, 0.2);
     
+    &::after { border: none; }
+    &:active { opacity: 0.9; transform: scale(0.98); }
+  }
+
+  .demo-login-btn {
+    width: 100%;
+    height: 96rpx;
+    background-color: rgba($color-primary, 0.08);
+    color: $color-primary;
+    font-size: $font-base;
+    font-weight: $weight-medium;
+    border-radius: $radius-pill;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2rpx solid rgba($color-primary, 0.18);
+
     &::after { border: none; }
     &:active { opacity: 0.9; transform: scale(0.98); }
   }

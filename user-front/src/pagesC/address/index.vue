@@ -36,10 +36,18 @@
 
         <!-- Quick Import Buttons -->
         <view class="quick-import-row">
+          <!-- #ifdef MP-WEIXIN -->
           <button class="import-btn wechat" @tap="importWxAddress">
             <svg-icon name="wechat" :size="28" color="#07C160" />
             <text>微信地址导入</text>
           </button>
+          <!-- #endif -->
+          <!-- #ifdef H5 -->
+          <button class="import-btn wechat" @tap="showManualAddressTip">
+            <svg-icon name="edit" :size="28" color="#07C160" />
+            <text>手动填写地址</text>
+          </button>
+          <!-- #endif -->
           <button class="import-btn locate" @tap="getLocation">
             <svg-icon name="location" :size="28" color="#2E7D32" />
             <text>定位当前地址</text>
@@ -320,6 +328,10 @@ function importWxAddress() {
       uni.showToast({ title: '获取微信地址失败', icon: 'none' });
     },
   });
+}
+
+function showManualAddressTip() {
+  uni.showToast({ title: '请在下方手动填写收货信息', icon: 'none' });
 }
 
 /** Get current location and fill address via reverse geocode */

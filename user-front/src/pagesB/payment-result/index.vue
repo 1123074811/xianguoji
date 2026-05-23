@@ -13,7 +13,7 @@
         <view class="icon-box">
           <svg-icon :name="status === 'success' ? 'check' : 'close'" :size="80" :color="status === 'success' ? '#2E7D32' : '#E53935'" />
         </view>
-        <text class="status-title">{{ status === 'success' ? '支付成功' : '支付失败' }}</text>
+        <text class="status-title">{{ statusTitle }}</text>
         
         <view v-if="status === 'success'" class="price-box">
           <text class="currency">¥</text>
@@ -24,7 +24,7 @@
         </view>
 
         <text class="status-desc">
-          {{ status === 'success' ? '感谢您的信任，果园正快马加鞭为您备货' : '检查一下网络，再次与新鲜连接' }}
+          {{ statusDesc }}
         </text>
 
         <view class="btn-group">
@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import GoodsCard from '@/components/goods-card.vue';
 import SvgIcon from '@/components/svg-icon.vue';
@@ -63,12 +63,30 @@ import type { ProductVO } from '@/api/types/catalog';
 const status = ref('success');
 const payAmount = ref('0.00');
 const orderNo = ref('');
+const payMode = ref(import.meta.env.VITE_DEMO_PAY_METHOD || 'mock');
 const recommendations = ref<ProductVO[]>([]);
+
+const isDemoMode = computed(() => import.meta.env.VITE_ENABLE_WECHAT_PAY !== 'true' || payMode.value !== 'wechat');
+const statusTitle = computed(() => {
+  if (status.value !== 'success') return isDemoMode.value ? '提交失败' : '支付失败';
+  if (payMode.value === 'offline') return '订单提交成功';
+  if (payMode.value === 'reservation') return '预约提交成功';
+  if (isDemoMode.value) return '模拟支付成功';
+  return '支付成功';
+});
+const statusDesc = computed(() => {
+  if (status.value !== 'success') return isDemoMode.value ? '订单提交失败，请稍后重试' : '检查一下网络，再次与新鲜连接';
+  if (payMode.value === 'offline') return '请到店后完成付款，商家将为您保留订单';
+  if (payMode.value === 'reservation') return '商家确认后将为您备货或联系自提';
+  if (isDemoMode.value) return '演示订单已创建，可在订单列表查看流程';
+  return '感谢您的信任，果园正快马加鞭为您备货';
+});
 
 onLoad((options) => {
   if (options) {
     if (options.status) status.value = options.status;
     if (options.orderNo) orderNo.value = options.orderNo;
+    if (options.payMode) payMode.value = options.payMode;
   }
 });
 

@@ -52,7 +52,12 @@
 
     <view class="action-bar">
       <template v-if="instance?.status === 1">
+        <!-- #ifdef MP-WEIXIN -->
         <button class="btn btn-share" open-type="share">邀请好友</button>
+        <!-- #endif -->
+        <!-- #ifdef H5 -->
+        <button class="btn btn-share" @tap="copyShareLink">复制邀请链接</button>
+        <!-- #endif -->
         <button v-if="!meIsParticipant" class="btn btn-primary" @tap="goJoin">立即参团</button>
         <button v-else class="btn btn-disabled" disabled>已在拼团中</button>
       </template>
@@ -119,6 +124,16 @@ async function loadDetail(instanceId: number, shareCode: string) {
 function copyShareCode() {
   if (!instance.value?.shareCode) return;
   uni.setClipboardData({ data: instance.value.shareCode });
+}
+
+function copyShareLink() {
+  const code = instance.value?.shareCode || '';
+  const path = `/pagesC/group-buy/share?code=${code}`;
+  const base = typeof window !== 'undefined' ? window.location.origin : '';
+  uni.setClipboardData({
+    data: base ? `${base}${path}` : path,
+    success: () => uni.showToast({ title: '链接已复制', icon: 'success' }),
+  });
 }
 
 async function goJoin() {

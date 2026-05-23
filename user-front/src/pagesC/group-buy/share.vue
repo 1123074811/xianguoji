@@ -94,11 +94,21 @@
     <!-- 底部操作栏 -->
     <view class="bottom-bar">
       <template v-if="instance?.status === 1 && !meIsParticipant">
+        <!-- #ifdef MP-WEIXIN -->
         <button class="btn btn-share" open-type="share">邀请好友参团</button>
+        <!-- #endif -->
+        <!-- #ifdef H5 -->
+        <button class="btn btn-share" @tap="copyShareLink">复制邀请链接</button>
+        <!-- #endif -->
         <button class="btn btn-join" @tap="goJoin">我要参团</button>
       </template>
       <template v-else-if="instance?.status === 1">
+        <!-- #ifdef MP-WEIXIN -->
         <button class="btn btn-share" open-type="share">邀请好友参团</button>
+        <!-- #endif -->
+        <!-- #ifdef H5 -->
+        <button class="btn btn-share" @tap="copyShareLink">复制邀请链接</button>
+        <!-- #endif -->
         <button class="btn btn-disabled" disabled>已在拼团中</button>
       </template>
       <template v-else-if="instance?.status === 2">
@@ -201,6 +211,17 @@ async function loadRelated() {
 function copyShareCode() {
   if (!instance.value?.shareCode) return;
   uni.setClipboardData({ data: instance.value.shareCode });
+}
+
+function copyShareLink() {
+  const code = instance.value?.shareCode || '';
+  const id = instance.value?.id || '';
+  const path = `/pagesC/group-buy/share?${code ? `code=${code}` : `id=${id}`}`;
+  const base = typeof window !== 'undefined' ? window.location.origin : '';
+  uni.setClipboardData({
+    data: base ? `${base}${path}` : path,
+    success: () => uni.showToast({ title: '链接已复制', icon: 'success' }),
+  });
 }
 
 async function goJoin() {
