@@ -22,7 +22,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/xianguoji?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DB:xianguoji}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: ${MYSQL_USER:root}
     password: ${MYSQL_PASSWORD}
     druid:
@@ -35,8 +35,8 @@ spring:
         login-password: ${DRUID_PASSWORD}
   data:
     redis:
-      host: 127.0.0.1
-      port: 6379
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
       database: 0
       password: ${REDIS_PASSWORD}
 
@@ -67,7 +67,7 @@ xianguoji:
     secret: ${JWT_SECRET:}
   upload:
     base-dir: D:/xianguoji/upload
-    domain: http://127.0.0.1:8080/static
+    domain: http://${SERVER_HOST:127.0.0.1}:${SERVER_PORT:8080}/static
   oss:
     endpoint: ${ALIYUN_OSS_ENDPOINT:}
     access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID:}
