@@ -77,12 +77,15 @@ import { useRoute, useRouter } from 'vue-router'
 import { toast } from '@/utils/toast'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { useAppStore } from '@/stores/app'
+import { useAdminStore } from '@/stores/admin'
+import { adminAuthApi } from '@/api/modules/auth'
 
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
+const adminStore = useAdminStore()
 
-const { lastMessage, unreadCount } = useWebSocket()
+const { lastMessage, unreadCount, disconnect } = useWebSocket()
 
 async function toggleOpenStatus() {
   try {
@@ -110,8 +113,15 @@ const isActive = (path: string) => {
   return route.path.startsWith(path)
 }
 
-const handleLogout = () => {
-  router.push('/login')
+const handleLogout = async () => {
+  disconnect()
+  try {
+    await adminAuthApi.logout()
+  } catch (e) {
+    console.warn('退出登录接口调用失败', e)
+  }
+  adminStore.logout()
+  await router.replace('/login')
 }
 
 watch(lastMessage, (msg) => {

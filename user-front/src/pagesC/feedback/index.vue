@@ -71,9 +71,10 @@
 import { reactive, computed, ref } from 'vue';
 import { messageApi } from '@/pagesC/api/message';
 import { useUserStore } from '@/stores/user';
+import { API_BASE_URL } from '@/config/env';
 import SvgIcon from '@/components/svg-icon.vue';
 
-const BASE_URL = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8080';
+const BASE_URL = API_BASE_URL;
 const uploading = ref(false);
 
 const types = [

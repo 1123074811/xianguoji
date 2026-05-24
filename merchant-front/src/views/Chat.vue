@@ -152,14 +152,10 @@ import { adminChatApi } from '@/api/modules/chat'
 import type { ChatUserVO, ChatMessageVO } from '@/api/types/chat'
 import { useAdminStore } from '@/stores/admin'
 
-const BASE_URL = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8080'
+import { API_BASE_URL } from '@/config/env'
+import { resolveImageUrl } from '@/utils/image'
 
-function resolveImageUrl(path: string | undefined | null): string {
-  if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
-  if (path.startsWith('/static/')) return `${BASE_URL}${path}`
-  return path
-}
+const BASE_URL = API_BASE_URL
 
 // User list
 const users = ref<ChatUserVO[]>([])

@@ -127,6 +127,7 @@ import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { chatApi } from './api';
 import type { ChatMessageVO, ProductCardVO, ChatSendDto } from '@/api/types/chat';
 import { resolveImageUrl } from '@/utils/image';
+import { API_BASE_URL } from '@/config/env';
 import { useUserStore } from '@/stores/user';
 import SvgIcon from '@/components/svg-icon.vue';
 
@@ -269,7 +270,7 @@ function handleChooseImage() {
 
 function uploadImage(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const BASE_URL = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8080';
+    const BASE_URL = API_BASE_URL;
     uni.uploadFile({
       url: BASE_URL + '/api/u/file/upload',
       filePath,

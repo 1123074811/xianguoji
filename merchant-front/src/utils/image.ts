@@ -1,4 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8080';
+import { API_BASE_URL } from '@/config/env';
+
+const BASE_URL = API_BASE_URL;
 
 /**
  * 将后端返回的图片路径转为完整 URL

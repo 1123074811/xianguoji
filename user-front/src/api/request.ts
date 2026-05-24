@@ -1,7 +1,8 @@
 import { useUserStore } from '@/stores/user';
+import { API_BASE_URL } from '@/config/env';
 
 // F-1: 环境切换 + F-2: 生产环境强制 HTTPS
-const BASE_URL = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8080';
+const BASE_URL = API_BASE_URL;
 let CLIENT_TYPE = import.meta.env.VITE_CLIENT_TYPE || 'h5';
 // #ifdef MP-WEIXIN
 CLIENT_TYPE = 'miniapp';
@@ -147,8 +148,11 @@ export function request<T = any>(opts: RequestOptions): Promise<T> {
     url += (url.includes('?') ? '&' : '?') + qs;
   }
 
+  const isSameOriginHttpDemo = typeof window !== 'undefined'
+    && window.location.protocol === 'http:'
+    && url.startsWith(`${window.location.origin}/`);
   // F-2: 生产环境禁止非 HTTPS 请求
-  if (import.meta.env.PROD && url.startsWith('http://')) {
+  if (import.meta.env.PROD && url.startsWith('http://') && !isSameOriginHttpDemo) {
     reportError('SEC', `F-2: HTTP请求被拦截 url=${url}`);
     return Promise.reject(new Error('生产环境仅允许HTTPS请求'));
   }

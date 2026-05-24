@@ -124,6 +124,7 @@ import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useCartStore } from '@/stores/cart';
 import { authApi } from '@/api/modules/auth';
+import { API_BASE_URL } from '@/config/env';
 import SvgIcon from '@/components/svg-icon.vue';
 
 const phone = ref('');
@@ -280,7 +281,7 @@ async function handleWechatConfirm() {
       try {
         const uploadRes = await new Promise<string>((resolve, reject) => {
           uni.uploadFile({
-            url: (import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8080') + '/api/pub/file/upload-avatar',
+            url: API_BASE_URL + '/api/pub/file/upload-avatar',
             filePath: wxAvatarUrl.value,
             name: 'file',
             success: (r: any) => {

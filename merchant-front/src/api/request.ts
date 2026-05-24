@@ -1,9 +1,10 @@
 import axios, { AxiosError } from 'axios';
 import type { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { useAdminStore } from '@/stores/admin';
+import { API_BASE_URL } from '@/config/env';
 
 // F-1: 环境切换
-const BASE_URL = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8080';
+const BASE_URL = API_BASE_URL;
 
 // F-2: 生产环境强制 HTTPS
 if (import.meta.env.PROD && BASE_URL.startsWith('http://')) {
@@ -69,7 +70,7 @@ export function request<T = any>(config: AxiosRequestConfig & { silent?: boolean
 
 function handleAuthFail() {
   useAdminStore().logout();
-  window.location.href = '/login';
+  window.location.href = `${import.meta.env.BASE_URL}login`;
 }
 
 function showError(msg?: string) {

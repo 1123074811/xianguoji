@@ -2,6 +2,7 @@ import { ref, onUnmounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAdminStore } from '@/stores/admin'
 import { useNotificationStore } from '@/stores/notification'
+import { WS_BASE_URL } from '@/config/env'
 
 export interface WsMessage {
   type: string
@@ -29,7 +30,7 @@ const MAX_RECONNECT = 10
 const HEARTBEAT_INTERVAL = 30000
 
 export function useWebSocket() {
-  const BASE_URL = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8080'
+  const BASE_URL = WS_BASE_URL
   const adminStore = useAdminStore()
   const notificationStore = useNotificationStore()
   const { unreadCount } = storeToRefs(notificationStore)
